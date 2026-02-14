@@ -1,0 +1,42 @@
+﻿
+> next-platform@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.16
+  - Environments: .env
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+node.exe : Failed to compile.
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Failed to compile.:String) [], R 
+   emoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+./src/app/(auth)/login/page.tsx:56:41
+Type error: Property 'success' does not exist on type '{ readonly title: 
+"تسجيل الدخول"; readonly subtitle: "أدخل بياناتك للوصول إلى لوحة التحكم"; 
+readonly email: "البريد الإلكتروني"; readonly emailPlaceholder: "أدخل بريدك 
+الإلكتروني"; ... 7 more ...; readonly error: "بيانات الدخول غير صحيحة"; } | { 
+...; }'.
+  Property 'success' does not exist on type '{ readonly title: "تسجيل 
+الدخول"; readonly subtitle: "أدخل بياناتك للوصول إلى لوحة التحكم"; readonly 
+email: "البريد الإلكتروني"; readonly emailPlaceholder: "أدخل بريدك 
+الإلكتروني"; ... 7 more ...; readonly error: "بيانات الدخول غير صحيحة"; }'.
+
+[0m [90m 54 |[39m             } [36melse[39m {[0m
+[0m [90m 55 |[39m                 toast({[0m
+[0m[31m[1m>[22m[39m[90m 56 |[39m                     title[33m:[39m 
+t[33m.[39mauth[33m.[39mlogin[33m.[39msuccess[33m,[39m[0m
+[0m [90m    |[39m                                         
+[31m[1m^[22m[39m[0m
+[0m [90m 57 |[39m                 })[33m;[39m[0m
+[0m [90m 58 |[39m                 [36mconst[39m redirect [33m=[39m 
+searchParams[33m.[39m[36mget[39m([32m'redirect'[39m) [33m||[39m 
+[32m'/'[39m[33m;[39m[0m
+[0m [90m 59 |[39m                 
+router[33m.[39mpush(redirect)[33m;[39m[0m

@@ -1,0 +1,54 @@
+Fetching stores...
+Found 4 stores.
+--------------------------------------------------
+Store: Unknown
+ID: c2177125-f970-4fc8-be6b-ce18a36bf59f
+Balance: -22.7
+Unlimited Balance Column: false
+Plan Name: "Basic"
+RPC Limit: -1
+RPC Usage: 10
+Calculated Logic:
+  isBalanceLow: true
+  isOverLimit: false (limit=-1)
+  shouldRestrict: false
+--------------------------------------------------
+--------------------------------------------------
+Store: Unknown
+ID: 992314d9-bab3-4efb-9443-2e948ac0decc
+Balance: 0
+Unlimited Balance Column: false
+Plan Name: "Enterprise"
+RPC Limit: -1
+RPC Usage: 0
+Calculated Logic:
+  isBalanceLow: true
+  isOverLimit: false (limit=-1)
+  shouldRestrict: false
+--------------------------------------------------
+--------------------------------------------------
+Store: Unknown
+ID: 791494a0-b9e7-46a4-a20c-b22e1a8b02ad
+Balance: 234.25
+Unlimited Balance Column: false
+Plan Name: "Enterprise"
+RPC Limit: -1
+RPC Usage: 0
+Calculated Logic:
+  isBalanceLow: false
+  isOverLimit: false (limit=-1)
+  shouldRestrict: false
+--------------------------------------------------
+--------------------------------------------------
+Store: Unknown
+ID: 9ccce082-3933-4b35-a77d-9044afe78b5b
+Balance: 0
+Unlimited Balance Column: false
+Plan Name: "Basic"
+RPC Limit: -1
+RPC Usage: 0
+Calculated Logic:
+  isBalanceLow: true
+  isOverLimit: false (limit=-1)
+  shouldRestrict: false
+--------------------------------------------------

@@ -1,0 +1,81 @@
+﻿
+> next-platform@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.16
+  - Environments: .env
+
+   Creating an optimized production build ...
+node.exe : Failed to 
+compile.
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo      
+        : NotSpecified  
+  : (Failed to compil   
+ e.:String) [], Remo    
+teException
+    + FullyQualifiedErr 
+   orId : NativeComman  
+  dError
+ 
+
+./src/app/(auth)/login/p
+age.tsx
+Module not found: Can't 
+resolve 'lucide-react'
+
+https://nextjs.org/docs/
+messages/module-not-foun
+d
+
+./src/app/(auth)/signup/
+page.tsx
+Module not found: Can't 
+resolve 'lucide-react'
+
+https://nextjs.org/docs/
+messages/module-not-foun
+d
+
+./src/app/(auth)/verify-
+email/page.tsx
+Module not found: Can't 
+resolve 'lucide-react'
+
+https://nextjs.org/docs/
+messages/module-not-foun
+d
+
+./src/components/auth/Au
+thLayout.tsx
+Module not found: Can't 
+resolve 'lucide-react'
+
+https://nextjs.org/docs/
+messages/module-not-foun
+d
+
+Import trace for 
+requested module:
+./src/app/(auth)/verify-
+email/page.tsx
+
+./src/components/landing
+/Features.tsx
+Module not found: Can't 
+resolve 'lucide-react'
+
+https://nextjs.org/docs/
+messages/module-not-foun
+d
+
+
+> Build failed because 
+of webpack errors

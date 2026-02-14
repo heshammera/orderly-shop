@@ -1,0 +1,66 @@
+﻿
+> next-platform@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.16
+  - Environments: .env
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+node.exe : Failed to compile.
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: (Failed   
+  to compile.:String) [],    
+ RemoteException
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+
+./src/contexts/CartContext.ts
+x:2:26
+Type error: Cannot find 
+module '@/integrations/supaba
+se/client' or its 
+corresponding type 
+declarations.
+
+[0m [90m 1 |[39m 
+[36mimport[39m 
+[33mReact[39m[33m,[39m { 
+createContext[33m,[39m 
+useContext[33m,[39m 
+useEffect[33m,[39m 
+useState[33m,[39m 
+useCallback } [36mfrom[39m 
+[32m'react'[39m[33m;[39m
+[0m
+[0m[31m[1m>[22m[39m[90m
+ 2 |[39m [36mimport[39m { 
+supabase } [36mfrom[39m [3
+2m'@/integrations/supabase/cl
+ient'[39m[33m;[39m[0m
+[0m [90m   |[39m          
+                
+[31m[1m^[22m[39m[0m
+[0m [90m 3 |[39m [90m// 
+import { useAuth } from '@/co
+ntexts/AuthContext';[39m[0m
+[0m [90m 4 |[39m [90m// 
+Note: We might need a 
+specific CustomerAuthContext 
+if AuthContext is only for 
+Admins.[39m[0m
+[0m [90m 5 |[39m [90m// 
+For now, checking 
+supabase.auth directly or 
+assuming generic Auth which 
+handles both.[39m[0m

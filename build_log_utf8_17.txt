@@ -1,0 +1,175 @@
+﻿
+> next-platform@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.16
+  - Environments: .env
+
+   Creating an optimized production build ...
+node.exe : <w> [webpack.cache.PackFileCacheStrategy] Serializing big strings 
+(133kiB) impacts deserialization performance (consider using Buffer instead 
+and decode when needed)
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (<w> [webpack.ca...de when needed 
+   ):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/8) ...
+Error: useLanguage must be used within a LanguageProvider
+    at a (D:\www\social-commerce-hub-main\next-platform\.next\server\chunks\42
+1.js:1:5675)
+    at n (D:\www\social-commerce-hub-main\next-platform\.next\server\app\(auth
+)\verify-email\page.js:1:4036)
+    at nj (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:46251)
+    at nM (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:47571)
+    at nN (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:64546)
+    at nI (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:47010)
+    at nM (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:47717)
+    at nN (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:64546)
+    at nI (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:47010)
+    at nM (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:47717) {
+  digest: '4143460473'
+}
+
+Error occurred prerendering page "/verify-email". Read more: 
+https://nextjs.org/docs/messages/prerender-error
+
+Error: useLanguage must be used within a LanguageProvider
+    at a (D:\www\social-commerce-hub-main\next-platform\.next\server\chunks\42
+1.js:1:5675)
+    at n (D:\www\social-commerce-hub-main\next-platform\.next\server\app\(auth
+)\verify-email\page.js:1:4036)
+    at nj (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:46251)
+    at nM (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:47571)
+    at nN (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:64546)
+    at nI (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:47010)
+    at nM (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:47717)
+    at nN (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:64546)
+    at nI (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:47010)
+    at nM (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:47717)
+   Generating static pages (2/8) 
+   Generating static pages (4/8) 
+Error: useLanguage must be used within a LanguageProvider
+    at a (D:\www\social-commerce-hub-main\next-platform\.next\server\chunks\42
+1.js:1:5675)
+    at f (D:\www\social-commerce-hub-main\next-platform\.next\server\app\page.
+js:1:8626)
+    at nj (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:46251)
+    at nM (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:47571)
+    at nM (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:61546)
+    at nN (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:64546)
+    at nB (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:67538)
+    at nD (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:66680)
+    at nN (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:64853)
+    at nB (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:67538) {
+  digest: '4092172459'
+}
+
+Error occurred prerendering page "/". Read more: 
+https://nextjs.org/docs/messages/prerender-error
+
+Error: useLanguage must be used within a LanguageProvider
+    at a (D:\www\social-commerce-hub-main\next-platform\.next\server\chunks\42
+1.js:1:5675)
+    at f (D:\www\social-commerce-hub-main\next-platform\.next\server\app\page.
+js:1:8626)
+    at nj (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:46251)
+    at nM (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:47571)
+    at nM (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:61546)
+    at nN (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:64546)
+    at nB (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:67538)
+    at nD (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:66680)
+    at nN (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:64853)
+    at nB (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:67538)
+   Generating static pages (6/8) 
+Error: useLanguage must be used within a LanguageProvider
+    at a (D:\www\social-commerce-hub-main\next-platform\.next\server\chunks\42
+1.js:1:5675)
+    at l (D:\www\social-commerce-hub-main\next-platform\.next\server\app\(auth
+)\signup\page.js:1:94944)
+    at nj (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:46251)
+    at nM (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:47571)
+    at nN (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:64546)
+    at nI (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:47010)
+    at nM (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:47717)
+    at nN (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:64546)
+    at nI (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:47010)
+    at nM (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:47717) {
+  digest: '1524836718'
+}
+
+Error occurred prerendering page "/signup". Read more: 
+https://nextjs.org/docs/messages/prerender-error
+
+Error: useLanguage must be used within a LanguageProvider
+    at a (D:\www\social-commerce-hub-main\next-platform\.next\server\chunks\42
+1.js:1:5675)
+    at l (D:\www\social-commerce-hub-main\next-platform\.next\server\app\(auth
+)\signup\page.js:1:94944)
+    at nj (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:46251)
+    at nM (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:47571)
+    at nN (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:64546)
+    at nI (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:47010)
+    at nM (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:47717)
+    at nN (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:64546)
+    at nI (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:47010)
+    at nM (D:\www\social-commerce-hub-main\next-platform\node_modules\next\dis
+t\compiled\next-server\app-page.runtime.prod.js:12:47717)
+ ✓ Generating static pages (8/8)
+
+> Export encountered errors on following paths:
+	/(auth)/signup/page: /signup
+	/(auth)/verify-email/page: /verify-email
+	/page: /

@@ -1,0 +1,1563 @@
+﻿
+> next-platform@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.16
+  - Environments: .env
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/8) ...
+node.exe : TypeError: 
+n.useState is not a function 
+or its return value is not 
+iterable
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: (TypeErr  
+  or: n.us...is not iterab   
+ le:String) [], RemoteExc    
+eption
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+    at D:\www\social-commerce
+-hub-main\next-platform\.next
+\server\chunks\775.js:1:17778
+    at T (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:17
+937)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at AsyncLocalStorage.run 
+(node:internal/async_local_st
+orage/async_context_frame:63:
+14) {
+  digest: '4192984619'
+}
+TypeError: (0 , R.F) is not 
+a function
+    at k (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:18
+305)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at AsyncLocalStorage.run 
+(node:internal/async_local_st
+orage/async_context_frame:63:
+14)
+    at Timeout._onTimeout (D:
+\www\social-commerce-hub-main
+\next-platform\node_modules\n
+ext\dist\compiled\next-server
+\app-page.runtime.prod.js:12:
+150268) {
+  digest: '29805695'
+}
+TypeError: n.useState is not 
+a function or its return 
+value is not iterable
+    at D:\www\social-commerce
+-hub-main\next-platform\.next
+\server\chunks\775.js:1:17778
+    at T (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:17
+937)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at Timeout._onTimeout (D:
+\www\social-commerce-hub-main
+\next-platform\node_modules\n
+ext\dist\compiled\next-server
+\app-page.runtime.prod.js:12:
+135346) {
+  digest: '599057315'
+}
+TypeError: (0 , R.F) is not 
+a function
+    at k (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:18
+305)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at Timeout._onTimeout (D:
+\www\social-commerce-hub-main
+\next-platform\node_modules\n
+ext\dist\compiled\next-server
+\app-page.runtime.prod.js:12:
+135346)
+    at listOnTimeout (node:in
+ternal/timers:605:17) {
+  digest: '211306436'
+}
+TypeError: n.useState is not 
+a function or its return 
+value is not iterable
+    at D:\www\social-commerce
+-hub-main\next-platform\.next
+\server\chunks\775.js:1:17778
+    at T (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:17
+937)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at Timeout._onTimeout (D:
+\www\social-commerce-hub-main
+\next-platform\node_modules\n
+ext\dist\compiled\next-server
+\app-page.runtime.prod.js:12:
+135346) {
+  digest: '599057315'
+}
+
+Error occurred prerendering 
+page "/signup". Read more: ht
+tps://nextjs.org/docs/message
+s/prerender-error
+
+TypeError: n.useState is not 
+a function or its return 
+value is not iterable
+    at D:\www\social-commerce
+-hub-main\next-platform\.next
+\server\chunks\775.js:1:17778
+    at T (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:17
+937)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at AsyncLocalStorage.run 
+(node:internal/async_local_st
+orage/async_context_frame:63:
+14)
+TypeError: n.useState is not 
+a function or its return 
+value is not iterable
+    at D:\www\social-commerce
+-hub-main\next-platform\.next
+\server\chunks\775.js:1:17778
+    at T (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:17
+937)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at AsyncLocalStorage.run 
+(node:internal/async_local_st
+orage/async_context_frame:63:
+14) {
+  digest: '4192984619'
+}
+TypeError: (0 , R.F) is not 
+a function
+    at k (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:18
+305)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at AsyncLocalStorage.run 
+(node:internal/async_local_st
+orage/async_context_frame:63:
+14)
+    at Timeout._onTimeout (D:
+\www\social-commerce-hub-main
+\next-platform\node_modules\n
+ext\dist\compiled\next-server
+\app-page.runtime.prod.js:12:
+150268) {
+  digest: '29805695'
+}
+TypeError: n.useState is not 
+a function or its return 
+value is not iterable
+    at D:\www\social-commerce
+-hub-main\next-platform\.next
+\server\chunks\775.js:1:17778
+    at T (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:17
+937)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at Timeout._onTimeout (D:
+\www\social-commerce-hub-main
+\next-platform\node_modules\n
+ext\dist\compiled\next-server
+\app-page.runtime.prod.js:12:
+135346) {
+  digest: '599057315'
+}
+TypeError: (0 , R.F) is not 
+a function
+    at k (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:18
+305)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at Timeout._onTimeout (D:
+\www\social-commerce-hub-main
+\next-platform\node_modules\n
+ext\dist\compiled\next-server
+\app-page.runtime.prod.js:12:
+135346)
+    at listOnTimeout (node:in
+ternal/timers:605:17) {
+  digest: '211306436'
+}
+TypeError: n.useState is not 
+a function or its return 
+value is not iterable
+    at D:\www\social-commerce
+-hub-main\next-platform\.next
+\server\chunks\775.js:1:17778
+    at T (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:17
+937)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at Timeout._onTimeout (D:
+\www\social-commerce-hub-main
+\next-platform\node_modules\n
+ext\dist\compiled\next-server
+\app-page.runtime.prod.js:12:
+135346) {
+  digest: '599057315'
+}
+
+Error occurred prerendering 
+page "/verify-email". Read 
+more: https://nextjs.org/docs
+/messages/prerender-error
+
+TypeError: n.useState is not 
+a function or its return 
+value is not iterable
+    at D:\www\social-commerce
+-hub-main\next-platform\.next
+\server\chunks\775.js:1:17778
+    at T (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:17
+937)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at AsyncLocalStorage.run 
+(node:internal/async_local_st
+orage/async_context_frame:63:
+14)
+TypeError: n.useState is not 
+a function or its return 
+value is not iterable
+    at D:\www\social-commerce
+-hub-main\next-platform\.next
+\server\chunks\775.js:1:17778
+    at T (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:17
+937)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at AsyncLocalStorage.run 
+(node:internal/async_local_st
+orage/async_context_frame:63:
+14) {
+  digest: '4192984619'
+}
+TypeError: (0 , R.F) is not 
+a function
+    at k (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:18
+305)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at AsyncLocalStorage.run 
+(node:internal/async_local_st
+orage/async_context_frame:63:
+14)
+    at Timeout._onTimeout (D:
+\www\social-commerce-hub-main
+\next-platform\node_modules\n
+ext\dist\compiled\next-server
+\app-page.runtime.prod.js:12:
+150268) {
+  digest: '29805695'
+}
+TypeError: n.useState is not 
+a function or its return 
+value is not iterable
+    at D:\www\social-commerce
+-hub-main\next-platform\.next
+\server\chunks\775.js:1:17778
+    at T (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:17
+937)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at Timeout._onTimeout (D:
+\www\social-commerce-hub-main
+\next-platform\node_modules\n
+ext\dist\compiled\next-server
+\app-page.runtime.prod.js:12:
+135346) {
+  digest: '599057315'
+}
+TypeError: (0 , R.F) is not 
+a function
+    at k (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:18
+305)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at Timeout._onTimeout (D:
+\www\social-commerce-hub-main
+\next-platform\node_modules\n
+ext\dist\compiled\next-server
+\app-page.runtime.prod.js:12:
+135346)
+    at listOnTimeout (node:in
+ternal/timers:605:17) {
+  digest: '211306436'
+}
+TypeError: n.useState is not 
+a function or its return 
+value is not iterable
+    at D:\www\social-commerce
+-hub-main\next-platform\.next
+\server\chunks\775.js:1:17778
+    at T (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:17
+937)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at Timeout._onTimeout (D:
+\www\social-commerce-hub-main
+\next-platform\node_modules\n
+ext\dist\compiled\next-server
+\app-page.runtime.prod.js:12:
+135346) {
+  digest: '599057315'
+}
+
+Error occurred prerendering 
+page "/_not-found". Read 
+more: https://nextjs.org/docs
+/messages/prerender-error
+
+TypeError: n.useState is not 
+a function or its return 
+value is not iterable
+    at D:\www\social-commerce
+-hub-main\next-platform\.next
+\server\chunks\775.js:1:17778
+    at T (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:17
+937)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at AsyncLocalStorage.run 
+(node:internal/async_local_st
+orage/async_context_frame:63:
+14)
+TypeError: n.useState is not 
+a function or its return 
+value is not iterable
+    at D:\www\social-commerce
+-hub-main\next-platform\.next
+\server\chunks\775.js:1:17778
+    at T (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:17
+937)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at AsyncLocalStorage.run 
+(node:internal/async_local_st
+orage/async_context_frame:63:
+14) {
+  digest: '4192984619'
+}
+TypeError: (0 , R.F) is not 
+a function
+    at k (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:18
+305)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at AsyncLocalStorage.run 
+(node:internal/async_local_st
+orage/async_context_frame:63:
+14)
+    at Timeout._onTimeout (D:
+\www\social-commerce-hub-main
+\next-platform\node_modules\n
+ext\dist\compiled\next-server
+\app-page.runtime.prod.js:12:
+150268) {
+  digest: '29805695'
+}
+TypeError: n.useState is not 
+a function or its return 
+value is not iterable
+    at D:\www\social-commerce
+-hub-main\next-platform\.next
+\server\chunks\775.js:1:17778
+    at T (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:17
+937)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at Timeout._onTimeout (D:
+\www\social-commerce-hub-main
+\next-platform\node_modules\n
+ext\dist\compiled\next-server
+\app-page.runtime.prod.js:12:
+135346) {
+  digest: '599057315'
+}
+TypeError: (0 , R.F) is not 
+a function
+    at k (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:18
+305)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at Timeout._onTimeout (D:
+\www\social-commerce-hub-main
+\next-platform\node_modules\n
+ext\dist\compiled\next-server
+\app-page.runtime.prod.js:12:
+135346)
+    at listOnTimeout (node:in
+ternal/timers:605:17) {
+  digest: '211306436'
+}
+TypeError: n.useState is not 
+a function or its return 
+value is not iterable
+    at D:\www\social-commerce
+-hub-main\next-platform\.next
+\server\chunks\775.js:1:17778
+    at T (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:17
+937)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at Timeout._onTimeout (D:
+\www\social-commerce-hub-main
+\next-platform\node_modules\n
+ext\dist\compiled\next-server
+\app-page.runtime.prod.js:12:
+135346) {
+  digest: '599057315'
+}
+
+Error occurred prerendering 
+page "/". Read more: https://
+nextjs.org/docs/messages/prer
+ender-error
+
+TypeError: n.useState is not 
+a function or its return 
+value is not iterable
+    at D:\www\social-commerce
+-hub-main\next-platform\.next
+\server\chunks\775.js:1:17778
+    at T (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:17
+937)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at AsyncLocalStorage.run 
+(node:internal/async_local_st
+orage/async_context_frame:63:
+14)
+TypeError: n.useState is not 
+a function or its return 
+value is not iterable
+    at D:\www\social-commerce
+-hub-main\next-platform\.next
+\server\chunks\775.js:1:17778
+    at T (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:17
+937)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at AsyncLocalStorage.run 
+(node:internal/async_local_st
+orage/async_context_frame:63:
+14) {
+  digest: '4192984619'
+}
+TypeError: (0 , R.F) is not 
+a function
+    at k (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:18
+305)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+   Generating static pages (2/8) 
+   Generating static pages (4/8) 
+    at AsyncLocalStorage.run 
+(node:internal/async_local_st
+orage/async_context_frame:63:
+14)
+    at Timeout._onTimeout (D:
+\www\social-commerce-hub-main
+\next-platform\node_modules\n
+ext\dist\compiled\next-server
+\app-page.runtime.prod.js:12:
+150268) {
+  digest: '29805695'
+}
+TypeError: n.useState is not 
+a function or its return 
+value is not iterable
+    at D:\www\social-commerce
+-hub-main\next-platform\.next
+\server\chunks\775.js:1:17778
+    at T (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:17
+937)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at Timeout._onTimeout (D:
+\www\social-commerce-hub-main
+\next-platform\node_modules\n
+ext\dist\compiled\next-server
+\app-page.runtime.prod.js:12:
+135346) {
+  digest: '599057315'
+}
+TypeError: (0 , R.F) is not 
+a function
+    at k (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:18
+305)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at Timeout._onTimeout (D:
+\www\social-commerce-hub-main
+\next-platform\node_modules\n
+ext\dist\compiled\next-server
+\app-page.runtime.prod.js:12:
+135346)
+    at listOnTimeout (node:in
+ternal/timers:605:17) {
+  digest: '211306436'
+}
+TypeError: n.useState is not 
+a function or its return 
+value is not iterable
+    at D:\www\social-commerce
+-hub-main\next-platform\.next
+\server\chunks\775.js:1:17778
+    at T (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:17
+937)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at Timeout._onTimeout (D:
+\www\social-commerce-hub-main
+\next-platform\node_modules\n
+ext\dist\compiled\next-server
+\app-page.runtime.prod.js:12:
+135346) {
+  digest: '599057315'
+}
+
+Error occurred prerendering 
+page "/login". Read more: htt
+ps://nextjs.org/docs/messages
+/prerender-error
+
+TypeError: n.useState is not 
+a function or its return 
+value is not iterable
+    at D:\www\social-commerce
+-hub-main\next-platform\.next
+\server\chunks\775.js:1:17778
+    at T (D:\www\social-comme
+rce-hub-main\next-platform\.n
+ext\server\chunks\775.js:1:17
+937)
+    at eh (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:134657)
+    at e (D:\www\social-comme
+rce-hub-main\next-platform\no
+de_modules\next\dist\compiled
+\next-server\app-page.runtime
+.prod.js:12:137542)
+    at ek (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:138016)
+    at Array.toJSON (D:\www\s
+ocial-commerce-hub-main\next-
+platform\node_modules\next\di
+st\compiled\next-server\app-p
+age.runtime.prod.js:12:135626
+)
+    at stringify 
+(<anonymous>)
+    at eP (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142090)
+    at eE (D:\www\social-comm
+erce-hub-main\next-platform\n
+ode_modules\next\dist\compile
+d\next-server\app-page.runtim
+e.prod.js:12:142569)
+    at AsyncLocalStorage.run 
+(node:internal/async_local_st
+orage/async_context_frame:63:
+14)
+   Generating static pages (6/8) 
+ ✓ Generating static pages (8/8)
+
+> Export encountered errors 
+on following paths:
+	/(auth)/login/page: /login
+	/(auth)/signup/page: /signup
+	/(auth)/verify-email/page: 
+/verify-email
+	/_not-found/page: 
+/_not-found
+	/page: /

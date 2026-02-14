@@ -1,0 +1,128 @@
+﻿
+> next-platform@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.16
+  - Environments: .env
+
+   Creating an optimized production build ...
+node.exe : Failed to compile.
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: (Failed   
+  to compile.:String) [],    
+ RemoteException
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+
+./node_modules/ramda/es/add.j
+s
+Module not found: Can't 
+resolve 
+'./internal/_curry2.js'
+
+https://nextjs.org/docs/messa
+ges/module-not-found
+
+Import trace for requested 
+module:
+./node_modules/ramda/es/index
+.js
+./node_modules/@supabase/ssr/
+dist/index.mjs
+./src/lib/supabase/client.ts
+./src/hooks/useAuth.ts
+./src/components/landing/Head
+er.tsx
+
+./node_modules/ramda/es/addIn
+dex.js
+Module not found: Can't 
+resolve 
+'./internal/_concat.js'
+
+https://nextjs.org/docs/messa
+ges/module-not-found
+
+Import trace for requested 
+module:
+./node_modules/ramda/es/index
+.js
+./node_modules/@supabase/ssr/
+dist/index.mjs
+./src/lib/supabase/client.ts
+./src/hooks/useAuth.ts
+./src/components/landing/Head
+er.tsx
+
+./node_modules/ramda/es/addIn
+dex.js
+Module not found: Can't 
+resolve 
+'./internal/_curry1.js'
+
+https://nextjs.org/docs/messa
+ges/module-not-found
+
+Import trace for requested 
+module:
+./node_modules/ramda/es/index
+.js
+./node_modules/@supabase/ssr/
+dist/index.mjs
+./src/lib/supabase/client.ts
+./src/hooks/useAuth.ts
+./src/components/landing/Head
+er.tsx
+
+./node_modules/ramda/es/addIn
+dexRight.js
+Module not found: Can't 
+resolve 
+'./internal/_concat.js'
+
+https://nextjs.org/docs/messa
+ges/module-not-found
+
+Import trace for requested 
+module:
+./node_modules/ramda/es/index
+.js
+./node_modules/@supabase/ssr/
+dist/index.mjs
+./src/lib/supabase/client.ts
+./src/hooks/useAuth.ts
+./src/components/landing/Head
+er.tsx
+
+./node_modules/ramda/es/addIn
+dexRight.js
+Module not found: Can't 
+resolve 
+'./internal/_curry1.js'
+
+https://nextjs.org/docs/messa
+ges/module-not-found
+
+Import trace for requested 
+module:
+./node_modules/ramda/es/index
+.js
+./node_modules/@supabase/ssr/
+dist/index.mjs
+./src/lib/supabase/client.ts
+./src/hooks/useAuth.ts
+./src/components/landing/Head
+er.tsx
+
+
+> Build failed because of 
+webpack errors

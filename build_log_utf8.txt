@@ -1,0 +1,56 @@
+﻿
+> next-platform@0.1.0 build
+> next build
+
+node.exe : 
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo      
+        : NotSpecified  
+  : (:String) [], Rem   
+ oteException
+    + FullyQualifiedErr 
+   orId : NativeComman  
+  dError
+ 
+> Build error occurred
+Error: Configuring 
+Next.js via 
+'next.config.ts' is not 
+supported. Please 
+replace the file with 
+'next.config.js' or 
+'next.config.mjs'.
+    at loadConfig (D:\ww
+w\social-commerce-hub-ma
+in\next-platform\node_mo
+dules\next\dist\server\c
+onfig.js:800:19)
+    at async 
+Span.traceAsyncFn (D:\ww
+w\social-commerce-hub-ma
+in\next-platform\node_mo
+dules\next\dist\trace\tr
+ace.js:154:20)
+    at async D:\www\soci
+al-commerce-hub-main\nex
+t-platform\node_modules\
+next\dist\build\index.js
+:370:28
+    at async 
+Span.traceAsyncFn (D:\ww
+w\social-commerce-hub-ma
+in\next-platform\node_mo
+dules\next\dist\trace\tr
+ace.js:154:20)
+    at async build (D:\w
+ww\social-commerce-hub-m
+ain\next-platform\node_m
+odules\next\dist\build\i
+ndex.js:364:9)

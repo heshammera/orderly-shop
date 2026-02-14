@@ -1,0 +1,68 @@
+﻿
+> next-platform@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.16
+  - Environments: .env
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+node.exe : Failed to compile.
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: (Failed   
+  to compile.:String) [],    
+ RemoteException
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+
+./src/components/auth/RoleGua
+rd.tsx:3:30
+Type error: Cannot find 
+module 
+'@/hooks/useStoreRole' or 
+its corresponding type 
+declarations.
+
+[0m [90m 1 |[39m 
+[36mimport[39m { useEffect 
+} [36mfrom[39m [32m'react'
+[39m[33m;[39m[0m
+[0m [90m 2 |[39m 
+[36mimport[39m { 
+useNavigate[33m,[39m 
+useParams } [36mfrom[39m [
+32m'react-router-dom'[39m[3
+3m;[39m[0m
+[0m[31m[1m>[22m[39m[90m
+ 3 |[39m [36mimport[39m { 
+useStoreRole } 
+[36mfrom[39m [32m'@/hooks/
+useStoreRole'[39m[33m;[39m
+[0m
+[0m [90m   |[39m          
+                    
+[31m[1m^[22m[39m[0m
+[0m [90m 4 |[39m 
+[36mimport[39m { 
+[33mLoader2[39m } 
+[36mfrom[39m [32m'lucide-r
+eact'[39m[33m;[39m[0m
+[0m [90m 5 |[39m 
+[36mimport[39m { toast } 
+[36mfrom[39m [32m'sonner'
+[39m[33m;[39m[0m
+[0m [90m 6 |[39m 
+[36mimport[39m { 
+useLanguage } [36mfrom[39m 
+[32m'@/contexts/LanguageCont
+ext'[39m[33m;[39m[0m

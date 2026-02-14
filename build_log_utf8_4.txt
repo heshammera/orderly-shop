@@ -1,0 +1,69 @@
+﻿
+> next-platform@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.16
+  - Environments: .env
+
+   Creating an optimized production build ...
+node.exe : <w> [webpack.cache
+.PackFileCacheStrategy] 
+Serializing big strings 
+(133kiB) impacts 
+deserialization performance 
+(consider using Buffer 
+instead and decode when 
+needed)
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: (<w> [we  
+  bpack.ca...de when neede   
+ d):String) [], RemoteExc    
+eption
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+Failed to compile.
+
+./src/components/admin/AdminL
+ayout.tsx:39:56
+Type error: Argument of type 
+'"has_role"' is not 
+assignable to parameter of 
+type '"lookup_user_by_email" 
+| "get_store_team"'.
+
+[0m [90m 37 |[39m[0m
+[0m [90m 38 |[39m         
+    [90m// Check if user 
+has 'admin' role[39m[0m
+[0m[31m[1m>[22m[39m[90m
+ 39 |[39m             
+[36mconst[39m { 
+data[33m,[39m error } 
+[33m=[39m [36mawait[39m s
+upabase[33m.[39mrpc([32m'h
+as_role'[39m[33m,[39m 
+{[0m
+[0m [90m    |[39m         
+                             
+                  
+[31m[1m^[22m[39m[0m
+[0m [90m 40 |[39m         
+        _user_id[33m:[39m u
+ser[33m.[39mid[33m,[39m[
+0m
+[0m [90m 41 |[39m         
+        _role[33m:[39m 
+[32m'admin'[39m[0m
+[0m [90m 42 |[39m         
+    })[33m;[39m[0m
