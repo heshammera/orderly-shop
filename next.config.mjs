@@ -24,7 +24,8 @@ const withPWA = withPWAInit({
     aggressiveFrontEndNavCaching: true,
     reloadOnOnline: true,
     swcMinify: true,
-    disable: process.env.NODE_ENV === "development",
+    // disable: process.env.NODE_ENV === "development",
+    disable: true, // Temporarily disable PWA for debugging Vercel 404
     workboxOptions: {
         disableDevLogs: true,
     },
