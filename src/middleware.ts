@@ -25,11 +25,15 @@ export async function middleware(request: NextRequest) {
         // Block admin routes on subdomains - redirect to main domain
         if (!isMainDomain) {
             const redirectUrl = request.nextUrl.clone();
-            redirectUrl.hostname = 'localhost';
-
-            // Port is handled by Next.js if omitted, but let's be safe if it was in host header
-            const port = host.split(':')[1];
-            if (port) redirectUrl.port = port;
+            const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+            try {
+                const siteUrlObj = new URL(siteUrl);
+                redirectUrl.hostname = siteUrlObj.hostname;
+                redirectUrl.protocol = siteUrlObj.protocol;
+                redirectUrl.port = siteUrlObj.port;
+            } catch (e) {
+                redirectUrl.hostname = 'localhost';
+            }
 
             console.log(`[Admin Block] Redirecting ${host} to ${redirectUrl.host}`);
             return NextResponse.redirect(redirectUrl);

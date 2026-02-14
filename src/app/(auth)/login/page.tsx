@@ -179,16 +179,26 @@ function LoginFormContent() {
                             }
                         } else {
                             const parts = host.split('.');
+                            // Special handling for Vercel deployments to support path-based routing on free tier
+                            if (host.endsWith('.vercel.app')) {
+                                rootDomain = host;
+                            }
                             // If more than 2 parts (e.g. store.domain.com), take everything after the first part
-                            // unless it's an IP address (not perfectly handled here but unlikely for stores)
-                            if (parts.length > 2) {
+                            else if (parts.length > 2) {
                                 rootDomain = parts.slice(1).join('.');
                             }
                         }
 
                         // Construct Tenant URL
-                        // Use /sso path to handle session setting
-                        let tenantUrl = `${protocol}//${store.slug}.${rootDomain}/dashboard`;
+                        let tenantUrl = '';
+
+                        // If using Vercel domain, use path-based routing (/s/slug) because subdomains aren't supported on free tier
+                        if (rootDomain.endsWith('.vercel.app')) {
+                            tenantUrl = `${protocol}//${rootDomain}/s/${store.slug}/dashboard`;
+                        } else {
+                            // Use subdomain routing for custom domains or localhost
+                            tenantUrl = `${protocol}//${store.slug}.${rootDomain}/dashboard`;
+                        }
 
                         // If we have session data, pass it via hash to the subdomain
                         // This allows the subdomain to set its own cookies (since we are now using strict host-only cookies)

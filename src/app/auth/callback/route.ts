@@ -53,7 +53,14 @@ export async function GET(request: NextRequest) {
 
                 // Construct Tenant URL
                 // e.g. http://my-store.localhost:3000/dashboard?verified=true
-                const tenantUrl = `${protocol}//${store.slug}.${rootDomain}/dashboard?verified=true`;
+                let tenantUrl = '';
+
+                if (host.endsWith('.vercel.app')) {
+                    tenantUrl = `${protocol}//${host}/s/${store.slug}/dashboard?verified=true`;
+                } else {
+                    tenantUrl = `${protocol}//${store.slug}.${rootDomain}/dashboard?verified=true`;
+                }
+
                 return NextResponse.redirect(tenantUrl);
             }
 

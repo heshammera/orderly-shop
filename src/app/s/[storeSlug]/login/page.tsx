@@ -187,6 +187,11 @@ export default function StoreLoginPage() {
                     }
 
                     targetUrl = `${protocol}//${store.slug}.localhost${port ? ':' + port : ''}${targetPath}`;
+                } else if (hostname.endsWith('.vercel.app')) {
+                    // Vercel Free Tier: Use path-based routing
+                    // Navigate to /s/[slug]/dashboard
+                    router.push(`/s/${store.slug}${targetPath}`);
+                    return;
                 } else {
                     if (hostname.startsWith(store.slug + '.')) {
                         // Already on the correct subdomain
