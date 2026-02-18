@@ -221,7 +221,9 @@ function LoginFormContent() {
                                 tenantUrl = `${protocol}//${rootDomain}/s/${store.slug}/dashboard`;
                             } else {
                                 // Cross-domain (subdomain) requires SSO hash
-                                tenantUrl = `${protocol}//${store.slug}.${rootDomain}/sso#access_token=${access_token}&refresh_token=${refresh_token}&type=recovery`;
+                                // Since /sso page is missing, we redirect to /dashboard
+                                // User might need to login again if cookies don't share, but better than 404
+                                tenantUrl = `${protocol}//${store.slug}.${rootDomain}/dashboard`;
                             }
                         }
 

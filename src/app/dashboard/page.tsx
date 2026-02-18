@@ -134,19 +134,35 @@ export default function DashboardPage() {
                     const host = window.location.host;
                     let rootDomain = host;
 
-                    if (host.includes('.localhost')) {
-                        rootDomain = host.substring(host.indexOf('.') + 1);
+                    // Robust root domain detection
+                    if (host.includes('localhost')) {
+                        if (host.includes('.localhost')) {
+                            rootDomain = host.substring(host.indexOf('.') + 1);
+                        }
                     } else {
                         const parts = host.split('.');
-                        if (parts.length > 2) {
+                        if (host.endsWith('.vercel.app')) {
+                            rootDomain = host;
+                        } else if (parts.length > 2) {
                             rootDomain = parts.slice(1).join('.');
                         }
                     }
 
-                    // Construct SSO URL
-                    const ssoUrl = `${protocol}//${store.slug}.${rootDomain}/sso#access_token=${session.access_token}&refresh_token=${session.refresh_token}`;
+                    // Construct Redirect URL
+                    let targetUrl = '';
+                    const isVercelDomain = rootDomain.endsWith('.vercel.app');
 
-                    window.location.href = ssoUrl;
+                    if (isVercelDomain) {
+                        // Path-based routing for Vercel
+                        targetUrl = `${protocol}//${rootDomain}/s/${store.slug}/dashboard`;
+                    } else {
+                        // Subdomain routing for others
+                        // Since /sso doesn't exist, we redirect to /dashboard.
+                        // Cross-domain cookie sharing depends on browser/config.
+                        targetUrl = `${protocol}//${store.slug}.${rootDomain}/dashboard`;
+                    }
+
+                    window.location.href = targetUrl;
                     return;
                 }
             }
@@ -181,7 +197,13 @@ export default function DashboardPage() {
             }
         }
 
-        return `${protocol}//${slug}.${rootDomain}/sso#access_token=${session.access_token}&refresh_token=${session.refresh_token}`;
+        const isVercelDomain = rootDomain.endsWith('.vercel.app');
+
+        if (isVercelDomain) {
+            return `${protocol}//${rootDomain}/s/${slug}/dashboard`;
+        }
+
+        return `${protocol}//${slug}.${rootDomain}/dashboard`;
     };
 
     return (
