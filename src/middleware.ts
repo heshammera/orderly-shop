@@ -202,7 +202,80 @@ export async function middleware(request: NextRequest) {
 
     // Check if hostname is just 'localhost' (no subdomain)
     if (isMainDomain) {
-        // This is the main site - don't rewrite
+        // --- NEW: Handle /s/[slug]/dashboard REWRITE for Vercel/Main Domain ---
+        // Since Vercel doesn't support wildcard subdomains on free tier, we use /s/[slug]
+        // But /s/[slug]/dashboard doesn't physically exist, so we must rewrite it to /dashboard/[storeId]
+
+        const pathBasedDashboardMatch = pathname.match(/^\/s\/([^/]+)\/((?:dashboard|editor).*)$/);
+
+        if (pathBasedDashboardMatch) {
+            const slug = pathBasedDashboardMatch[1];
+            const restOfPath = pathBasedDashboardMatch[2]; // e.g. "dashboard" or "dashboard/settings"
+
+            console.log(`[Middleware] Path-based dashboard request: slug=${slug}, path=${restOfPath}`);
+
+            try {
+                const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+                const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+                // Resolve slug to storeId
+                const fetchUrl = `${supabaseUrl}/rest/v1/rpc/get_store_id_by_slug`;
+                const res = await fetch(fetchUrl, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': supabaseAnonKey,
+                        'Authorization': `Bearer ${supabaseAnonKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ p_slug: slug })
+                });
+
+                if (res.ok) {
+                    const storeId = await res.json();
+                    if (storeId) {
+                        // Construct the internal URL: /dashboard/[storeId]/...
+                        // If restOfPath is just "dashboard", we map to /dashboard/[storeId]
+                        // If "dashboard/settings", we map to /dashboard/[storeId]/settings
+                        // We need to be careful with how restOfPath captures names.
+
+                        // Current regex: /s/slug/(dashboard...)
+                        // If URL is /s/slug/dashboard, restOfPath is "dashboard"
+                        // Target is /dashboard/storeId
+
+                        // If URL is /s/slug/dashboard/settings, restOfPath is "dashboard/settings"
+                        // Target is /dashboard/storeId/settings
+
+                        // Simple string replacement:
+                        // /dashboard -> /dashboard/[storeId]
+                        const newPath = restOfPath.replace(/^dashboard/, `/dashboard/${storeId}`)
+                            .replace(/^editor/, `/dashboard/${storeId}/editor`); // logic from below
+
+                        const newUrl = request.nextUrl.clone();
+                        newUrl.pathname = newPath;
+
+                        console.log(`[Middleware] Rewriting path-based to: ${newUrl.pathname}`);
+
+                        const rewriteResponse = NextResponse.rewrite(newUrl, {
+                            request: { headers: request.headers }
+                        });
+
+                        // Copy cookies
+                        response.headers.forEach((value, key) => {
+                            if (key === 'set-cookie') {
+                                rewriteResponse.headers.set(key, value);
+                            }
+                        });
+
+                        return rewriteResponse;
+                    }
+                }
+            } catch (e) {
+                console.error('[Middleware] Error resolving slug for path-based routing:', e);
+            }
+        }
+        // -----------------------------------------------------------------------
+
+        // This is the main site - don't rewrite (unless matched above)
         return response;
     }
 
