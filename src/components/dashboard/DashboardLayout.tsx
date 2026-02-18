@@ -52,11 +52,19 @@ export function DashboardLayout({
     isSubdomain = false,
     hideSidebar = false
 }: DashboardLayoutProps) {
+    const { user, loading } = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!loading && user && !user.email_confirmed_at) {
+            router.push('/email-verify');
+        }
+    }, [user, loading, router]);
+
     const supabase = createClient();
     const { t, language, setLanguage, dir } = useLanguage();
     const { isAdmin, isEditor, isOwner } = useStoreRole(storeId);
     const { signOut } = useAuth();
-    const router = useRouter();
     const pathname = usePathname();
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);

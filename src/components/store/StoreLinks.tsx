@@ -24,17 +24,49 @@ export function StoreLinks({ storeSlug, storeId, storeName }: StoreLinksProps) {
 
     useEffect(() => {
         const origin = window.location.origin;
-        const hostname = window.location.hostname;
 
-        // Extract main domain (remove www if exists)
-        const hostParts = hostname.split('.');
-        const mainDomain = hostParts.length > 2 && hostParts[0] === 'www'
-            ? hostParts.slice(1).join('.')
-            : hostname;
+        // Robust Main Domain Extraction
+        let mainDomain = window.location.hostname;
+        const siteUrlEnv = process.env.NEXT_PUBLIC_SITE_URL;
+
+        if (siteUrlEnv) {
+            try {
+                const siteUrl = new URL(siteUrlEnv);
+                mainDomain = siteUrl.hostname;
+            } catch (e) {
+                // Fallback to window.location if env is invalid
+            }
+        }
+
+        // Fallback or cleanup if no env var
+        if (!siteUrlEnv || mainDomain === 'localhost') {
+            const hostParts = window.location.hostname.split('.');
+            mainDomain = hostParts.length > 2 && hostParts[0] === 'www'
+                ? hostParts.slice(1).join('.')
+                : window.location.hostname;
+        }
+
+        // Clean up mainDomain (remove port, remove www)
+        mainDomain = mainDomain.replace(/^www\./, '');
+
+        // Construct subdomain URL
+        const protocol = window.location.protocol;
+        const port = window.location.port ? `:${window.location.port}` : '';
+
+        // If main domain is localhost, we need special handling if we are physically ON a subdomain
+        // But usually we want: storeSlug.mainDomain
+
+        let subdomainUrl = `${protocol}//${storeSlug}.${mainDomain}`;
+        if (mainDomain === 'localhost') {
+            subdomainUrl = `${protocol}//${storeSlug}.${mainDomain}${port}`;
+        } else if (port && !['80', '443'].includes(port)) {
+            // If we have a port in prod/dev (e.g. :3000), append it
+            subdomainUrl = `${subdomainUrl}${port}`;
+        }
 
         setLinks({
             pathStore: `${origin}/s/${storeSlug}`,
-            subdomainStore: `https://${storeSlug}.${mainDomain}`,
+            subdomainStore: subdomainUrl,
             dashboard: `${origin}/dashboard/${storeId}`,
         });
     }, [storeSlug, storeId]);

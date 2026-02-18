@@ -121,9 +121,16 @@ export async function middleware(request: NextRequest) {
 
         if (user) {
             // --- EMAIL VERIFICATION ENFORCEMENT ---
-            if (!user.email_confirmed_at && !pathname.startsWith('/email-verify') && !pathname.startsWith('/auth/callback')) {
+            const isAuthRoute = pathname.startsWith('/auth') || pathname.startsWith('/login') || pathname.startsWith('/signup');
+            const isPublicRoute = pathname === '/' || pathname.startsWith('/s/');
+            const isVerifyPage = pathname.startsWith('/email-verify');
+
+            if (!user.email_confirmed_at && !isAuthRoute && !isVerifyPage && !isPublicRoute) {
+                // Allow users to see the landing page and stores, but not dashboard/account
                 const url = request.nextUrl.clone();
                 url.pathname = '/email-verify';
+                // Add redirect param so we can send them back after verification? 
+                // Currently just forcing verify.
                 return NextResponse.redirect(url);
             }
             // -------------------------------------

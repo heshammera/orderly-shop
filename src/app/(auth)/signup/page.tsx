@@ -106,6 +106,20 @@ function SignupFormContent() {
     const onSubmit = async (data: SignupFormValues) => {
         setLoading(true);
         try {
+            // Check if email exists first
+            const { checkEmailExists } = await import('@/app/actions/auth');
+            const { exists, error: checkError } = await checkEmailExists(data.email);
+
+            if (exists) {
+                toast({
+                    title: t.auth.signup.error,
+                    description: language === 'ar' ? 'البريد الإلكتروني مسجل بالفعل' : 'Email already registered',
+                    variant: 'destructive',
+                });
+                setLoading(false);
+                return;
+            }
+
             const redirect = searchParams.get('redirect');
 
             // Pass store metadata to signUp
