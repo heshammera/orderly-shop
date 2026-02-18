@@ -134,31 +134,20 @@ export default function DashboardPage() {
                     const host = window.location.host;
                     let rootDomain = host;
 
-                    // Robust root domain detection
-                    if (host.includes('localhost')) {
+                    let targetUrl = '';
+                    // Robust Vercel detection
+                    if (host.includes('.vercel.app')) {
+                        targetUrl = `${protocol}//${host}/s/${store.slug}/dashboard`;
+                    } else if (host.includes('localhost')) {
                         if (host.includes('.localhost')) {
                             rootDomain = host.substring(host.indexOf('.') + 1);
                         }
+                        targetUrl = `${protocol}//${store.slug}.${rootDomain}/dashboard`;
                     } else {
                         const parts = host.split('.');
-                        if (host.endsWith('.vercel.app')) {
-                            rootDomain = host;
-                        } else if (parts.length > 2) {
+                        if (parts.length > 2) {
                             rootDomain = parts.slice(1).join('.');
                         }
-                    }
-
-                    // Construct Redirect URL
-                    let targetUrl = '';
-                    const isVercelDomain = rootDomain.endsWith('.vercel.app');
-
-                    if (isVercelDomain) {
-                        // Path-based routing for Vercel
-                        targetUrl = `${protocol}//${rootDomain}/s/${store.slug}/dashboard`;
-                    } else {
-                        // Subdomain routing for others
-                        // Since /sso doesn't exist, we redirect to /dashboard.
-                        // Cross-domain cookie sharing depends on browser/config.
                         targetUrl = `${protocol}//${store.slug}.${rootDomain}/dashboard`;
                     }
 
@@ -188,21 +177,18 @@ export default function DashboardPage() {
         const host = window.location.host;
         let rootDomain = host;
 
+        // Robust Vercel detection - simply check if we are on a vercel.app domain
+        if (host.includes('.vercel.app')) {
+            return `${protocol}//${host}/s/${slug}/dashboard`;
+        }
+
         if (host.includes('.localhost')) {
             rootDomain = host.substring(host.indexOf('.') + 1);
         } else {
             const parts = host.split('.');
-            if (host.endsWith('.vercel.app')) {
-                rootDomain = host;
-            } else if (parts.length > 2) {
+            if (parts.length > 2) {
                 rootDomain = parts.slice(1).join('.');
             }
-        }
-
-        const isVercelDomain = rootDomain.endsWith('.vercel.app');
-
-        if (isVercelDomain) {
-            return `${protocol}//${rootDomain}/s/${slug}/dashboard`;
         }
 
         return `${protocol}//${slug}.${rootDomain}/dashboard`;
