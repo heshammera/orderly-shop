@@ -192,7 +192,9 @@ export default function DashboardPage() {
             rootDomain = host.substring(host.indexOf('.') + 1);
         } else {
             const parts = host.split('.');
-            if (parts.length > 2) {
+            if (host.endsWith('.vercel.app')) {
+                rootDomain = host;
+            } else if (parts.length > 2) {
                 rootDomain = parts.slice(1).join('.');
             }
         }
