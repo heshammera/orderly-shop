@@ -146,7 +146,7 @@ export function WalletRechargeDialog({
                 .from('wallet_recharge_requests')
                 .insert({
                     store_id: storeId,
-                    amount_usd: usdAmount,
+                    amount_usd: usdAmount, // This will be added to store balance (which is in USD)
                     amount_local: localAmount,
                     exchange_rate: rate,
                     sender_phone: senderPhone,

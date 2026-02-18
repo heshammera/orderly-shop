@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { useExchangeRate } from '@/hooks/useExchangeRate';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,10 +17,13 @@ interface WalletBalanceProps {
 export function WalletBalance({ storeId, currency }: WalletBalanceProps) {
     const supabase = createClient();
     const { language } = useLanguage();
-    const [balance, setBalance] = useState(0);
+    const [balance, setBalance] = useState(0); // Stores USD balance
     const [pendingBalance, setPendingBalance] = useState(0);
     const [totalEarnings, setTotalEarnings] = useState(0);
     const [loading, setLoading] = useState(true);
+
+    // Fetch exchange rate for the store's currency
+    const { rate, loading: rateLoading } = useExchangeRate(currency);
 
     useEffect(() => {
         fetchWalletData();
@@ -28,7 +32,7 @@ export function WalletBalance({ storeId, currency }: WalletBalanceProps) {
     const fetchWalletData = async () => {
         setLoading(true);
         try {
-            // 1. Get main balance from stores table (source of truth)
+            // 1. Get main balance from stores table (source of truth) - NOW IN USD
             const { data: storeData } = await supabase
                 .from('stores')
                 .select('balance, currency')
@@ -51,13 +55,18 @@ export function WalletBalance({ storeId, currency }: WalletBalanceProps) {
                 .eq('store_id', storeId)
                 .single();
 
-            // Store balance is the main available balance
+            // Store balance is the main available balance (in USD)
             if (storeData) {
-                setBalance(storeData.balance || 0);
+                // We don't set balance directly, we wait for exchange rate
+                const usdBalance = storeData.balance || 0;
+                setBalance(usdBalance);
             }
 
             // Pending balance = Pending Orders (from view) + Pending Recharges
             const pendingOrders = walletStats?.pending_balance || 0;
+            // Note: Pending recharges are already in local currency in the DB (amount_local)
+            // Pending orders should also be in local currency? 
+            // Assuming pending_balance from store_wallets view is in local currency.
             setPendingBalance(pendingOrders + pendingRechargeAmount);
 
             setTotalEarnings(walletStats?.total_earnings || 0);
@@ -103,7 +112,7 @@ export function WalletBalance({ storeId, currency }: WalletBalanceProps) {
                 </CardHeader>
                 <CardContent>
                     <div className="text-3xl font-bold text-gray-900 dark:text-gray-50">
-                        {balance.toFixed(2)} <span className="text-sm font-normal text-muted-foreground">{currency}</span>
+                        {(balance * rate).toFixed(2)} <span className="text-sm font-normal text-muted-foreground">{currency}</span>
                     </div>
                     {isLowBalance && (
                         <p className="text-xs text-red-600 dark:text-red-400 mt-1 font-medium flex items-center gap-1">
