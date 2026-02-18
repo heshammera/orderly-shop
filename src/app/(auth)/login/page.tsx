@@ -193,18 +193,36 @@ function LoginFormContent() {
                         let tenantUrl = '';
 
                         // If using Vercel domain, use path-based routing (/s/slug) because subdomains aren't supported on free tier
-                        if (rootDomain.endsWith('.vercel.app')) {
+                        // UNLESS we are on a custom domain pointing to Vercel (which wouldn't end in .vercel.app usually, unless it's a CNAME to it?)
+                        // Actually, custom domains won't end in vercel.app.
+
+                        const isVercelDomain = rootDomain.endsWith('.vercel.app');
+
+                        if (isVercelDomain) {
+                            // Path-based routing for Vercel default domains
                             tenantUrl = `${protocol}//${rootDomain}/s/${store.slug}/dashboard`;
                         } else {
-                            // Use subdomain routing for custom domains or localhost
+                            // Subdomain routing for localhost and custom domains
                             tenantUrl = `${protocol}//${store.slug}.${rootDomain}/dashboard`;
                         }
 
-                        // If we have session data, pass it via hash to the subdomain
+                        // If we have session data, pass it via hash to the subdomain (or path)
                         // This allows the subdomain to set its own cookies (since we are now using strict host-only cookies)
                         if (authData.session) {
                             const { access_token, refresh_token } = authData.session;
-                            tenantUrl = `${protocol}//${store.slug}.${rootDomain}/sso#access_token=${access_token}&refresh_token=${refresh_token}&type=recovery`;
+
+                            if (isVercelDomain) {
+                                // For path-based, we might not strictly need SSO hash if cookies are shared on same domain?
+                                // Cookies on domain.vercel.app are shared with domain.vercel.app/s/slug
+                                // BUT, our middleware might expect the session refresh.
+                                // Let's keep the SSO flow for consistency or just redirect directly if cookies are set?
+                                // Supabase cookies are set on the current domain.
+                                // If we redirect to SAME domain (path based), cookies persist!
+                                tenantUrl = `${protocol}//${rootDomain}/s/${store.slug}/dashboard`;
+                            } else {
+                                // Cross-domain (subdomain) requires SSO hash
+                                tenantUrl = `${protocol}//${store.slug}.${rootDomain}/sso#access_token=${access_token}&refresh_token=${refresh_token}&type=recovery`;
+                            }
                         }
 
                         console.log('Redirecting to tenant URL:', tenantUrl);

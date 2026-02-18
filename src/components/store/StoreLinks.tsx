@@ -21,6 +21,7 @@ export function StoreLinks({ storeSlug, storeId, storeName }: StoreLinksProps) {
         subdomainStore: '',
         dashboard: '',
     });
+    const [currentMainDomain, setCurrentMainDomain] = useState('');
 
     useEffect(() => {
         const origin = window.location.origin;
@@ -53,15 +54,21 @@ export function StoreLinks({ storeSlug, storeId, storeName }: StoreLinksProps) {
         const protocol = window.location.protocol;
         const port = window.location.port ? `:${window.location.port}` : '';
 
-        // If main domain is localhost, we need special handling if we are physically ON a subdomain
-        // But usually we want: storeSlug.mainDomain
+        let subdomainUrl = '';
+        const isVercel = mainDomain.endsWith('.vercel.app');
 
-        let subdomainUrl = `${protocol}//${storeSlug}.${mainDomain}`;
-        if (mainDomain === 'localhost') {
-            subdomainUrl = `${protocol}//${storeSlug}.${mainDomain}${port}`;
-        } else if (port && !['80', '443'].includes(port)) {
-            // If we have a port in prod/dev (e.g. :3000), append it
-            subdomainUrl = `${subdomainUrl}${port}`;
+        if (isVercel) {
+            // Fallback for Vercel free tier: Use path routing
+            subdomainUrl = `${origin}/s/${storeSlug}`;
+        } else {
+            // Standard Subdomain Routing (Localhost or Custom Domain)
+            subdomainUrl = `${protocol}//${storeSlug}.${mainDomain}`;
+
+            if (mainDomain === 'localhost') {
+                subdomainUrl = `${protocol}//${storeSlug}.${mainDomain}${port}`;
+            } else if (port && !['80', '443'].includes(port)) {
+                subdomainUrl = `${subdomainUrl}${port}`;
+            }
         }
 
         setLinks({
@@ -69,6 +76,7 @@ export function StoreLinks({ storeSlug, storeId, storeName }: StoreLinksProps) {
             subdomainStore: subdomainUrl,
             dashboard: `${origin}/dashboard/${storeId}`,
         });
+        setCurrentMainDomain(mainDomain);
     }, [storeSlug, storeId]);
 
     const handleCopy = (text: string, label: string) => {
@@ -100,8 +108,12 @@ export function StoreLinks({ storeSlug, storeId, storeName }: StoreLinksProps) {
             <Alert className="bg-blue-50 border-blue-200">
                 <AlertDescription className="text-blue-900">
                     {language === 'ar'
-                        ? '✨ متجرك متاح عبر رابطين مختلفين. احفظ هذه الروابط!'
-                        : '✨ Your store is available via two different URLs. Save these links!'}
+                        ? (currentMainDomain.endsWith('.vercel.app')
+                            ? '✨ تم استخدام رابط المسار لأن النطاقات الفرعية تتطلب نطاقًا خاصًا على Vercel.'
+                            : '✨ متجرك متاح عبر رابطين مختلفين. احفظ هذه الروابط!')
+                        : (currentMainDomain.endsWith('.vercel.app')
+                            ? '✨ Path link used because subdomains require a custom domain on Vercel.'
+                            : '✨ Your store is available via two different URLs. Save these links!')}
                 </AlertDescription>
             </Alert>
 
