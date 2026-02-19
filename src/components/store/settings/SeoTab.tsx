@@ -88,7 +88,7 @@ export function SeoTab({ store, onSave }: SeoTabProps) {
                         {formData.seoTitleAr || store.name?.ar || 'Store Title'}
                     </p>
                     <p className="text-xs text-emerald-600 dark:text-emerald-400 truncate">
-                        {store.slug}.matjari.com
+                        {store.slug}.orderly.com
                     </p>
                     <p className="text-sm text-muted-foreground line-clamp-2">
                         {formData.seoDescriptionAr || store.description?.ar || 'Store description will appear here...'}

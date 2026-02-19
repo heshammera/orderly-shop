@@ -51,7 +51,7 @@ export function Pricing() {
   };
 
   const handleConfirmSignup = () => {
-    router.push('/auth?signup=true');
+    router.push('/signup');
   };
 
   if (loading) {

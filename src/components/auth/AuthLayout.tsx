@@ -28,7 +28,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
             </div>
           </Link>
           <h1 className="text-4xl font-bold mb-4 text-center">
-            {language === 'ar' ? 'متجري' : 'Matjari'}
+            {language === 'ar' ? 'أوردرلي' : 'Orderly'}
           </h1>
           <p className="text-xl opacity-90 text-center max-w-md">
             {language === 'ar'
@@ -47,7 +47,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
             <Store className="w-7 h-7 text-primary-foreground" />
           </div>
           <span className="text-2xl font-bold text-foreground">
-            {language === 'ar' ? 'متجري' : 'Matjari'}
+            {language === 'ar' ? 'أوردرلي' : 'Orderly'}
           </span>
         </Link>
 

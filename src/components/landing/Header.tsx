@@ -32,9 +32,9 @@ export function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">م</span>
+              <span className="text-primary-foreground font-bold text-lg">O</span>
             </div>
-            <span className="text-xl font-bold text-foreground">متجري</span>
+            <span className="text-xl font-bold text-foreground">Orderly</span>
           </Link>
 
           {/* Desktop Navigation */}

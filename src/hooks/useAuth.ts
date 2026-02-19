@@ -45,11 +45,14 @@ export function useAuth() {
     }, [supabase]);
 
     const signUp = useCallback(async (email: string, password: string, fullName: string, redirectTo?: string, metadata?: any) => {
+        const finalRedirectTo = redirectTo || window.location.origin;
+        console.log('[Auth] SignUp Redirect URL:', finalRedirectTo);
+
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
             options: {
-                emailRedirectTo: redirectTo || window.location.origin,
+                emailRedirectTo: finalRedirectTo,
                 data: {
                     full_name: fullName,
                     ...metadata

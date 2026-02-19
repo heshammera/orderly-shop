@@ -14,9 +14,9 @@ export function Footer() {
           <div className="col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4">
               <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">م</span>
+                <span className="text-primary-foreground font-bold text-lg">O</span>
               </div>
-              <span className="text-xl font-bold">متجري</span>
+              <span className="text-xl font-bold">Orderly</span>
             </Link>
             <p className="text-muted-foreground text-sm max-w-xs">
               {t.footer.description}
@@ -83,7 +83,7 @@ export function Footer() {
         {/* Bottom */}
         <div className="border-t border-border pt-8 text-center">
           <p className="text-muted-foreground text-sm">
-            © {new Date().getFullYear()} متجري. {t.footer.rights}.
+            © {new Date().getFullYear()} Orderly. {t.footer.rights}.
           </p>
         </div>
       </div>

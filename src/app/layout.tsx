@@ -8,12 +8,12 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Social Commerce Hub",
+  title: "Orderly - أوردرلي",
   description: "Arabic First Social Commerce Platform",
   manifest: "/manifest.json",
   appleWebApp: {
     statusBarStyle: "default",
-    title: "StoreHub",
+    title: "Orderly",
   },
   other: {
     "mobile-web-app-capable": "yes",

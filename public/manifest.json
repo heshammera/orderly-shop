@@ -1,6 +1,6 @@
 {
-    "name": "Social Commerce Hub",
-    "short_name": "Commerce Hub",
+    "name": "Orderly",
+    "short_name": "Orderly",
     "description": "Build and manage your social commerce store with AI-powered tools",
     "start_url": "/",
     "display": "standalone",

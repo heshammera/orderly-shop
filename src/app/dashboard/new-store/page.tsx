@@ -98,7 +98,7 @@ export default function CreateStorePage() {
                             </Label>
                             <Input
                                 id="name"
-                                placeholder={language === 'ar' ? 'مثال: متجري للملابس' : 'e.g. My Clothing Store'}
+                                placeholder={language === 'ar' ? 'مثال: أوردرلي للملابس' : 'e.g. My Clothing Store'}
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 required

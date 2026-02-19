@@ -204,7 +204,7 @@ export function DomainsTab({ store, onSave }: DomainsTabProps) {
                                         <code className="bg-background px-2 py-1 rounded">CNAME</code>
 
                                         <span className="text-muted-foreground">Value:</span>
-                                        <code className="bg-background px-2 py-1 rounded">domains.matjari.com</code>
+                                        <code className="bg-background px-2 py-1 rounded">domains.orderly.com</code>
                                     </div>
                                 </div>
                             )}

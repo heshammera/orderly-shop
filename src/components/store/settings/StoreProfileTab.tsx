@@ -213,7 +213,7 @@ export function StoreProfileTab({ store, onSave }: StoreProfileTabProps) {
             <div className="space-y-2">
                 <Label>{language === 'ar' ? 'رابط المتجر' : 'Store URL'}</Label>
                 <div className="flex items-center gap-2 p-3 rounded-md bg-muted text-muted-foreground">
-                    <span className="font-mono text-sm">{store.slug}.matjari.com</span>
+                    <span className="font-mono text-sm">{store.slug}.orderly.com</span>
                 </div>
                 <p className="text-xs text-muted-foreground">
                     {language === 'ar'
