@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -15,7 +15,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
-import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 const loginSchema = z.object({
@@ -36,10 +35,24 @@ function LoginFormContent() {
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
+    const verified = searchParams.get('verified') === 'true';
+    const emailParam = searchParams.get('email') || '';
+
+    // Show success toast if coming from email-verify
+    useEffect(() => {
+        if (verified) {
+            toast({
+                title: language === 'ar' ? 'تم التفعيل بنجاح' : 'Verified Successfully',
+                description: language === 'ar' ? 'يرجى تسجيل الدخول للبدء' : 'Please log in to continue',
+                className: 'bg-green-50 border-green-200 text-green-800'
+            });
+        }
+    }, [verified, language, toast]);
+
     const form = useForm<LoginForm>({
         resolver: zodResolver(loginSchema),
         defaultValues: {
-            email: '',
+            email: emailParam,
             password: '',
         },
     });
@@ -212,18 +225,11 @@ function LoginFormContent() {
                             const { access_token, refresh_token } = authData.session;
 
                             if (isVercelDomain) {
-                                // For path-based, we might not strictly need SSO hash if cookies are shared on same domain?
-                                // Cookies on domain.vercel.app are shared with domain.vercel.app/s/slug
-                                // BUT, our middleware might expect the session refresh.
-                                // Let's keep the SSO flow for consistency or just redirect directly if cookies are set?
-                                // Supabase cookies are set on the current domain.
-                                // If we redirect to SAME domain (path based), cookies persist!
+                                // For path-based, we don't need SSO hash because cookies are shared on the same domain
                                 tenantUrl = `${protocol}//${rootDomain}/s/${store.slug}/dashboard`;
                             } else {
                                 // Cross-domain (subdomain) requires SSO hash
-                                // Since /sso page is missing, we redirect to /dashboard
-                                // User might need to login again if cookies don't share, but better than 404
-                                tenantUrl = `${protocol}//${store.slug}.${rootDomain}/dashboard`;
+                                tenantUrl = `${protocol}//${store.slug}.${rootDomain}/sso#access_token=${access_token}&refresh_token=${refresh_token}`;
                             }
                         }
 

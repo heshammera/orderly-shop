@@ -142,13 +142,13 @@ export default function DashboardPage() {
                         if (host.includes('.localhost')) {
                             rootDomain = host.substring(host.indexOf('.') + 1);
                         }
-                        targetUrl = `${protocol}//${store.slug}.${rootDomain}/dashboard`;
+                        targetUrl = `${protocol}//${store.slug}.${rootDomain}/sso#access_token=${session.access_token}&refresh_token=${session.refresh_token}`;
                     } else {
                         const parts = host.split('.');
                         if (parts.length > 2) {
                             rootDomain = parts.slice(1).join('.');
                         }
-                        targetUrl = `${protocol}//${store.slug}.${rootDomain}/dashboard`;
+                        targetUrl = `${protocol}//${store.slug}.${rootDomain}/sso#access_token=${session.access_token}&refresh_token=${session.refresh_token}`;
                     }
 
                     window.location.href = targetUrl;
@@ -191,7 +191,7 @@ export default function DashboardPage() {
             }
         }
 
-        return `${protocol}//${slug}.${rootDomain}/dashboard`;
+        return `${protocol}//${slug}.${rootDomain}/sso#access_token=${session.access_token}&refresh_token=${session.refresh_token}`;
     };
 
     return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Eye, EyeOff, Store, User, ArrowRight, ArrowLeft, Check } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Store, User, ArrowRight, ArrowLeft, Check, Phone, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -22,6 +22,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 const step1Schema = z.object({
     fullName: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().email("Invalid email address"),
+    phone: z.string().optional().refine((val) => !val || /^\+?[1-9]\d{6,14}$/.test(val.replace(/\s/g, '')), {
+        message: "Invalid phone number format (e.g. +966512345678)"
+    }),
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string().min(6, "Password must be at least 6 characters"),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -55,6 +58,11 @@ function SignupFormContent() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+    // Slug availability state
+    const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+    const [slugSuggestions, setSlugSuggestions] = useState<string[]>([]);
+    const slugCheckTimer = useRef<NodeJS.Timeout | null>(null);
+
     // Initialize form with combined schema, but we'll validate per step
     const form = useForm<SignupFormValues>({
         resolver: zodResolver(signupSchema),
@@ -62,6 +70,7 @@ function SignupFormContent() {
         defaultValues: {
             fullName: '',
             email: '',
+            phone: '',
             password: '',
             confirmPassword: '',
             storeName: '',
@@ -70,6 +79,37 @@ function SignupFormContent() {
     });
 
     const { trigger, watch, setValue } = form;
+
+    // Check slug availability
+    const checkSlugAvailability = useCallback(async (slug: string) => {
+        if (!slug || slug.length < 3) {
+            setSlugStatus('idle');
+            setSlugSuggestions([]);
+            return;
+        }
+
+        setSlugStatus('checking');
+        try {
+            const res = await fetch(`/api/auth/check-slug?slug=${encodeURIComponent(slug)}`);
+            const data = await res.json();
+
+            if (data.available) {
+                setSlugStatus('available');
+                setSlugSuggestions([]);
+            } else {
+                setSlugStatus('taken');
+                setSlugSuggestions(data.suggestions || []);
+            }
+        } catch {
+            setSlugStatus('idle');
+        }
+    }, []);
+
+    // Debounced slug check
+    const debouncedSlugCheck = useCallback((slug: string) => {
+        if (slugCheckTimer.current) clearTimeout(slugCheckTimer.current);
+        slugCheckTimer.current = setTimeout(() => checkSlugAvailability(slug), 500);
+    }, [checkSlugAvailability]);
 
     // Auto-generate slug from store name
     // eslint-disable-next-line
@@ -83,18 +123,38 @@ function SignupFormContent() {
                 .replace(/[^a-z0-9]+/g, '-')
                 .replace(/^-+|-+$/g, '');
             setValue("storeSlug", slug, { shouldValidate: true });
+            debouncedSlugCheck(slug);
         }
     };
 
+    // Watch storeSlug for manual changes
+    const storeSlug = watch("storeSlug");
+    useEffect(() => {
+        if (step === 2 && storeSlug && storeSlug.length >= 3) {
+            debouncedSlugCheck(storeSlug);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [storeSlug, step]);
+
     const handleNextStep = async () => {
         const fieldsToValidate = step === 1
-            ? ['fullName', 'email', 'password', 'confirmPassword'] as const
+            ? ['fullName', 'email', 'phone', 'password', 'confirmPassword'] as const
             : ['storeName', 'storeSlug'] as const;
 
         // @ts-ignore
         const isStepValid = await trigger(fieldsToValidate); // Validate only current step fields
 
         if (isStepValid) {
+            if (step === 2 && slugStatus === 'taken') {
+                toast({
+                    title: language === 'ar' ? 'رابط المتجر مُستخدم' : 'Store URL is taken',
+                    description: language === 'ar'
+                        ? 'اختر رابطاً آخر من الاقتراحات أو اكتب رابطاً جديداً'
+                        : 'Choose a suggestion or enter a different URL',
+                    variant: 'destructive',
+                });
+                return;
+            }
             setStep(s => s + 1);
         }
     };
@@ -104,6 +164,17 @@ function SignupFormContent() {
     };
 
     const onSubmit = async (data: SignupFormValues) => {
+        // Block submission if slug is taken
+        if (slugStatus === 'taken') {
+            toast({
+                title: language === 'ar' ? 'رابط المتجر مُستخدم' : 'Store URL is taken',
+                description: language === 'ar'
+                    ? 'اختر رابطاً آخر من الاقتراحات أو اكتب رابطاً جديداً'
+                    : 'Choose a suggestion or enter a different URL',
+                variant: 'destructive',
+            });
+            return;
+        }
         setLoading(true);
         try {
             // Check if email exists first
@@ -123,7 +194,7 @@ function SignupFormContent() {
             const redirect = searchParams.get('redirect');
 
             // Pass store metadata to signUp
-            const { error } = await signUp(
+            const { error, data: signUpData } = await signUp(
                 data.email,
                 data.password,
                 data.fullName,
@@ -143,13 +214,21 @@ function SignupFormContent() {
             } else {
                 toast({
                     title: t.auth.signup.success,
-                    description: language === 'ar' ? 'تم إنشاء الحساب بنجاح. يرجى تفعيل البريد الإلكتروني.' : 'Account created. Please verify your email.',
+                    description: language === 'ar' ? 'تم إنشاء الحساب بنجاح. يرجى تفعيل حسابك.' : 'Account created. Please verify your account.',
                     className: 'bg-green-50 border-green-200 text-green-800'
                 });
 
-                // Redirect to Verify Email Page instead of login
+                // Redirect to Verify Page with userId, phone (if provided)
                 const redirectParam = searchParams.get('redirect');
-                router.push(redirectParam ? `/email-verify?redirect=${encodeURIComponent(redirectParam)}` : '/email-verify');
+                const verifyParams = new URLSearchParams();
+                if (redirectParam) verifyParams.set('redirect', redirectParam);
+                if (data.phone) verifyParams.set('phone', data.phone);
+                // Pass userId and email so verify page can send OTP without needing a session
+                const newUserId = (signUpData as any)?.user?.id;
+                if (newUserId) verifyParams.set('uid', newUserId);
+                if (data.email) verifyParams.set('email', data.email);
+                const queryString = verifyParams.toString();
+                router.push(`/email-verify${queryString ? `?${queryString}` : ''}`);
             }
         } finally {
             setLoading(false);
@@ -229,6 +308,33 @@ function SignupFormContent() {
                                                         <Input className="pl-3 rtl:pr-3" type="email" placeholder={t.auth.signup.emailPlaceholder} {...field} />
                                                     </div>
                                                 </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="phone"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>
+                                                    {language === 'ar' ? 'رقم الهاتف (اختياري - للتفعيل عبر واتساب)' : 'Phone (optional - for WhatsApp verification)'}
+                                                </FormLabel>
+                                                <FormControl>
+                                                    <div className="relative">
+                                                        <Phone className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground rtl:right-3 rtl:left-auto" />
+                                                        <Input
+                                                            className="pl-9 rtl:pr-9 rtl:pl-3"
+                                                            type="tel"
+                                                            dir="ltr"
+                                                            placeholder="+966512345678"
+                                                            {...field}
+                                                        />
+                                                    </div>
+                                                </FormControl>
+                                                <FormDescription>
+                                                    {language === 'ar' ? 'أدخل رقمك مع رمز الدولة للتفعيل عبر واتساب' : 'Enter with country code for WhatsApp verification'}
+                                                </FormDescription>
                                                 <FormMessage />
                                             </FormItem>
                                         )}
@@ -332,16 +438,76 @@ function SignupFormContent() {
                                                         <span className="text-sm text-muted-foreground bg-muted p-2.5 rounded-s-md border border-e-0">
                                                             /
                                                         </span>
-                                                        <Input
-                                                            className="rounded-s-none"
-                                                            placeholder="my-store"
-                                                            {...field}
-                                                        />
+                                                        <div className="relative flex-1">
+                                                            <Input
+                                                                className="rounded-s-none pr-10"
+                                                                placeholder="my-store"
+                                                                {...field}
+                                                                onChange={(e) => {
+                                                                    field.onChange(e);
+                                                                    debouncedSlugCheck(e.target.value);
+                                                                }}
+                                                            />
+                                                            {/* Status Icon */}
+                                                            <div className="absolute end-3 top-1/2 -translate-y-1/2">
+                                                                {slugStatus === 'checking' && (
+                                                                    <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                                                                )}
+                                                                {slugStatus === 'available' && (
+                                                                    <CheckCircle2 className="w-4 h-4 text-green-600" />
+                                                                )}
+                                                                {slugStatus === 'taken' && (
+                                                                    <AlertCircle className="w-4 h-4 text-red-500" />
+                                                                )}
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </FormControl>
-                                                <FormDescription>
-                                                    {language === 'ar' ? 'يجب أن يكون بالإنجليزية، بدون مسافات (استخدم -)' : 'Must be in English, no spaces (use -)'}
-                                                </FormDescription>
+
+                                                {/* Availability Message */}
+                                                {slugStatus === 'available' && (
+                                                    <p className="text-xs text-green-600 font-medium flex items-center gap-1 mt-1">
+                                                        <CheckCircle2 className="w-3 h-3" />
+                                                        {language === 'ar' ? 'هذا الرابط متاح ✓' : 'This URL is available ✓'}
+                                                    </p>
+                                                )}
+                                                {slugStatus === 'taken' && (
+                                                    <div className="mt-1.5 space-y-2">
+                                                        <p className="text-xs text-red-500 font-medium flex items-center gap-1">
+                                                            <AlertCircle className="w-3 h-3" />
+                                                            {language === 'ar' ? 'هذا الرابط مُستخدم بالفعل' : 'This URL is already taken'}
+                                                        </p>
+                                                        {slugSuggestions.length > 0 && (
+                                                            <div className="bg-muted/50 rounded-lg p-2.5 space-y-1.5">
+                                                                <p className="text-xs text-muted-foreground font-medium">
+                                                                    {language === 'ar' ? '💡 اقتراحات متاحة:' : '💡 Available suggestions:'}
+                                                                </p>
+                                                                <div className="flex flex-wrap gap-1.5">
+                                                                    {slugSuggestions.map((suggestion) => (
+                                                                        <button
+                                                                            key={suggestion}
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                setValue("storeSlug", suggestion, { shouldValidate: true });
+                                                                                setSlugStatus('available');
+                                                                                setSlugSuggestions([]);
+                                                                            }}
+                                                                            className="text-xs px-2.5 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 hover:border-primary/40 transition-all font-medium cursor-pointer"
+                                                                        >
+                                                                            {suggestion}
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {slugStatus === 'idle' && (
+                                                    <FormDescription>
+                                                        {language === 'ar' ? 'يجب أن يكون بالإنجليزية، بدون مسافات (استخدم -)' : 'Must be in English, no spaces (use -)'}
+                                                    </FormDescription>
+                                                )}
                                                 <FormMessage />
                                             </FormItem>
                                         )}

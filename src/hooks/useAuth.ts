@@ -45,22 +45,35 @@ export function useAuth() {
     }, [supabase]);
 
     const signUp = useCallback(async (email: string, password: string, fullName: string, redirectTo?: string, metadata?: any) => {
-        const finalRedirectTo = redirectTo || window.location.origin;
-        console.log('[Auth] SignUp Redirect URL:', finalRedirectTo);
+        try {
+            // Call our custom admin registration endpoint to bypass the 2 emails/hour Supabase limit
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email,
+                    password,
+                    fullName,
+                    metadata
+                }),
+            });
 
-        const { data, error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                emailRedirectTo: finalRedirectTo,
-                data: {
-                    full_name: fullName,
-                    ...metadata
-                },
-            },
-        });
-        return { data, error };
-    }, [supabase]);
+            const result = await response.json();
+
+            if (!response.ok) {
+                return { data: null, error: new Error(result.error || 'Registration failed') };
+            }
+
+            // Return a format that matches the Supabase signUp response so the frontend doesn't break
+            return {
+                data: { user: result.user, session: null },
+                error: null
+            };
+        } catch (error: any) {
+            console.error('[Auth] Custom SignUp Error:', error);
+            return { data: null, error };
+        }
+    }, []);
 
     const signIn = useCallback(async (email: string, password: string) => {
         const { data, error } = await supabase.auth.signInWithPassword({
