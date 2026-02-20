@@ -170,10 +170,13 @@ export default function SelectPlanPage() {
 
             toast({
                 title: language === 'ar' ? 'تم الاشتراك بنجاح' : 'Subscribed Successfully',
-                description: language === 'ar' ? 'تم تفعيل باقتك المجانية.' : 'Your free plan is now active.',
+                description: language === 'ar' ? 'تم تفعيل باقتك المجانية. يرجى تسجيل الدخول الآن للبدء.' : 'Your free plan is now active. Please log in to start.',
                 className: 'bg-green-50 border-green-200 text-green-800'
             });
-            router.push('/dashboard');
+
+            // Sign out the pseudo-session used for setup and force a fresh login
+            await supabase.auth.signOut();
+            router.push('/login');
         } catch (err: any) {
             toast({ title: 'Error', description: err.message, variant: 'destructive' });
         } finally {

@@ -169,11 +169,19 @@ function LoginFormContent() {
                 try {
                     const { data: store } = await supabase
                         .from('stores')
-                        .select('slug')
+                        .select('slug, status')
                         .eq('owner_id', authData.user?.id) // Use authData from signIn
                         .single();
 
                     if (store && store.slug) {
+
+                        // Handle pending plan redirect immediately on main domain
+                        if (store.status === 'pending_plan') {
+                            console.log('User store is pending plan, redirecting to select-plan');
+                            router.push('/select-plan');
+                            return;
+                        }
+
                         // Determine root domain
                         // This logic assumes we are running on standard ports or domains setup
                         const protocol = window.location.protocol;
