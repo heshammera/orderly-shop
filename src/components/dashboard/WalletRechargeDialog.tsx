@@ -51,7 +51,7 @@ export function WalletRechargeDialog({
     const [senderPhone, setSenderPhone] = useState('');
     const [proofFile, setProofFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
-    const [walletNumber, setWalletNumber] = useState<string>('');
+    const [activeWallets, setActiveWallets] = useState<any[]>([]);
     const [walletLoading, setWalletLoading] = useState(true);
 
     // Fetch active wallet number from settings
@@ -64,10 +64,10 @@ export function WalletRechargeDialog({
                 if (error) throw error;
 
                 const wallets = data?.wallets || [];
-                const activeWallet = wallets.find((w: any) => w.active);
+                const active = wallets.filter((w: any) => w.active);
 
-                if (activeWallet) {
-                    setWalletNumber(activeWallet.number);
+                if (active.length > 0) {
+                    setActiveWallets(active);
                 }
             } catch (error) {
                 console.error('Error fetching wallet:', error);
@@ -210,13 +210,13 @@ export function WalletRechargeDialog({
                     <div className="flex justify-center py-8">
                         <Loader2 className="w-8 h-8 animate-spin text-primary" />
                     </div>
-                ) : !walletNumber ? (
+                ) : activeWallets.length === 0 ? (
                     <Alert variant="destructive">
                         <AlertTriangle className="h-4 w-4" />
                         <AlertDescription>
                             {language === 'ar'
-                                ? 'لا يوجد رقم محفظة مُعد. يرجى الاتصال بالدعم.'
-                                : 'No wallet number configured. Please contact support.'}
+                                ? 'لا توجد محافظ نشطة مُعدة. يرجى الاتصال بالدعم.'
+                                : 'No active wallets configured. Please contact support.'}
                         </AlertDescription>
                     </Alert>
                 ) : (
@@ -245,11 +245,15 @@ export function WalletRechargeDialog({
                             <AlertDescription className="mt-2 space-y-3">
                                 <div className="space-y-1">
                                     <p className="font-semibold text-blue-900 dark:text-blue-100">
-                                        {language === 'ar' ? '📱 رقم المحفظة:' : '📱 Wallet Number:'}
+                                        {language === 'ar' ? '📱 أرقام المحافظ المتاحة:' : '📱 Available Wallet Numbers:'}
                                     </p>
-                                    <p className="text-lg font-bold font-mono text-blue-700 dark:text-blue-300" dir="ltr">
-                                        {walletNumber}
-                                    </p>
+                                    <div className="space-y-2 py-1">
+                                        {activeWallets.map((wallet: any, index: number) => (
+                                            <p key={index} className="text-lg font-bold font-mono text-blue-700 dark:text-blue-300" dir="ltr">
+                                                {wallet.number}
+                                            </p>
+                                        ))}
+                                    </div>
                                 </div>
 
                                 <div className="pt-2 border-t border-blue-200 dark:border-blue-800 space-y-1">
@@ -324,7 +328,7 @@ export function WalletRechargeDialog({
                 <DialogFooter>
                     <Button
                         onClick={handleSubmit}
-                        disabled={loading || walletLoading || rateLoading || !walletNumber}
+                        disabled={loading || walletLoading || rateLoading || activeWallets.length === 0}
                         className="w-full sm:w-auto"
                     >
                         {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}

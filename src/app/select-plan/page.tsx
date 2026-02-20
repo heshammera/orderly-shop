@@ -25,7 +25,7 @@ export default function SelectPlanPage() {
     const [storeId, setStoreId] = useState<string | null>(null);
     const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
     const [selectedPlan, setSelectedPlan] = useState<any | null>(null); // For modal
-    const [walletNumber, setWalletNumber] = useState<string | null>(null);
+    const [activeWallets, setActiveWallets] = useState<any[]>([]);
 
     // Payment Form State
     const [receiptFile, setReceiptFile] = useState<File | null>(null);
@@ -90,8 +90,8 @@ export default function SelectPlanPage() {
                 // Fetch Wallet Settings
                 const { data: settingsData } = await supabase.rpc('get_setting', { setting_key: 'payment_wallets' });
                 if (settingsData && settingsData.wallets) {
-                    const active = settingsData.wallets.find((w: any) => w.active);
-                    if (active) setWalletNumber(active.number);
+                    const active = settingsData.wallets.filter((w: any) => w.active);
+                    if (active.length > 0) setActiveWallets(active);
                 }
 
             } catch (error) {
@@ -344,13 +344,17 @@ export default function SelectPlanPage() {
                     <div className="space-y-4 py-4">
                         <div className="p-4 bg-muted rounded-lg text-sm space-y-2">
                             <p className="font-semibold">{language === 'ar' ? 'بيانات المحفظة الإلكترونية:' : 'Electronic Wallet Details:'}</p>
-                            {walletNumber ? (
+                            {activeWallets.length > 0 ? (
                                 <>
-                                    <p className="text-xl font-bold font-mono py-2 text-primary" dir="ltr">{walletNumber}</p>
+                                    <div className="space-y-2 py-2">
+                                        {activeWallets.map((wallet: any, index: number) => (
+                                            <p key={index} className="text-xl font-bold font-mono text-primary" dir="ltr">{wallet.number}</p>
+                                        ))}
+                                    </div>
                                     <p className="text-sm text-gray-500">
                                         {language === 'ar'
-                                            ? 'يرجى تحويل المبلغ الموضح أعلاه إلى هذا الرقم'
-                                            : 'Please transfer the amount above to this number'}
+                                            ? 'يرجى تحويل المبلغ الموضح أعلاه إلى أحد هذه الأرقام'
+                                            : 'Please transfer the amount above to one of these numbers'}
                                     </p>
                                 </>
                             ) : (

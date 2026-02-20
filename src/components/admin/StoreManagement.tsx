@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, Search, Ban, CheckCircle, Edit, CreditCard, DollarSign, MoreHorizontal, ShieldAlert, Lock } from 'lucide-react';
+import { Loader2, Search, Ban, CheckCircle, Edit, CreditCard, DollarSign, MoreHorizontal, ShieldAlert, Lock, Trash2, AlertTriangle } from 'lucide-react';
 import {
     Dialog,
     DialogContent,
@@ -66,6 +66,7 @@ export function StoreManagement() {
     // State for modals
     const [editingStore, setEditingStore] = useState<any>(null); // For Commission/Settings
     const [statusEditStore, setStatusEditStore] = useState<any>(null); // For Status/Plan
+    const [deleteStore, setDeleteStore] = useState<any>(null); // For Deletion
     const [rechargeStore, setRechargeStore] = useState<any>(null);
     const [rechargeAmount, setRechargeAmount] = useState('');
     const [rechargeType, setRechargeType] = useState<'add' | 'deduct'>('add');
@@ -164,6 +165,21 @@ export function StoreManagement() {
             queryClient.invalidateQueries({ queryKey: ['admin-stores'] });
             setEditingStore(null);
             toast({ title: language === 'ar' ? 'تم تحديث الإعدادات' : 'Commission settings updated' });
+        },
+        onError: (error) => {
+            toast({ title: 'Error', description: error.message, variant: 'destructive' });
+        }
+    });
+
+    const deleteStoreMutation = useMutation({
+        mutationFn: async (id: string) => {
+            const { error } = await supabase.from('stores').delete().eq('id', id);
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['admin-stores'] });
+            setDeleteStore(null);
+            toast({ title: language === 'ar' ? 'تم حذف المتجر بنجاح' : 'Store deleted successfully' });
         },
         onError: (error) => {
             toast({ title: 'Error', description: error.message, variant: 'destructive' });
@@ -381,6 +397,10 @@ export function StoreManagement() {
                                                 <DropdownMenuItem onClick={() => handleStatusEditClick(store)}>
                                                     <ShieldAlert className="ml-2 h-4 w-4" /> {language === 'ar' ? 'تعديل الحالة/الباقة' : 'Edit Status/Plan'}
                                                 </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem onClick={() => setDeleteStore(store)} className="text-destructive focus:bg-destructive focus:text-destructive-foreground">
+                                                    <Trash2 className="ml-2 h-4 w-4" /> {language === 'ar' ? 'حذف المتجر نهائياً' : 'Delete Store Permanently'}
+                                                </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </TableCell>
@@ -576,6 +596,38 @@ export function StoreManagement() {
                         >
                             {manualRechargeMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {rechargeType === 'add' ? (language === 'ar' ? 'إضافة الرصيد' : 'Add Funds') : (language === 'ar' ? 'خصم الرصيد' : 'Deduct Funds')}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Store Confirmation Dialog */}
+            <Dialog open={!!deleteStore} onOpenChange={(open) => !open && setDeleteStore(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <div className="flex items-center gap-2 text-destructive mb-2">
+                            <AlertTriangle className="w-5 h-5" />
+                            <DialogTitle>
+                                {language === 'ar' ? 'تأكيد حذف المتجر' : 'Confirm Store Deletion'}
+                            </DialogTitle>
+                        </div>
+                        <DialogDescription>
+                            {language === 'ar'
+                                ? `هل أنت متأكد من حذف هذا المتجر نهائياً؟ التحذير: سيتم حذف جميع المنتجات والطلبات والبيانا المرتبطة به ولا يمكن استعادتها.`
+                                : `Are you sure you want to permanently delete this store? Warning: All products, orders, and associated data will be removed and cannot be recovered.`}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="flex-col-reverse sm:flex-row gap-2 mt-4">
+                        <Button variant="outline" disabled={deleteStoreMutation.isPending} onClick={() => setDeleteStore(null)}>
+                            {language === 'ar' ? 'إلغاء' : 'Cancel'}
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            disabled={deleteStoreMutation.isPending}
+                            onClick={() => deleteStoreMutation.mutate(deleteStore.id)}
+                        >
+                            {deleteStoreMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin rtl:ml-2" /> : <Trash2 className="mr-2 h-4 w-4 rtl:ml-2" />}
+                            {language === 'ar' ? 'تأكيد الحذف' : 'Confirm Deletion'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
