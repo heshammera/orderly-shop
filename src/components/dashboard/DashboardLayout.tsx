@@ -173,6 +173,12 @@ export function DashboardLayout({
             show: isEditor,
         },
         {
+            icon: Users,
+            label: language === 'ar' ? 'دعوة التجار (أرباح)' : 'Refer & Earn',
+            href: `/dashboard/${storeId}/referrals`,
+            show: isOwner,
+        },
+        {
             icon: Paintbrush,
             label: language === 'ar' ? 'محرر المتجر' : 'Store Editor',
             href: `/dashboard/${storeId}/editor`,

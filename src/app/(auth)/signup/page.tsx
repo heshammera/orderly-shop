@@ -38,6 +38,7 @@ const step2Schema = z.object({
     storeSlug: z.string()
         .min(3, "Store URL must be at least 3 characters")
         .regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers, and hyphens are allowed"),
+    referralCode: z.string().optional(),
 });
 
 // Combined Schema
@@ -75,6 +76,7 @@ function SignupFormContent() {
             confirmPassword: '',
             storeName: '',
             storeSlug: '',
+            referralCode: searchParams.get('ref') || '',
         },
     });
 
@@ -201,7 +203,8 @@ function SignupFormContent() {
                 redirect ? `${window.location.origin}${redirect}` : undefined,
                 {
                     store_name: data.storeName,
-                    store_slug: data.storeSlug
+                    store_slug: data.storeSlug,
+                    referral_code: data.referralCode
                 }
             );
 
@@ -508,6 +511,26 @@ function SignupFormContent() {
                                                         {language === 'ar' ? 'يجب أن يكون بالإنجليزية، بدون مسافات (استخدم -)' : 'Must be in English, no spaces (use -)'}
                                                     </FormDescription>
                                                 )}
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="referralCode"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>{language === 'ar' ? 'كود الدعوة (اختياري)' : 'Referral Code (Optional)'}</FormLabel>
+                                                <FormControl>
+                                                    <div className="relative">
+                                                        <Input
+                                                            className="pl-3 rtl:pr-3 uppercase"
+                                                            placeholder={language === 'ar' ? 'مثال: REF-ABCDEF' : 'Ex: REF-ABCDEF'}
+                                                            {...field}
+                                                        />
+                                                    </div>
+                                                </FormControl>
+                                                <FormDescription>{language === 'ar' ? 'أدخل كود الدعوة لتحصل على رصيد ترحيبي' : 'Enter referral code to get a welcome bonus'}</FormDescription>
                                                 <FormMessage />
                                             </FormItem>
                                         )}
