@@ -18,6 +18,7 @@ import { AITranslator } from '@/components/dashboard/AITranslator';
 import { Sparkles, Languages, Search } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ImageUpload } from '@/components/dashboard/ImageUpload';
+import { VariantEditor } from '@/components/dashboard/VariantEditor';
 
 interface ProductFormProps {
     storeId: string;
@@ -31,6 +32,7 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
     const supabase = createClient();
     const { language } = useLanguage();
     const [loading, setLoading] = useState(false);
+    const [variants, setVariants] = useState<any[]>([]);
 
     // Helper to parse JSON fields safely
     const parseField = (field: any, key: string) => {
@@ -105,21 +107,68 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                 }
             };
 
-            let error;
+            let savedProductId = initialData?.id;
+
             if (initialData) {
                 const { error: updateError } = await supabase
                     .from('products')
                     .update(payload)
                     .eq('id', initialData.id);
-                error = updateError;
+                if (updateError) throw updateError;
             } else {
-                const { error: insertError } = await supabase
+                const { data, error: insertError } = await supabase
                     .from('products')
-                    .insert(payload);
-                error = insertError;
+                    .insert(payload)
+                    .select()
+                    .single();
+                if (insertError) throw insertError;
+                savedProductId = data.id;
             }
 
-            if (error) throw error;
+            // Save Variants
+            if (savedProductId && (variants.length > 0 || initialData)) {
+                // Delete existing variants (cascade deletes options)
+                await supabase.from('product_variants').delete().eq('product_id', savedProductId);
+
+                // Insert new variants
+                for (let i = 0; i < variants.length; i++) {
+                    const v = variants[i];
+                    if (!v.name.ar && !v.name.en) continue;
+
+                    const { data: insertedVariant, error: vError } = await supabase
+                        .from('product_variants')
+                        .insert({
+                            product_id: savedProductId,
+                            name: v.name,
+                            display_type: v.display_type,
+                            option_type: v.option_type,
+                            required: v.required,
+                            sort_order: i
+                        })
+                        .select()
+                        .single();
+
+                    if (vError) throw vError;
+
+                    // Insert options
+                    if (v.options && v.options.length > 0) {
+                        const optionPayloads = v.options.map((o: any, j: number) => ({
+                            variant_id: insertedVariant.id,
+                            label: o.label,
+                            value: o.value || (o.label.ar || o.label.en),
+                            price_modifier: o.price_modifier || 0,
+                            is_default: o.is_default,
+                            sort_order: j
+                        }));
+
+                        const { error: oError } = await supabase
+                            .from('variant_options')
+                            .insert(optionPayloads);
+
+                        if (oError) throw oError;
+                    }
+                }
+            }
 
             toast.success(initialData ? (language === 'ar' ? 'تم تحديث المنتج بنجاح! 🎉' : 'Product updated successfully! 🎉') : (language === 'ar' ? 'تم إنشاء المنتج بنجاح! 🎉' : 'Product created successfully! 🎉'));
             if (onSuccess) onSuccess();
@@ -308,6 +357,15 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                                 />
                             </div>
                         </div>
+                    </div>
+
+                    <div className="border-t pt-6">
+                        <VariantEditor
+                            productId={initialData?.id}
+                            value={variants}
+                            onChange={setVariants}
+                            standalone={false}
+                        />
                     </div>
 
                 </CardContent>

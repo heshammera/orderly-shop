@@ -39,18 +39,35 @@ interface Variant {
 }
 
 interface VariantEditorProps {
-    productId: string;
+    productId?: string;
+    value?: Variant[];
+    onChange?: (variants: Variant[]) => void;
+    standalone?: boolean;
 }
 
-export function VariantEditor({ productId }: VariantEditorProps) {
+export function VariantEditor({ productId, value, onChange, standalone = true }: VariantEditorProps) {
     const { language } = useLanguage();
     const supabase = createClient();
-    const [variants, setVariants] = useState<Variant[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [localVariants, setLocalVariants] = useState<Variant[]>([]);
+    const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
 
+    const variants = value !== undefined ? value : localVariants;
+
+    const handleVariantsChange = (newVariants: Variant[]) => {
+        setLocalVariants(newVariants);
+        if (onChange) {
+            onChange(newVariants);
+        }
+    };
+
     useEffect(() => {
-        fetchVariants();
+        if (productId && standalone) {
+            fetchVariants();
+        } else if (productId && !standalone && variants.length === 0) {
+            // Fetch once to populate parent state if we are editing
+            fetchVariants();
+        }
     }, [productId]);
 
     const fetchVariants = async () => {
@@ -87,12 +104,12 @@ export function VariantEditor({ productId }: VariantEditorProps) {
                 }))
         }));
 
-        setVariants(mapped);
+        handleVariantsChange(mapped);
         setLoading(false);
     };
 
     const addVariant = () => {
-        setVariants([...variants, {
+        handleVariantsChange([...variants, {
             name: { ar: '', en: '' },
             display_type: 'buttons',
             option_type: 'text',
@@ -104,15 +121,15 @@ export function VariantEditor({ productId }: VariantEditorProps) {
     };
 
     const removeVariant = (index: number) => {
-        setVariants(variants.filter((_, i) => i !== index));
+        handleVariantsChange(variants.filter((_, i) => i !== index));
     };
 
-    const updateVariant = (index: number, field: string, value: any) => {
-        setVariants(variants.map((v, i) => i === index ? { ...v, [field]: value } : v));
+    const updateVariant = (index: number, field: string, val: any) => {
+        handleVariantsChange(variants.map((v, i) => i === index ? { ...v, [field]: val } : v));
     };
 
     const addOption = (variantIndex: number) => {
-        setVariants(variants.map((v, i) => {
+        handleVariantsChange(variants.map((v, i) => {
             if (i !== variantIndex) return v;
             return {
                 ...v,
@@ -128,23 +145,24 @@ export function VariantEditor({ productId }: VariantEditorProps) {
     };
 
     const removeOption = (variantIndex: number, optionIndex: number) => {
-        setVariants(variants.map((v, i) => {
+        handleVariantsChange(variants.map((v, i) => {
             if (i !== variantIndex) return v;
             return { ...v, options: v.options.filter((_, j) => j !== optionIndex) };
         }));
     };
 
-    const updateOption = (variantIndex: number, optionIndex: number, field: string, value: any) => {
-        setVariants(variants.map((v, i) => {
+    const updateOption = (variantIndex: number, optionIndex: number, field: string, val: any) => {
+        handleVariantsChange(variants.map((v, i) => {
             if (i !== variantIndex) return v;
             return {
                 ...v,
-                options: v.options.map((o, j) => j === optionIndex ? { ...o, [field]: value } : o)
+                options: v.options.map((o, j) => j === optionIndex ? { ...o, [field]: val } : o)
             };
         }));
     };
 
     const handleSave = async () => {
+        if (!productId) return;
         setSaving(true);
         try {
             // Delete existing variants (cascade deletes options)
@@ -385,7 +403,7 @@ export function VariantEditor({ productId }: VariantEditorProps) {
                     </div>
                 ))}
 
-                {variants.length > 0 && (
+                {standalone && variants.length > 0 && (
                     <Button type="button" onClick={handleSave} disabled={saving} className="w-full">
                         {saving
                             ? (language === 'ar' ? 'جاري الحفظ...' : 'Saving...')
