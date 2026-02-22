@@ -155,13 +155,19 @@ export function StoreManagement() {
 
     const updateCommissionMutation = useMutation({
         mutationFn: async (data: any) => {
-            const { error } = await supabase.from('stores').update({
-                commission_type: data.type,
-                commission_value: data.value,
-                has_unlimited_balance: data.unlimited,
-                has_removed_copyright: data.has_removed_copyright
-            }).eq('id', data.id);
-            if (error) throw error;
+            const res = await fetch('/api/admin/store-commission', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    store_id: data.id,
+                    commission_type: data.type,
+                    commission_value: data.value,
+                    has_unlimited_balance: data.unlimited,
+                    has_removed_copyright: data.has_removed_copyright
+                })
+            });
+            const result = await res.json();
+            if (!res.ok) throw new Error(result.error || 'Failed to update');
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin-stores'] });
