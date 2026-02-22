@@ -60,7 +60,7 @@ export function AdminSidebar() {
         },
         {
             icon: Wallet,
-            label: language === 'ar' ? 'إعدادات المحافظ' : 'Wallet Settings',
+            label: language === 'ar' ? 'المحافظ ورسوم المنصة' : 'Wallets & Platform Fees',
             href: '/admin/wallet-settings',
         },
         {
@@ -77,6 +77,11 @@ export function AdminSidebar() {
             icon: Users,
             label: language === 'ar' ? 'الاشتراكات' : 'Subscriptions',
             href: '/admin/subscriptions',
+        },
+        {
+            icon: Store,
+            label: language === 'ar' ? 'طلبات إزالة الحقوق' : 'Copyright Requests',
+            href: '/admin/copyright-requests',
         },
     ];
 

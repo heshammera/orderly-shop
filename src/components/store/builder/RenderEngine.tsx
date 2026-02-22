@@ -74,11 +74,12 @@ const COMPONENT_MAP: Record<string, any> = {
     'ExitIntentPopup': ExitIntentPopup
 };
 
-export function RenderEngine({ schema, storeId, storeCurrency, storeSlug, isEditable = false, onUpdate, onSelectComponent, selectedComponentId, onDelete, onMoveUp, onMoveDown }: {
+export function RenderEngine({ schema, storeId, storeCurrency, storeSlug, store, isEditable = false, onUpdate, onSelectComponent, selectedComponentId, onDelete, onMoveUp, onMoveDown }: {
     schema: PageSchema,
     storeId: string,
     storeCurrency?: string,
     storeSlug?: string,
+    store?: any,
     isEditable?: boolean,
     onUpdate?: (id: string, content: any) => void,
     onSelectComponent?: (id: string) => void,
@@ -119,6 +120,7 @@ export function RenderEngine({ schema, storeId, storeCurrency, storeSlug, isEdit
                             storeId={storeId}
                             storeCurrency={storeCurrency}
                             storeSlug={storeSlug}
+                            store={store}
                             isEditable={isEditable}
                             onUpdate={isEditable ? onUpdate : undefined}
                         />

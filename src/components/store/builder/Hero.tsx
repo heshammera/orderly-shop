@@ -57,7 +57,7 @@ export function Hero({ data, isEditable = false, onUpdate }: { data: ComponentSc
     const activeSlideIndexRef = useRef<number>(0);
 
     // Settings defaults
-    const heightClass = settings.height === 'large' ? 'h-[600px]' : settings.height === 'medium' ? 'h-[400px]' : 'h-[300px]';
+    const heightClass = settings.height === 'large' ? 'h-[80vh] min-h-[600px]' : settings.height === 'medium' ? 'h-[60vh] min-h-[400px]' : 'h-[50vh] min-h-[300px]';
     const alignClass = settings.align === 'left' ? 'text-left items-start' : settings.align === 'right' ? 'text-right items-end' : 'text-center items-center';
 
     const slides = content.slides || (content.title ? [{
@@ -96,33 +96,33 @@ export function Hero({ data, isEditable = false, onUpdate }: { data: ComponentSc
         <div className={`relative w-full h-full flex flex-col justify-center ${alignClass} text-white overflow-hidden group/slide`}>
             {/* Background Image */}
             <div
-                className="absolute inset-0 bg-cover bg-center z-0 transition-transform duration-700 group-hover/slide:scale-105"
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0 transition-transform duration-1000 ease-out group-hover/slide:scale-105"
                 style={{ backgroundImage: `url(${slide.backgroundImage || '/placeholder-hero.jpg'})` }}
             />
-            {/* Overlay */}
+            {/* Gradient Overlay for Depth */}
             <div
-                className="absolute inset-0 bg-black z-10"
-                style={{ opacity: (settings.overlayOpacity || 50) / 100 }}
+                className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10 z-10"
+                style={{ opacity: (settings.overlayOpacity || 70) / 100 }}
             />
             {/* Edit Image Overlay */}
             {isEditable && (
-                <div className="absolute top-4 right-4 z-30 opacity-0 group-hover/slide:opacity-100 transition-opacity">
+                <div className="absolute top-6 right-6 z-30 opacity-0 group-hover/slide:opacity-100 transition-opacity duration-300">
                     <Button
                         size="sm"
                         variant="secondary"
                         onClick={() => triggerImageUpload(index)}
-                        className="gap-2 shadow-lg"
+                        className="gap-2 shadow-xl backdrop-blur-md bg-white/90 hover:bg-white text-black border-0"
                     >
                         <Upload className="w-4 h-4" />
-                        Change Image
+                        {language === 'ar' ? 'تغيير الصورة' : 'Change Image'}
                     </Button>
                 </div>
             )}
             {/* Content */}
-            <div className="container relative z-20 px-4">
-                <div className={`max-w-2xl ${settings.align === 'center' ? 'mx-auto' : ''}`}>
+            <div className="container relative z-20 px-6 sm:px-12">
+                <div className={`max-w-4xl ${settings.align === 'center' ? 'mx-auto' : ''}`}>
                     <h1
-                        className={`text-4xl md:text-6xl font-bold mb-4 tracking-tight drop-shadow-lg ${isEditable ? 'outline-dashed outline-2 outline-transparent hover:outline-primary/50 focus:outline-primary cursor-text' : ''}`}
+                        className={`text-5xl sm:text-7xl lg:text-8xl font-extrabold mb-6 tracking-tighter leading-[1.1] drop-shadow-2xl ${isEditable ? 'outline-dashed outline-2 outline-transparent hover:outline-primary/50 focus:outline-primary cursor-text' : ''}`}
                         contentEditable={isEditable}
                         suppressContentEditableWarning
                         onBlur={(e) => handleTextUpdate(index, 'title', e.currentTarget.textContent || '')}
@@ -130,7 +130,7 @@ export function Hero({ data, isEditable = false, onUpdate }: { data: ComponentSc
                         {getText(slide.title)}
                     </h1>
                     <p
-                        className={`text-lg md:text-xl mb-8 text-gray-100 drop-shadow-md ${isEditable ? 'outline-dashed outline-2 outline-transparent hover:outline-primary/50 focus:outline-primary cursor-text' : ''}`}
+                        className={`text-lg sm:text-2xl mb-10 text-gray-200/90 font-medium max-w-2xl drop-shadow-lg ${settings.align === 'center' ? 'mx-auto' : ''} ${isEditable ? 'outline-dashed outline-2 outline-transparent hover:outline-primary/50 focus:outline-primary cursor-text' : ''}`}
                         contentEditable={isEditable}
                         suppressContentEditableWarning
                         onBlur={(e) => handleTextUpdate(index, 'subtitle', e.currentTarget.textContent || '')}
@@ -139,7 +139,11 @@ export function Hero({ data, isEditable = false, onUpdate }: { data: ComponentSc
                     </p>
                     {slide.buttonText && (
                         <div className="inline-block relative group">
-                            <Button size="lg" className="text-lg px-8 py-6 rounded-full" asChild={!isEditable}>
+                            <Button
+                                size="lg"
+                                className="text-lg font-semibold px-10 py-7 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_40px_-10px_rgba(0,0,0,0.5)] transition-all hover:scale-105"
+                                asChild={!isEditable}
+                            >
                                 {isEditable ? (
                                     <span
                                         contentEditable

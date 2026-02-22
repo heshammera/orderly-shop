@@ -16,7 +16,7 @@ export function CheckoutPage({ store, pageSchema }: CheckoutPageProps) {
     const schema = pageSchema || {
         globalSettings: {
             colors: { primary: '#000000', secondary: '#ffffff', background: '#f8f9fa', text: '#1f2937' },
-            fonts: { heading: 'Inter', body: 'Inter' }
+            font: 'Inter'
         },
         sections: [
             { ...COMPONENT_DEFAULTS['CheckoutHeader'], id: 'default-header' } as ComponentSchema,
@@ -24,7 +24,7 @@ export function CheckoutPage({ store, pageSchema }: CheckoutPageProps) {
             { ...COMPONENT_DEFAULTS['OrderSummary'], id: 'default-summary' } as ComponentSchema,
             { ...COMPONENT_DEFAULTS['TrustBadges'], id: 'default-badges' } as ComponentSchema,
         ]
-    };
+    } as PageSchema;
 
     if (!store) return <Loader2 className="animate-spin" />;
 

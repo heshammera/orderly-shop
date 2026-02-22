@@ -18,6 +18,7 @@ export function WalletBalance({ storeId, currency }: WalletBalanceProps) {
     const supabase = createClient();
     const { language } = useLanguage();
     const [balance, setBalance] = useState(0); // Stores USD balance
+    const [hasUnlimitedBalance, setHasUnlimitedBalance] = useState(false);
     const [pendingBalance, setPendingBalance] = useState(0);
     const [totalEarnings, setTotalEarnings] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -35,7 +36,7 @@ export function WalletBalance({ storeId, currency }: WalletBalanceProps) {
             // 1. Get main balance from stores table (source of truth) - NOW IN USD
             const { data: storeData } = await supabase
                 .from('stores')
-                .select('balance, currency')
+                .select('balance, currency, has_unlimited_balance')
                 .eq('id', storeId)
                 .single();
 
@@ -60,6 +61,7 @@ export function WalletBalance({ storeId, currency }: WalletBalanceProps) {
                 // We don't set balance directly, we wait for exchange rate
                 const usdBalance = storeData.balance || 0;
                 setBalance(usdBalance);
+                setHasUnlimitedBalance(storeData.has_unlimited_balance || false);
             }
 
             // Pending balance = Pending Orders (from view) + Pending Recharges
@@ -91,45 +93,67 @@ export function WalletBalance({ storeId, currency }: WalletBalanceProps) {
     return (
         <div className="grid gap-4 md:grid-cols-2">
             {/* Available Balance Card - Dynamic Color */}
-            <Card className={`relative overflow-hidden shadow-lg transition-all duration-300 ${isLowBalance
-                ? 'bg-gradient-to-br from-red-50 via-red-50/50 to-background dark:from-red-950/20 dark:via-red-950/10 border-red-200 dark:border-red-900/50'
-                : 'bg-gradient-to-br from-green-50 via-green-50/50 to-background dark:from-green-950/20 dark:via-green-950/10 border-green-200 dark:border-green-900/50'
-                }`}>
-                <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl -translate-y-16 translate-x-16 ${isLowBalance ? 'bg-red-400/20' : 'bg-green-400/20'
-                    }`} />
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className={`text-sm font-medium ${isLowBalance ? 'text-red-700 dark:text-red-400' : 'text-green-700 dark:text-green-400'
-                        }`}>
-                        {language === 'ar' ? 'الرصيد المتاح' : 'Available Balance'}
-                    </CardTitle>
-                    <div className={`p-2 rounded-lg ${isLowBalance
-                        ? 'bg-red-100 dark:bg-red-900/30'
-                        : 'bg-green-100 dark:bg-green-900/30'
-                        }`}>
-                        <Wallet className={`h-4 w-4 ${isLowBalance ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'
-                            }`} />
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <div className="text-3xl font-bold text-gray-900 dark:text-gray-50">
-                        {(balance * rate).toFixed(2)} <span className="text-sm font-normal text-muted-foreground">{currency}</span>
-                    </div>
-                    {isLowBalance && (
-                        <p className="text-xs text-red-600 dark:text-red-400 mt-1 font-medium flex items-center gap-1">
-                            <AlertTriangle className="w-3 h-3" />
-                            {language === 'ar' ? 'رصيد منخفض! يرجى الشحن' : 'Low balance! Please recharge'}
+            {hasUnlimitedBalance ? (
+                <Card className="relative overflow-hidden shadow-lg transition-all duration-300 bg-gradient-to-br from-amber-50 via-amber-50/50 to-background dark:from-amber-950/20 dark:via-amber-950/10 border-amber-200 dark:border-amber-900/50">
+                    <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl -translate-y-16 translate-x-16 bg-amber-400/20" />
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                            {language === 'ar' ? 'باقة غير محدودة (VIP)' : 'Unlimited VIP Balance'}
+                        </CardTitle>
+                        <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30">
+                            <Wallet className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-4xl font-extrabold text-amber-600 dark:text-amber-400 drop-shadow-sm">
+                            ∞ <span className="text-lg font-medium text-amber-700 dark:text-amber-500">{language === 'ar' ? 'غير محدود' : 'Unlimited'}</span>
+                        </div>
+                        <p className="text-xs text-amber-700/80 dark:text-amber-400/80 mt-2 font-medium">
+                            {language === 'ar' ? 'متجرك مميز ولا يتم سحب عمولات من المحفظة ✨' : 'Your store is premium. No commissions are deducted ✨'}
                         </p>
-                    )}
-                    {!isLowBalance && (
-                        <p className="text-xs text-green-600 dark:text-green-400 mt-1 font-medium">
-                            {language === 'ar' ? 'الرصيد جيد ✓' : 'Balance is healthy ✓'}
-                        </p>
-                    )}
-                    <div className="flex gap-2 mt-4">
-                        <WalletRechargeDialog storeId={storeId} storeCurrency={currency} onSuccess={fetchWalletData} />
-                    </div>
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
+            ) : (
+                <Card className={`relative overflow-hidden shadow-lg transition-all duration-300 ${isLowBalance
+                    ? 'bg-gradient-to-br from-red-50 via-red-50/50 to-background dark:from-red-950/20 dark:via-red-950/10 border-red-200 dark:border-red-900/50'
+                    : 'bg-gradient-to-br from-green-50 via-green-50/50 to-background dark:from-green-950/20 dark:via-green-950/10 border-green-200 dark:border-green-900/50'
+                    }`}>
+                    <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl -translate-y-16 translate-x-16 ${isLowBalance ? 'bg-red-400/20' : 'bg-green-400/20'
+                        }`} />
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className={`text-sm font-medium ${isLowBalance ? 'text-red-700 dark:text-red-400' : 'text-green-700 dark:text-green-400'
+                            }`}>
+                            {language === 'ar' ? 'الرصيد المتاح' : 'Available Balance'}
+                        </CardTitle>
+                        <div className={`p-2 rounded-lg ${isLowBalance
+                            ? 'bg-red-100 dark:bg-red-900/30'
+                            : 'bg-green-100 dark:bg-green-900/30'
+                            }`}>
+                            <Wallet className={`h-4 w-4 ${isLowBalance ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'
+                                }`} />
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-3xl font-bold text-gray-900 dark:text-gray-50">
+                            {(balance * rate).toFixed(2)} <span className="text-sm font-normal text-muted-foreground">{currency}</span>
+                        </div>
+                        {isLowBalance && (
+                            <p className="text-xs text-red-600 dark:text-red-400 mt-1 font-medium flex items-center gap-1">
+                                <AlertTriangle className="w-3 h-3" />
+                                {language === 'ar' ? 'رصيد منخفض! يرجى الشحن' : 'Low balance! Please recharge'}
+                            </p>
+                        )}
+                        {!isLowBalance && (
+                            <p className="text-xs text-green-600 dark:text-green-400 mt-1 font-medium">
+                                {language === 'ar' ? 'الرصيد جيد ✓' : 'Balance is healthy ✓'}
+                            </p>
+                        )}
+                        <div className="flex gap-2 mt-4">
+                            <WalletRechargeDialog storeId={storeId} storeCurrency={currency} onSuccess={fetchWalletData} />
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
 
             {/* Pending Balance Card */}
             <Card className="shadow-sm">

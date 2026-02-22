@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ success: true, message: 'No active Google Sheet integrations' });
         }
 
-        const results = [];
+        const results: any[] = [];
 
         // 4. Process Each Integration
         for (const integration of integrations) {

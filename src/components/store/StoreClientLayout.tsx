@@ -10,6 +10,8 @@ import { Loader2, Menu, ShoppingCart, Globe, Store as StoreIcon, Truck } from 'l
 import { CartProvider, useCart } from '@/contexts/CartContext';
 import { TrackingPixels } from '@/components/store/TrackingPixels';
 import { StoreDashboardLink } from '@/components/store/StoreDashboardLink';
+import { Footer } from '@/components/store/builder/Footer';
+import { COMPONENT_DEFAULTS } from '@/lib/store-builder/types';
 
 interface StoreData {
     id: string;
@@ -19,6 +21,7 @@ interface StoreData {
     currency: string;
     settings: any;
     slug: string;
+    has_removed_copyright?: boolean;
 }
 
 interface Integration {
@@ -140,34 +143,7 @@ function StoreHeader({ store }: { store: StoreData }) {
     );
 }
 
-function StoreFooter({ store }: { store: StoreData }) {
-    const { language } = useLanguage();
-    const storeName = store.name[language] || store.name.ar || store.name.en;
 
-    return (
-        <footer className="bg-card border-t mt-16">
-            <div className="container mx-auto px-4 py-8">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        {store.logo_url ? (
-                            <img src={store.logo_url} alt={storeName} className="w-8 h-8 rounded-lg object-cover" />
-                        ) : (
-                            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                                <StoreIcon className="w-4 h-4 text-primary-foreground" />
-                            </div>
-                        )}
-                        <span className="font-semibold">{storeName}</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                        {language === 'ar'
-                            ? `© ${new Date().getFullYear()} ${storeName}. جميع الحقوق محفوظة.`
-                            : `© ${new Date().getFullYear()} ${storeName}. All rights reserved.`}
-                    </p>
-                </div>
-            </div>
-        </footer>
-    );
-}
 
 export function StoreClientLayout({ children, store, integrations = {} }: StoreLayoutProps) {
     const { dir } = useLanguage();
@@ -180,7 +156,10 @@ export function StoreClientLayout({ children, store, integrations = {} }: StoreL
                 <main>
                     {children}
                 </main>
-                <StoreFooter store={store} />
+                <Footer
+                    data={COMPONENT_DEFAULTS.Footer as any}
+                    store={store}
+                />
             </CartProvider>
         </div>
     );

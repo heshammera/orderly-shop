@@ -39,7 +39,7 @@ interface Subscription {
     status: 'active' | 'past_due' | 'canceled' | 'trialing' | 'incomplete';
     current_period_end: string | null;
     store: { name: { ar: string; en: string }; slug: string } | null;
-    plan: { name: { ar: string; en: string }; name_ar?: string; name_en?: string; } | null;
+    plan: { name: { ar: string; en: string }; name_ar?: string; name_en?: string; price_monthly?: number; } | null;
 }
 
 interface Plan {

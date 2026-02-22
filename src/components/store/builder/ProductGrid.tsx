@@ -61,10 +61,10 @@ export function ProductGrid({ data, storeId, storeCurrency, storeSlug, isEditabl
     };
 
     return (
-        <section className="py-16 container px-4" id="products">
-            <div className="text-center mb-12">
+        <section className="py-20 lg:py-28 container px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto" id="products">
+            <div className="text-center mb-16 max-w-3xl mx-auto">
                 <h2
-                    className={`text-3xl font-bold mb-4 ${isEditable ? 'outline-dashed outline-2 outline-transparent hover:outline-primary/50 cursor-text' : ''}`}
+                    className={`text-3xl md:text-5xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100 mb-4 ${isEditable ? 'outline-dashed outline-2 outline-transparent hover:outline-primary/50 cursor-text' : ''}`}
                     contentEditable={isEditable}
                     suppressContentEditableWarning
                     onBlur={(e) => handleUpdate('title', e.currentTarget.textContent || '')}
@@ -73,7 +73,7 @@ export function ProductGrid({ data, storeId, storeCurrency, storeSlug, isEditabl
                 </h2>
                 {content.subtitle && (
                     <p
-                        className={`text-muted-foreground text-lg ${isEditable ? 'outline-dashed outline-2 outline-transparent hover:outline-primary/50 cursor-text' : ''}`}
+                        className={`text-lg md:text-xl text-gray-500 dark:text-gray-400 ${isEditable ? 'outline-dashed outline-2 outline-transparent hover:outline-primary/50 cursor-text' : ''}`}
                         contentEditable={isEditable}
                         suppressContentEditableWarning
                         onBlur={(e) => handleUpdate('subtitle', e.currentTarget.textContent || '')}
@@ -160,37 +160,41 @@ export function ProductGrid({ data, storeId, storeCurrency, storeSlug, isEditabl
                                     href={`/s/${storeSlug || storeId}/p/${product.id}`}
                                     className="group cursor-pointer block"
                                 >
-                                    <div className="aspect-square relative overflow-hidden rounded-md bg-gray-100 mb-3">
+                                    <div className="aspect-[4/5] relative overflow-hidden rounded-2xl bg-gray-50 mb-4 shadow-sm group-hover:shadow-md transition-shadow">
                                         <Image
                                             src={image}
                                             alt={name}
                                             fill
-                                            className="object-cover group-hover:scale-105 transition-transform"
+                                            className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                         />
+                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
                                     </div>
-                                    <h3 className="font-medium text-base leading-tight group-hover:underline">{name}</h3>
-                                    <p className="text-muted-foreground mt-1">{price}</p>
+                                    <h3 className="font-semibold text-lg text-gray-900 tracking-tight group-hover:text-primary transition-colors">{name}</h3>
+                                    <p className="text-gray-500 font-medium mt-1">{price}</p>
                                 </Link>
                             );
                         }
 
                         // Default 'cards'
                         return (
-                            <div key={product.id} className="group relative border rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all bg-white">
-                                <div className="aspect-square relative overflow-hidden bg-gray-100">
+                            <div key={product.id} className="group relative flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                                <Link href={`/s/${storeSlug || storeId}/p/${product.id}`} className="block aspect-[4/5] relative overflow-hidden bg-gray-50">
                                     <Image
                                         src={image}
                                         alt={name}
                                         fill
-                                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                        className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                     />
-                                </div>
-                                <div className="p-4">
-                                    <h3 className="font-semibold text-lg line-clamp-1">{name}</h3>
-                                    <p className="text-primary font-bold mt-2">{price}</p>
-                                    <Button className="w-full mt-4" variant="outline" asChild>
+                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+                                </Link>
+                                <div className="p-5 sm:p-6 flex flex-col flex-1">
+                                    <Link href={`/s/${storeSlug || storeId}/p/${product.id}`} className="block mb-2">
+                                        <h3 className="font-bold text-xl text-gray-900 line-clamp-2 hover:text-primary transition-colors tracking-tight">{name}</h3>
+                                    </Link>
+                                    <p className="text-primary font-extrabold text-lg mt-auto mb-4">{price}</p>
+                                    <Button className="w-full font-semibold rounded-xl bg-gray-900 text-white hover:bg-primary hover:text-primary-foreground transition-colors shadow-none hover:shadow-lg" asChild>
                                         <Link href={`/s/${storeSlug || storeId}/p/${product.id}`}>{(t as any).store?.viewDetails || 'View Details'}</Link>
                                     </Button>
                                 </div>

@@ -1,8 +1,8 @@
 -- 1. Add has_removed_copyright boolean to stores table
 ALTER TABLE stores ADD COLUMN IF NOT EXISTS has_removed_copyright BOOLEAN DEFAULT FALSE;
 
--- 2. Add remove_copyright_price to global settings if not exists
-INSERT INTO global_settings (key, value, description)
+-- 2. Add remove_copyright_price to system settings if not exists
+INSERT INTO system_settings (key, value, description)
 VALUES (
     'remove_copyright_price',
     '50.00',
@@ -28,11 +28,11 @@ ALTER TABLE copyright_removal_requests ENABLE ROW LEVEL SECURITY;
 -- Policies for Stores
 CREATE POLICY "Stores can view their own copyright requests"
     ON copyright_removal_requests FOR SELECT
-    USING (store_id IN (SELECT store_id FROM store_team_members WHERE user_id = auth.uid()));
+    USING (store_id IN (SELECT store_id FROM store_members WHERE user_id = auth.uid()));
 
 CREATE POLICY "Stores can insert their own copyright requests"
     ON copyright_removal_requests FOR INSERT
-    WITH CHECK (store_id IN (SELECT store_id FROM store_team_members WHERE user_id = auth.uid()));
+    WITH CHECK (store_id IN (SELECT store_id FROM store_members WHERE user_id = auth.uid()));
 
 -- Policies for Super Admins
 CREATE POLICY "Super Admins can view all copyright requests"

@@ -9,8 +9,10 @@ import { RegionalTab } from './RegionalTab';
 import { SeoTab } from './SeoTab';
 import { ShippingTab } from './ShippingTab';
 import { DomainsTab } from './DomainsTab';
+import { CopyrightRemovalTab } from './CopyrightRemovalTab';
+import { PagesTab } from './PagesTab';
 import { IntegrationsManager } from '@/components/dashboard/IntegrationsManager';
-import { Store, Phone, Globe, Search, Truck, Link, Plug } from 'lucide-react';
+import { Store, Phone, Globe, Search, Truck, Link, Plug, ShieldCheck, FileText } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useRouter } from 'next/navigation';
@@ -102,6 +104,16 @@ export function StoreSettingsForm({ store: initialStore }: StoreSettingsFormProp
             value: 'integrations',
             label: language === 'ar' ? 'التكاملات' : 'Integrations',
             icon: Plug,
+        },
+        {
+            value: 'pages',
+            label: language === 'ar' ? 'الصفحات' : 'Pages',
+            icon: FileText,
+        },
+        {
+            value: 'copyright',
+            label: language === 'ar' ? 'إزالة الحقوق' : 'Remove Copyright',
+            icon: ShieldCheck,
         },
     ];
 
@@ -237,6 +249,43 @@ export function StoreSettingsForm({ store: initialStore }: StoreSettingsFormProp
                     </CardHeader>
                     <CardContent>
                         <IntegrationsManager storeId={initialStore.id} />
+                    </CardContent>
+                </Card>
+            </TabsContent>
+
+            <TabsContent value="pages">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            {language === 'ar' ? 'الصفحات القانونية' : 'Legal Pages'}
+                        </CardTitle>
+                        <CardDescription>
+                            {language === 'ar'
+                                ? 'إدارة صفحات من نحن، سياسة الخصوصية، وشروط الخدمة.'
+                                : 'Manage About Us, Privacy Policy, and Terms of Service pages.'}
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <PagesTab store={initialStore} onSave={handleSave} />
+                    </CardContent>
+                </Card>
+            </TabsContent>
+
+            <TabsContent value="copyright">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <ShieldCheck className="w-5 h-5" />
+                            {language === 'ar' ? 'العلامة التجارية الكاملة (إزالة الحقوق)' : 'Full White-labeling (Remove Copyright)'}
+                        </CardTitle>
+                        <CardDescription>
+                            {language === 'ar'
+                                ? 'اجعل المتجر خاصاً بك بنسبة 100٪ بدون ذكر منصة Orderly'
+                                : 'Make your store 100% yours without mentioning the Orderly platform'}
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <CopyrightRemovalTab store={initialStore} />
                     </CardContent>
                 </Card>
             </TabsContent>

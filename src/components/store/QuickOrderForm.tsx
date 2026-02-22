@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,7 +24,6 @@ interface QuickOrderFormProps {
 export function QuickOrderForm({ isOpen, onClose, product, quantity, variants, selections, store }: QuickOrderFormProps) {
     const { language } = useLanguage();
     const { toast } = useToast();
-    const supabase = createClient();
 
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -107,109 +105,50 @@ export function QuickOrderForm({ isOpen, onClose, product, quantity, variants, s
                 cityOrGovName = gov ? (language === 'ar' ? gov.ar : gov.en) : selectedGovernorate;
             }
 
-            // 1. Create/Find Customer
-            const { data: customerData, error: customerError } = await supabase
-                .from('customers')
-                .insert({
+            // Use server-side API route to bypass RLS
+            const response = await fetch('/api/checkout/quick-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                     store_id: store.id,
-                    name: formData.name,
-                    phone: formData.phone,
-                    address: {
-                        city: cityOrGovName,
-                        full_address: formData.address,
-                        governorate_id: selectedGovernorate,
-                        alt_phone: formData.alt_phone
-                    },
-                    total_orders: 1,
-                    total_spent: total
-                })
-                .select()
-                .single();
-
-            if (customerError) throw customerError;
-
-            // 2. Create Order
-            const { data: orderData, error: orderError } = await supabase
-                .from('orders')
-                .insert({
-                    store_id: store.id,
-                    customer_id: customerData.id,
-                    order_number: `ORD-${Date.now().toString().slice(-6)}`,
-                    status: 'pending',
-                    subtotal: subtotal,
-                    total: total,
-                    shipping_cost: shippingCost,
-                    currency: store.currency,
-                    customer_snapshot: {
-                        name: formData.name,
-                        phone: formData.phone,
-                        alt_phone: formData.alt_phone,
-                        city: cityOrGovName,
-                        governorate_id: selectedGovernorate,
-                        address: formData.address
-                    },
-                    shipping_address: {
-                        city: cityOrGovName,
-                        address: formData.address,
-                        governorate_id: selectedGovernorate
-                    },
-                    notes: formData.notes
-                })
-                .select()
-                .single();
-
-            if (orderError) throw orderError;
-
-            // 3. Create Order Items (One for each quantity unit because variants might differ)
-            const orderItems = [];
-            for (let i = 0; i < quantity; i++) {
-                const itemSelections = selections[i] || {};
-                let itemPrice = product.price;
-                const variantSnapshot = variants.map(v => {
-                    const selectedOpt = v.options.find((o: any) => o.id === itemSelections[v.id]);
-                    if (selectedOpt?.price_modifier) {
-                        itemPrice += selectedOpt.price_modifier;
-                    }
-                    return {
-                        variantId: v.id,
-                        variantName: v.name,
-                        optionId: selectedOpt?.id,
-                        optionLabel: selectedOpt?.label,
-                        priceModifier: selectedOpt?.price_modifier || 0
-                    };
-                });
-
-                orderItems.push({
-                    order_id: orderData.id,
-                    product_id: product.id,
-                    quantity: 1, // Individual items
-                    unit_price: itemPrice,
-                    total_price: itemPrice,
-                    product_snapshot: {
+                    product: {
+                        id: product.id,
                         name: product.name,
-                        variants: variantSnapshot
-                    }
-                });
+                        price: product.price
+                    },
+                    quantity,
+                    variants,
+                    selections,
+                    formData: {
+                        ...formData,
+                        city: cityOrGovName
+                    },
+                    selectedGovernorate,
+                    shippingCost,
+                    subtotal,
+                    total,
+                    currency: store.currency
+                })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to place order');
             }
 
-            const { error: itemError } = await supabase
-                .from('order_items')
-                .insert(orderItems);
-
-            if (itemError) throw itemError;
-
-            setOrderId(orderData.order_number);
+            setOrderId(result.order_number);
             setSuccess(true);
             toast({
                 title: language === 'ar' ? 'تم الطلب بنجاح' : 'Order Placed Successfully',
-                description: language === 'ar' ? `رقم الطلب: ${orderData.order_number}` : `Order #${orderData.order_number}`,
+                description: language === 'ar' ? `رقم الطلب: ${result.order_number}` : `Order #${result.order_number}`,
             });
 
         } catch (error: any) {
             console.error('Quick Order Error:', error);
             toast({
                 title: language === 'ar' ? 'خطأ في الطلب' : 'Order Failed',
-                description: error.message,
+                description: error.message || 'حدث خطأ غير متوقع',
                 variant: "destructive"
             });
         } finally {

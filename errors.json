@@ -1,0 +1,17 @@
+[
+  "﻿src/app/admin/(dashboard)/subscriptions/page.tsx(185,52): error TS2339: Property 'price_monthly' does not exist on type '{ name: { ar: string; en: string; }; name_ar?: string | undefined; name_en?: string | undefined; }'.\r",
+  "src/app/api/integrations/google-sheets/sync/route.ts(107,30): error TS2345: Argument of type '{ id: any; status: string; reason: string; }' is not assignable to parameter of type 'never'.\r",
+  "src/app/api/integrations/google-sheets/sync/route.ts(136,30): error TS2345: Argument of type '{ id: any; status: string; }' is not assignable to parameter of type 'never'.\r",
+  "src/app/api/integrations/google-sheets/sync/route.ts(139,30): error TS2345: Argument of type '{ id: any; status: string; error: any; }' is not assignable to parameter of type 'never'.\r",
+  "src/components/admin/AdminWalletSettings.tsx(119,23): error TS2339: Property 'number' does not exist on type '{ name: string; name_ar: string; active: boolean; }'.\r",
+  "src/components/admin/AdminWalletSettings.tsx(128,15): error TS2741: Property 'number' is missing in type '{ name: string; name_ar: string; active: boolean; id: string; }' but required in type 'PaymentWallet'.\r",
+  "src/components/admin/AdminWalletSettings.tsx(135,23): error TS2353: Object literal may only specify known properties, and 'number' does not exist in type 'SetStateAction<{ name: string; name_ar: string; active: boolean; }>'.\r",
+  "src/components/admin/AdminWalletSettings.tsx(141,13): error TS2353: Object literal may only specify known properties, and 'number' does not exist in type 'SetStateAction<{ name: string; name_ar: string; active: boolean; }>'.\r",
+  "src/components/admin/AdminWalletSettings.tsx(159,23): error TS2353: Object literal may only specify known properties, and 'number' does not exist in type 'SetStateAction<{ name: string; name_ar: string; active: boolean; }>'.\r",
+  "src/components/admin/AdminWalletSettings.tsx(200,96): error TS2353: Object literal may only specify known properties, and 'number' does not exist in type 'SetStateAction<{ name: string; name_ar: string; active: boolean; }>'.\r",
+  "src/components/admin/AdminWalletSettings.tsx(220,61): error TS2339: Property 'number' does not exist on type '{ name: string; name_ar: string; active: boolean; }'.\r",
+  "src/components/admin/AdminWalletSettings.tsx(221,89): error TS2353: Object literal may only specify known properties, and 'number' does not exist in type 'SetStateAction<{ name: string; name_ar: string; active: boolean; }>'.\r",
+  "src/components/admin/AdminWalletSettings.tsx(317,26): error TS2304: Cannot find name 'DollarSign'.\r",
+  "src/components/store/CheckoutPage.tsx(35,21): error TS2322: Type 'PageSchema | { globalSettings: { colors: { primary: string; secondary: string; background: string; text: string; }; fonts: { heading: string; body: string; }; }; sections: ComponentSchema[]; }' is not assignable to type 'PageSchema'.\r",
+  "src/components/store/QuickOrderForm.tsx(182,33): error TS2345: Argument of type '{ order_id: any; product_id: any; quantity: number; unit_price: any; total_price: any; product_snapshot: { name: any; variants: { variantId: any; variantName: any; optionId: any; optionLabel: any; priceModifier: any; }[]; }; }' is not assignable to parameter of type 'never'.\r"
+]

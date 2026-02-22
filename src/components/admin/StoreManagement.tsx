@@ -75,7 +75,8 @@ export function StoreManagement() {
     const [commissionData, setCommissionData] = useState({
         type: 'percentage',
         value: 5,
-        unlimited: false
+        unlimited: false,
+        has_removed_copyright: false
     });
 
     // Status Form
@@ -157,7 +158,8 @@ export function StoreManagement() {
             const { error } = await supabase.from('stores').update({
                 commission_type: data.type,
                 commission_value: data.value,
-                has_unlimited_balance: data.unlimited
+                has_unlimited_balance: data.unlimited,
+                has_removed_copyright: data.has_removed_copyright
             }).eq('id', data.id);
             if (error) throw error;
         },
@@ -240,7 +242,8 @@ export function StoreManagement() {
         setCommissionData({
             type: store.commission_type || 'percentage',
             value: store.commission_value || 0,
-            unlimited: store.has_unlimited_balance || false
+            unlimited: store.has_unlimited_balance || false,
+            has_removed_copyright: store.has_removed_copyright || false
         });
     };
 
@@ -388,7 +391,7 @@ export function StoreManagement() {
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuLabel>{language === 'ar' ? 'الإجراءات' : 'Actions'}</DropdownMenuLabel>
                                                 <DropdownMenuItem onClick={() => handleEditClick(store)}>
-                                                    <Edit className="ml-2 h-4 w-4" /> {language === 'ar' ? 'تعديل العمولة' : 'Edit Commission'}
+                                                    <Edit className="ml-2 h-4 w-4" /> {language === 'ar' ? 'تعديل العمولة وإزالة الحقوق' : 'Edit Commission & Copyright'}
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem onClick={() => handleRechargeClick(store)}>
                                                     <CreditCard className="ml-2 h-4 w-4" /> {language === 'ar' ? 'شحن رصيد/خصم' : 'Recharge/Deduct'}
@@ -436,8 +439,8 @@ export function StoreManagement() {
             <Dialog open={!!editingStore} onOpenChange={(open) => !open && setEditingStore(null)}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>{language === 'ar' ? 'تعديل إعدادات المتجر' : 'Edit Store Settings'}</DialogTitle>
-                        <DialogDescription>{language === 'ar' ? 'تخصيص العمولة وإعدادات الرصيد لهذا المتجر.' : 'Configure commission and balance settings for this store.'}</DialogDescription>
+                        <DialogTitle>{language === 'ar' ? 'تعديل إعدادات المتجر والحقوق' : 'Edit Store Settings & Copyright'}</DialogTitle>
+                        <DialogDescription>{language === 'ar' ? 'تخصيص العمولة، وإعدادات الرصيد، وإزالة حقوق المنصة لهذا المتجر.' : 'Configure commission, balance settings, and platform copyright for this store.'}</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="flex items-center justify-between">
@@ -445,6 +448,13 @@ export function StoreManagement() {
                             <Switch
                                 checked={commissionData.unlimited}
                                 onCheckedChange={(checked) => setCommissionData({ ...commissionData, unlimited: checked })}
+                            />
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <Label>{language === 'ar' ? 'إزالة حقوق المنصة' : 'Remove Platform Copyright'}</Label>
+                            <Switch
+                                checked={commissionData.has_removed_copyright}
+                                onCheckedChange={(checked) => setCommissionData({ ...commissionData, has_removed_copyright: checked })}
                             />
                         </div>
                         <div className="space-y-2">

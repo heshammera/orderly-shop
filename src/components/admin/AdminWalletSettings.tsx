@@ -19,7 +19,7 @@ import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { createClient } from '@/lib/supabase/client';
-import { Loader2, Plus, Pencil, Trash2, Wallet } from 'lucide-react';
+import { Loader2, Plus, Pencil, Trash2, Wallet, DollarSign } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 interface PaymentWallet {
@@ -45,6 +45,8 @@ export function AdminWalletSettings() {
         name_ar: '',
         active: true
     });
+    const [copyrightPrice, setCopyrightPrice] = useState<string>('50');
+    const [savingPrice, setSavingPrice] = useState(false);
 
     useEffect(() => {
         fetchWallets();
@@ -55,10 +57,39 @@ export function AdminWalletSettings() {
             const { data, error } = await supabase.rpc('get_setting', { setting_key: 'payment_wallets' });
             if (error) throw error;
             setWallets(data?.wallets || []);
+
+            const { data: priceData } = await supabase.rpc('get_setting_value_only', { setting_key: 'remove_copyright_price' });
+            if (priceData) {
+                setCopyrightPrice(priceData);
+            }
         } catch (error) {
             console.error('Error fetching wallets:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const saveCopyrightPrice = async () => {
+        setSavingPrice(true);
+        try {
+            await supabase.rpc('set_setting', {
+                setting_key: 'remove_copyright_price',
+                setting_value: copyrightPrice,
+                setting_description: 'Price to remove the Powered by Orderly copyright from the store footer'
+            });
+
+            toast({
+                title: language === 'ar' ? '✅ تم الحفظ' : '✅ Saved Successfully',
+                description: language === 'ar' ? 'تم تحديث سعر إزالة الحقوق' : 'Copyright removal price updated',
+            });
+        } catch (error: any) {
+            toast({
+                title: language === 'ar' ? 'خطأ' : 'Error',
+                description: error.message,
+                variant: 'destructive'
+            });
+        } finally {
+            setSavingPrice(false);
         }
     };
 
@@ -278,6 +309,39 @@ export function AdminWalletSettings() {
                             </TableBody>
                         </Table>
                     )}
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <DollarSign className="w-5 h-5" />
+                        {language === 'ar' ? 'رسوم المنصة الإضافية' : 'Platform Additional Fees'}
+                    </CardTitle>
+                    <CardDescription>
+                        {language === 'ar'
+                            ? 'حدد الأسعار والمقابل المادي للخدمات الإضافية مثل إزالة حقوق النشر المتواجدة أسفل كل متجر'
+                            : 'Set prices and fees for additional services like removing the storefront copyright'}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <Label>{language === 'ar' ? 'سعر إزالة الحقوق (Powered by Orderly)' : 'Copyright Removal Price'}</Label>
+                            <div className="flex items-center gap-3">
+                                <Input
+                                    type="number"
+                                    value={copyrightPrice}
+                                    onChange={(e) => setCopyrightPrice(e.target.value)}
+                                    placeholder="50"
+                                />
+                                <Button onClick={saveCopyrightPrice} disabled={savingPrice}>
+                                    {savingPrice && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                                    {language === 'ar' ? 'حفظ السعر' : 'Save Price'}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
         </div>

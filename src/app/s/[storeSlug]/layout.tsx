@@ -54,7 +54,7 @@ export default async function Layout({
     // Fetch Store Data & Integrations using admin privileges
     const { data: store, error: storeError } = await supabaseAdmin
         .from('stores')
-        .select('id, name, description, logo_url, currency, settings, slug, status')
+        .select('id, name, description, logo_url, currency, settings, slug, status, has_removed_copyright')
         .eq('slug', params.storeSlug)
         .single();
 

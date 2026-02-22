@@ -36,6 +36,7 @@ export function Canvas({ schema, storeId, onSelectComponent, selectedComponentId
         <RenderEngine
             schema={schema}
             storeId={storeId}
+            store={store}
             isEditable={true}
             onUpdate={onUpdate}
             onSelectComponent={onSelectComponent}

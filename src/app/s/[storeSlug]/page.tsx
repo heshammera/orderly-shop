@@ -69,21 +69,35 @@ export default async function StorePage({ params }: { params: { storeSlug: strin
     // console.log(`[StorePage] Fetching store for slug: ${params.storeSlug}`);
     const { data: store, error: storeError } = await supabaseAdmin
         .from('stores')
-        .select('id, name, logo_url, currency, status, slug')
+        .select('id, name, logo_url, currency, status, slug, has_removed_copyright')
         .eq('slug', params.storeSlug)
         .single();
 
     if (storeError) {
         console.error(`[StorePage] Error fetching store:`, storeError);
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-gray-50">
+                <div className="bg-white p-8 rounded-2xl shadow-xl max-w-2xl border border-red-100">
+                    <h1 className="text-2xl font-bold text-red-600 mb-4">Database Error Detected</h1>
+                    <p className="text-gray-600 mb-6">
+                        An error occurred while fetching the storefront data. This usually happens when a recent database migration has not been applied.
+                    </p>
+                    <div className="bg-gray-900 text-gray-100 p-4 rounded-lg text-left overflow-auto text-sm font-mono whitespace-pre-wrap">
+                        {JSON.stringify(storeError, null, 2)}
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     if (!store) {
         notFound();
     }
 
+    const storeName = typeof store.name === 'string' ? store.name : store.name?.en || store.name?.ar || 'Store';
+
     // Handle Non-Active Stores (Pending Plan, Pending Approval, etc.)
     if (store.status !== 'active') {
-        const storeName = typeof store.name === 'string' ? store.name : store.name?.en || store.name?.ar || 'Store';
 
         return (
             <div className="min-h-[60vh] flex flex-col items-center justify-center p-4 text-center space-y-6">
@@ -140,7 +154,13 @@ export default async function StorePage({ params }: { params: { storeSlug: strin
 
     return (
         <main>
-            <RenderEngine schema={pageContent} storeId={store.id} storeCurrency={store.currency || 'SAR'} storeSlug={params.storeSlug} />
+            <RenderEngine
+                schema={pageContent}
+                storeId={store.id}
+                storeCurrency={store.currency || 'SAR'}
+                storeSlug={params.storeSlug}
+                store={store}
+            />
         </main>
     );
 }
