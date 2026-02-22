@@ -27,6 +27,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ProductForm } from '@/components/dashboard/ProductForm';
 import { ProductDetailsDialog } from '@/components/dashboard/ProductDetailsDialog';
+import { VariantEditor } from '@/components/dashboard/VariantEditor';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
@@ -252,15 +253,18 @@ export default function ProductsPage({ params }: { params: { storeId: string } }
                         </DialogDescription>
                     </DialogHeader>
                     {selectedProduct && (
-                        <ProductForm
-                            storeId={storeId}
-                            initialData={selectedProduct}
-                            onSuccess={() => {
-                                setIsEditOpen(false);
-                                fetchProducts();
-                            }}
-                            onCancel={() => setIsEditOpen(false)}
-                        />
+                        <>
+                            <ProductForm
+                                storeId={storeId}
+                                initialData={selectedProduct}
+                                onSuccess={() => {
+                                    setIsEditOpen(false);
+                                    fetchProducts();
+                                }}
+                                onCancel={() => setIsEditOpen(false)}
+                            />
+                            <VariantEditor productId={selectedProduct.id} />
+                        </>
                     )}
                 </DialogContent>
             </Dialog>
