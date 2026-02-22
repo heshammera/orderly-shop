@@ -1,0 +1,87 @@
+{
+  "latestUser": {
+    "id": "ec335a2d-e6f9-4f89-b7e7-389f272bac53",
+    "aud": "authenticated",
+    "role": "authenticated",
+    "email": "test42345623456789784@gmail.com",
+    "phone": "",
+    "app_metadata": {
+      "provider": "email",
+      "providers": [
+        "email"
+      ]
+    },
+    "user_metadata": {
+      "full_name": "mostafa",
+      "referral_code": "REF-8AB853",
+      "store_name": "mostafa",
+      "store_slug": "mostafa"
+    },
+    "identities": null,
+    "created_at": "2026-02-22T22:34:24.099665Z",
+    "updated_at": "2026-02-22T22:34:24.19072Z",
+    "is_anonymous": false
+  },
+  "latestStore": {
+    "id": "a35f1076-0ca0-47de-ada4-af5487450d38",
+    "owner_id": "ec335a2d-e6f9-4f89-b7e7-389f272bac53",
+    "name": {
+      "ar": "mostafa",
+      "en": "mostafa"
+    },
+    "slug": "mostafa",
+    "description": {
+      "ar": "",
+      "en": ""
+    },
+    "logo_url": null,
+    "currency": "SAR",
+    "timezone": "Asia/Riyadh",
+    "contact_email": null,
+    "contact_phone": null,
+    "address": {},
+    "settings": {},
+    "status": "active",
+    "created_at": "2026-02-22T22:34:24.094896+00:00",
+    "updated_at": "2026-02-22T22:34:24.094896+00:00",
+    "balance": 2,
+    "commission_type": "percentage",
+    "commission_value": 5,
+    "has_unlimited_balance": false,
+    "custom_domain": null,
+    "domain_verified": false,
+    "loyalty_program_enabled": false,
+    "loyalty_earning_rate": 1,
+    "loyalty_redemption_rate": 100,
+    "status_reason": null,
+    "has_removed_copyright": false,
+    "referral_code": "REF-1B4140",
+    "referred_by_store_id": "d15d258c-d249-41d7-a3af-55eea6df7170",
+    "referral_reward_paid": false
+  },
+  "walletTxs": [
+    {
+      "id": "6418ee2a-1bd7-4272-914f-9230a4770bbf",
+      "store_id": "a35f1076-0ca0-47de-ada4-af5487450d38",
+      "amount": 2,
+      "type": "deposit",
+      "reference_id": null,
+      "description": "Referral Welcome Bonus / مكافأة ترحيبية عبر دعوة",
+      "created_at": "2026-02-22T22:34:24.094896+00:00"
+    }
+  ],
+  "subscriptions": [
+    {
+      "id": "19980b57-45ce-490f-a740-c60ed87a27a3",
+      "store_id": "a35f1076-0ca0-47de-ada4-af5487450d38",
+      "plan_id": "8ed8160c-1bb2-45e8-8bc4-f0b3664a1739",
+      "status": "active",
+      "starts_at": "2026-02-22T22:34:24.094896+00:00",
+      "current_period_end": "2036-02-22T22:34:24.094896+00:00",
+      "canceled_at": null,
+      "created_at": "2026-02-22T22:34:24.094896+00:00",
+      "updated_at": "2026-02-22T22:34:24.094896+00:00",
+      "current_period_start": "2026-02-22T22:34:24.094896+00:00"
+    }
+  ]
+}
