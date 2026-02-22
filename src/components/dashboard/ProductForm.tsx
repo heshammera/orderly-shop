@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ import { Sparkles, Languages, Search } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ImageUpload } from '@/components/dashboard/ImageUpload';
 import { VariantEditor } from '@/components/dashboard/VariantEditor';
+import { UpsellManager, UpsellFormData } from '@/components/dashboard/UpsellManager';
 
 interface ProductFormProps {
     storeId: string;
@@ -33,6 +34,34 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
     const { language } = useLanguage();
     const [loading, setLoading] = useState(false);
     const [variants, setVariants] = useState<any[]>([]);
+    const [upsellOffers, setUpsellOffers] = useState<UpsellFormData[]>([]);
+
+    // Load initial Upsells
+    useEffect(() => {
+        if (initialData?.id) {
+            const fetchUpsells = async () => {
+                const { data } = await supabase
+                    .from('upsell_offers')
+                    .select('*')
+                    .eq('product_id', initialData.id)
+                    .order('sort_order');
+                if (data) {
+                    setUpsellOffers(data.map((o: any) => ({
+                        id: o.id,
+                        minQuantity: o.min_quantity.toString(),
+                        discountType: o.discount_type,
+                        discountValue: o.discount_value.toString(),
+                        labelAr: typeof o.label === 'string' ? JSON.parse(o.label).ar : o.label?.ar || '',
+                        labelEn: typeof o.label === 'string' ? JSON.parse(o.label).en : o.label?.en || '',
+                        badgeAr: typeof o.badge === 'string' ? JSON.parse(o.badge).ar : o.badge?.ar || '',
+                        badgeEn: typeof o.badge === 'string' ? JSON.parse(o.badge).en : o.badge?.en || '',
+                        isActive: o.is_active,
+                    })));
+                }
+            };
+            fetchUpsells();
+        }
+    }, [initialData?.id]);
 
     // Helper to parse JSON fields safely
     const parseField = (field: any, key: string) => {
@@ -167,6 +196,30 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
 
                         if (oError) throw oError;
                     }
+                }
+            }
+
+            // Save Upsells
+            if (savedProductId && (upsellOffers.length > 0 || initialData)) {
+                await supabase.from('upsell_offers').delete().eq('product_id', savedProductId);
+
+                if (upsellOffers.length > 0) {
+                    const offersToInsert = upsellOffers.map((o, i) => ({
+                        product_id: savedProductId,
+                        min_quantity: parseInt(o.minQuantity) || 2,
+                        discount_type: o.discountType,
+                        discount_value: parseFloat(o.discountValue) || 0,
+                        label: { ar: o.labelAr, en: o.labelEn },
+                        badge: { ar: o.badgeAr, en: o.badgeEn },
+                        is_active: o.isActive,
+                        sort_order: i,
+                    }));
+
+                    const { error } = await supabase
+                        .from('upsell_offers')
+                        .insert(offersToInsert);
+
+                    if (error) throw error;
                 }
             }
 
@@ -365,6 +418,16 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                             value={variants}
                             onChange={setVariants}
                             standalone={false}
+                            storeId={storeId}
+                        />
+                    </div>
+
+                    <div className="border-t pb-6">
+                        <UpsellManager
+                            offers={upsellOffers}
+                            onChange={setUpsellOffers}
+                            currency="SAR" // TODO: Get from store settings
+                            basePrice={parseFloat(formData.price) || 0}
                         />
                     </div>
 

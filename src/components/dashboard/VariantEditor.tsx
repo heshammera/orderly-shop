@@ -15,7 +15,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Plus, Trash2, GripVertical, Palette, Type, Image, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Palette, Type, Image as ImageIcon, ChevronDown, ChevronUp, Upload, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface VariantOption {
@@ -43,14 +43,16 @@ interface VariantEditorProps {
     value?: Variant[];
     onChange?: (variants: Variant[]) => void;
     standalone?: boolean;
+    storeId?: string;
 }
 
-export function VariantEditor({ productId, value, onChange, standalone = true }: VariantEditorProps) {
+export function VariantEditor({ productId, value, onChange, standalone = true, storeId }: VariantEditorProps) {
     const { language } = useLanguage();
     const supabase = createClient();
     const [localVariants, setLocalVariants] = useState<Variant[]>([]);
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [uploading, setUploading] = useState<Record<string, boolean>>({});
 
     const variants = value !== undefined ? value : localVariants;
 
@@ -161,6 +163,36 @@ export function VariantEditor({ productId, value, onChange, standalone = true }:
         }));
     };
 
+    const handleImageUpload = async (vIndex: number, oIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const uploadKey = `${vIndex}-${oIndex}`;
+        setUploading(prev => ({ ...prev, [uploadKey]: true }));
+
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${storeId || 'temp'}/${crypto.randomUUID()}.${fileExt}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('product-images')
+                .upload(fileName, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('product-images')
+                .getPublicUrl(fileName);
+
+            updateOption(vIndex, oIndex, 'value', publicUrl);
+        } catch (error) {
+            console.error('Upload error:', error);
+            toast.error(language === 'ar' ? 'فشل رفع الصورة' : 'Failed to upload image');
+        } finally {
+            setUploading(prev => ({ ...prev, [uploadKey]: false }));
+        }
+    };
+
     const handleSave = async () => {
         if (!productId) return;
         setSaving(true);
@@ -220,7 +252,7 @@ export function VariantEditor({ productId, value, onChange, standalone = true }:
     const getOptionTypeIcon = (type: string) => {
         switch (type) {
             case 'color': return <Palette className="w-4 h-4" />;
-            case 'image': return <Image className="w-4 h-4" />;
+            case 'image': return <ImageIcon className="w-4 h-4" />;
             default: return <Type className="w-4 h-4" />;
         }
     };
@@ -375,13 +407,53 @@ export function VariantEditor({ productId, value, onChange, standalone = true }:
                                                 placeholder="English"
                                                 className="h-8 text-xs flex-1"
                                             />
-                                            {variant.option_type !== 'color' && (
+                                            {variant.option_type === 'text' && (
                                                 <Input
                                                     value={option.value}
                                                     onChange={(e) => updateOption(vIndex, oIndex, 'value', e.target.value)}
                                                     placeholder={language === 'ar' ? 'القيمة' : 'Value'}
                                                     className="h-8 text-xs w-20"
                                                 />
+                                            )}
+                                            {variant.option_type === 'image' && (
+                                                <div className="flex items-center gap-2">
+                                                    {option.value ? (
+                                                        <div className="relative w-8 h-8 rounded border overflow-hidden group">
+                                                            <img src={option.value} alt="" className="w-full h-full object-cover" />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => updateOption(vIndex, oIndex, 'value', '')}
+                                                                className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                                            >
+                                                                <Trash2 className="w-3 h-3 text-white" />
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="w-8 h-8 rounded border border-dashed flex items-center justify-center bg-muted">
+                                                            <ImageIcon className="w-3 h-3 text-muted-foreground" />
+                                                        </div>
+                                                    )}
+                                                    <div className="relative">
+                                                        <Input
+                                                            id={`up-${vIndex}-${oIndex}`}
+                                                            type="file"
+                                                            accept="image/*"
+                                                            className="hidden"
+                                                            onChange={(e) => handleImageUpload(vIndex, oIndex, e)}
+                                                            disabled={uploading[`${vIndex}-${oIndex}`]}
+                                                        />
+                                                        <Label
+                                                            htmlFor={`up-${vIndex}-${oIndex}`}
+                                                            className="h-8 px-2 flex items-center gap-1 border rounded-md cursor-pointer hover:bg-accent text-xs"
+                                                        >
+                                                            {uploading[`${vIndex}-${oIndex}`] ? (
+                                                                <Loader2 className="w-3 h-3 animate-spin" />
+                                                            ) : (
+                                                                <Upload className="w-3 h-3" />
+                                                            )}
+                                                        </Label>
+                                                    </div>
+                                                </div>
                                             )}
                                             <Input
                                                 type="number"
