@@ -57,13 +57,17 @@ export function trackViewContent(params: {
         const ttq = getTtq();
         if (ttq) {
             ttq.track('ViewContent', {
+                content_id: String(params.content_id),
+                content_type: params.content_type || 'product',
                 contents: [{
-                    content_id: params.content_id,
-                    content_name: params.content_name,
+                    content_id: String(params.content_id),
+                    content_name: String(params.content_name || ''),
                     content_type: params.content_type || 'product',
+                    price: Number(params.value),
+                    quantity: 1
                 }],
                 currency: params.currency,
-                value: params.value,
+                value: Number(params.value),
             });
         }
 
@@ -108,15 +112,17 @@ export function trackAddToCart(params: {
         const ttq = getTtq();
         if (ttq) {
             ttq.track('AddToCart', {
+                content_id: String(params.content_id),
+                content_type: params.content_type || 'product',
                 contents: [{
-                    content_id: params.content_id,
-                    content_name: params.content_name,
+                    content_id: String(params.content_id),
+                    content_name: String(params.content_name || ''),
                     content_type: params.content_type || 'product',
-                    quantity: params.quantity,
-                    price: params.value,
+                    quantity: Number(params.quantity),
+                    price: Number(params.value),
                 }],
                 currency: params.currency,
-                value: params.value,
+                value: Number(params.value),
             });
         }
 
@@ -160,11 +166,12 @@ export function trackInitiateCheckout(params: {
         if (ttq) {
             ttq.track('InitiateCheckout', {
                 contents: params.content_ids.map(id => ({
-                    content_id: id,
+                    content_id: String(id),
                     content_type: 'product',
+                    quantity: 1,
                 })),
                 currency: params.currency,
-                value: params.value,
+                value: Number(params.value),
             });
         }
 
@@ -209,11 +216,12 @@ export function trackPurchase(params: {
         if (ttq) {
             ttq.track('CompletePayment', {
                 contents: params.content_ids.map(id => ({
-                    content_id: id,
+                    content_id: String(id),
                     content_type: params.content_type || 'product',
+                    quantity: 1,
                 })),
                 currency: params.currency,
-                value: params.value,
+                value: Number(params.value),
             });
         }
 
