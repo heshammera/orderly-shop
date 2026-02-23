@@ -404,6 +404,7 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                     const badge = offer.badge[language] || offer.badge.ar;
                                     const label = offer.label[language] || offer.label.ar;
                                     const isRecommended = idx === Math.floor(upsellOffers.length / 2);
+                                    const showRibbon = badge || (isRecommended && !badge);
 
                                     // Calculate prices for display
                                     const originalTotal = product.price * offer.min_quantity;
@@ -424,14 +425,13 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                                 isSelected
                                                     ? "border-primary shadow-md shadow-primary/10"
                                                     : isRecommended
-                                                        ? "border-primary/50 hover:border-primary"
-                                                        : "border-border/60 hover:border-primary/40",
-                                                isRecommended && !isSelected && "ring-1 ring-primary/20"
+                                                        ? "border-primary/50 hover:border-primary ring-1 ring-primary/20"
+                                                        : "border-border/60 hover:border-primary/40"
                                             )}
                                             onClick={() => setQuantity(offer.min_quantity)}
                                         >
                                             {/* Recommended / Badge ribbon */}
-                                            {(isRecommended || badge) && (
+                                            {showRibbon && (
                                                 <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground text-[11px] font-bold px-3 py-1 text-center tracking-wide">
                                                     {badge || (language === 'ar' ? '⭐ الأكثر طلباً' : '⭐ Most Popular')}
                                                 </div>
