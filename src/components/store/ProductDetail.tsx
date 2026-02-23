@@ -371,57 +371,106 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                         </div>
                     </div>
 
-                    {/* Upsell Offers - Radio Style */}
+                    {/* Upsell Offers - Premium Design */}
                     {upsellOffers.length > 0 && (
-                        <div className="space-y-3">
-                            <Label className="text-base">{language === 'ar' ? 'اختر العرض' : 'Select Offer'}</Label>
+                        <div className="space-y-2.5">
                             <RadioGroup
                                 value={quantity.toString()}
                                 onValueChange={(val) => setQuantity(parseInt(val))}
-                                className="grid gap-3"
+                                className="grid gap-2.5"
                             >
                                 {/* Default option (1 item) */}
-                                <div className={cn(
-                                    "flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all",
-                                    quantity === 1 ? "border-primary bg-primary/5" : "border-muted hover:border-primary/50"
-                                )} onClick={() => setQuantity(1)}>
+                                <div
+                                    className={cn(
+                                        "relative flex items-center justify-between p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200",
+                                        quantity === 1
+                                            ? "border-primary bg-primary/5 shadow-sm"
+                                            : "border-border/60 hover:border-primary/40 bg-card"
+                                    )}
+                                    onClick={() => setQuantity(1)}
+                                >
                                     <div className="flex items-center gap-3">
                                         <RadioGroupItem value="1" id="q-1" />
-                                        <Label htmlFor="q-1" className="cursor-pointer font-medium">
+                                        <Label htmlFor="q-1" className="cursor-pointer font-medium text-sm">
                                             {language === 'ar' ? 'قطعة واحدة' : '1 Item'}
                                         </Label>
                                     </div>
-                                    <span className="font-bold">{formatPrice(product.price)}</span>
+                                    <span className="font-bold text-sm">{formatPrice(product.price)}</span>
                                 </div>
 
                                 {/* Offers */}
-                                {upsellOffers.map((offer) => {
+                                {upsellOffers.map((offer, idx) => {
                                     const isSelected = quantity === offer.min_quantity;
                                     const badge = offer.badge[language] || offer.badge.ar;
                                     const label = offer.label[language] || offer.label.ar;
+                                    const isRecommended = idx === Math.floor(upsellOffers.length / 2);
+
+                                    // Calculate prices for display
+                                    const originalTotal = product.price * offer.min_quantity;
+                                    let discountedTotal = originalTotal;
+                                    if (offer.discount_type === 'percentage') {
+                                        discountedTotal = originalTotal * (1 - offer.discount_value / 100);
+                                    } else {
+                                        discountedTotal = Math.max(0, originalTotal - offer.discount_value);
+                                    }
+                                    const savedAmount = originalTotal - discountedTotal;
+                                    const perItem = discountedTotal / offer.min_quantity;
+
                                     return (
                                         <div
                                             key={offer.id}
                                             className={cn(
-                                                "flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all",
-                                                isSelected ? "border-primary bg-primary/5" : "border-muted hover:border-primary/50"
+                                                "relative rounded-xl border-2 cursor-pointer transition-all duration-200 overflow-hidden",
+                                                isSelected
+                                                    ? "border-primary shadow-md shadow-primary/10"
+                                                    : isRecommended
+                                                        ? "border-primary/50 hover:border-primary"
+                                                        : "border-border/60 hover:border-primary/40",
+                                                isRecommended && !isSelected && "ring-1 ring-primary/20"
                                             )}
                                             onClick={() => setQuantity(offer.min_quantity)}
                                         >
-                                            <div className="flex items-center gap-3">
-                                                <RadioGroupItem value={offer.min_quantity.toString()} id={`q-${offer.min_quantity}`} />
-                                                <div className="grid gap-1">
-                                                    <div className="flex items-center gap-2">
-                                                        <Label htmlFor={`q-${offer.min_quantity}`} className="cursor-pointer font-medium">
+                                            {/* Recommended / Badge ribbon */}
+                                            {(isRecommended || badge) && (
+                                                <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground text-[11px] font-bold px-3 py-1 text-center tracking-wide">
+                                                    {badge || (language === 'ar' ? '⭐ الأكثر طلباً' : '⭐ Most Popular')}
+                                                </div>
+                                            )}
+
+                                            <div className={cn(
+                                                "flex items-center justify-between p-3.5",
+                                                isSelected && "bg-primary/5"
+                                            )}>
+                                                <div className="flex items-center gap-3">
+                                                    <RadioGroupItem
+                                                        value={offer.min_quantity.toString()}
+                                                        id={`q-${offer.min_quantity}`}
+                                                    />
+                                                    <div className="grid gap-0.5">
+                                                        <Label htmlFor={`q-${offer.min_quantity}`} className="cursor-pointer font-semibold text-sm">
                                                             {label || `${language === 'ar' ? 'اشتري' : 'Buy'} ${offer.min_quantity}`}
                                                         </Label>
-                                                        {badge && <Badge variant="secondary" className="text-xs h-5 px-1.5">{badge}</Badge>}
+                                                        <span className="text-[11px] text-muted-foreground">
+                                                            {formatPrice(perItem)} / {language === 'ar' ? 'للقطعة' : 'each'}
+                                                        </span>
                                                     </div>
-                                                    <span className="text-xs text-green-600 font-medium">
-                                                        {language === 'ar' ? 'توفير ' : 'Save '}
+                                                </div>
+
+                                                <div className="text-end flex items-center gap-2">
+                                                    {/* Original price (strikethrough) */}
+                                                    <span className="text-xs text-muted-foreground line-through">
+                                                        {formatPrice(originalTotal)}
+                                                    </span>
+                                                    {/* Discounted price */}
+                                                    <span className="font-bold text-sm">
+                                                        {formatPrice(discountedTotal)}
+                                                    </span>
+                                                    {/* Savings badge */}
+                                                    <span className="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-[10px] font-bold px-1.5 py-0.5 rounded-md whitespace-nowrap">
+                                                        {language === 'ar' ? 'وفّر ' : '-'}
                                                         {offer.discount_type === 'percentage'
                                                             ? `${offer.discount_value}%`
-                                                            : formatPrice(offer.discount_value)}
+                                                            : formatPrice(savedAmount)}
                                                     </span>
                                                 </div>
                                             </div>
