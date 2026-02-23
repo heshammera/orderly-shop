@@ -194,27 +194,19 @@ export function StoreManagement() {
         }
     });
 
-    const getExchangeRate = (currency: string) => {
-        if (currency === 'EGP') return 50.0;
-        if (currency === 'SAR') return 3.75;
-        return 1.0;
-    };
+
 
     const manualRechargeMutation = useMutation({
         mutationFn: async (data: { id: string, amount: number, type: 'add' | 'deduct' }) => {
-            // 1. Fetch store info (currency only needed if not passed in store object, but we have it now)
-            const exchangeRate = getExchangeRate(rechargeStore?.currency || 'USD');
-
-            // Calculate local amount (Negative if deducting)
+            // Amount entered is in the store's display currency — store directly
             const rawAmount = data.type === 'deduct' ? -Math.abs(data.amount) : Math.abs(data.amount);
-            const amountLocal = rawAmount * exchangeRate;
 
             // 2. Update balance and log transaction via secure RPC
             const { error: rpcError } = await supabase.rpc('admin_recharge_wallet', {
                 p_store_id: data.id,
-                p_amount: amountLocal,
+                p_amount: rawAmount,
                 p_type: data.type === 'deduct' ? 'withdrawal' : 'deposit',
-                p_description: `Manual ${data.type === 'add' ? 'Deposit' : 'Deduction'} by Admin ($${Math.abs(data.amount)})`
+                p_description: `Manual ${data.type === 'add' ? 'Deposit' : 'Deduction'} by Admin (${Math.abs(data.amount)} ${rechargeStore?.currency || ''})`
             });
 
             if (rpcError) throw rpcError;
@@ -226,7 +218,7 @@ export function StoreManagement() {
             setRechargeType('add');
             toast({
                 title: variables.type === 'add' ? (language === 'ar' ? 'تم إضافة الرصيد' : 'Funds Added') : (language === 'ar' ? 'تم خصم الرصيد' : 'Funds Deducted'),
-                description: `Successfully ${variables.type === 'add' ? 'added' : 'deducted'} $${variables.amount}`,
+                description: `Successfully ${variables.type === 'add' ? 'added' : 'deducted'} ${variables.amount} ${rechargeStore?.currency || ''}`,
                 className: variables.type === 'add' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
             });
         },
@@ -326,8 +318,6 @@ export function StoreManagement() {
                                 ? nameData
                                 : (language === 'ar' ? nameData.ar || nameData.en : nameData.en || nameData.ar);
 
-                            const exchangeRate = getExchangeRate(store.currency || 'USD');
-                            const balanceInUSD = (store.balance || 0) / exchangeRate;
                             const ownerName = store.owner_name || 'N/A';
                             const ownerEmail = store.owner_email || 'N/A';
 
@@ -360,11 +350,6 @@ export function StoreManagement() {
                                                     <span className={(store.balance || 0) <= 0 ? 'text-red-500 font-bold' : 'text-green-600 font-bold'}>
                                                         {(store.balance || 0).toFixed(2)} {store.currency || 'USD'}
                                                     </span>
-                                                    {store.currency !== 'USD' && (
-                                                        <span className="text-xs text-muted-foreground">
-                                                            ≈ ${balanceInUSD.toFixed(2)} USD
-                                                        </span>
-                                                    )}
                                                 </>
                                             )}
                                         </div>
@@ -573,7 +558,7 @@ export function StoreManagement() {
                             </Select>
                         </div>
                         <div className="space-y-2">
-                            <Label>{language === 'ar' ? 'المبلغ (USD)' : 'Amount (USD)'}</Label>
+                            <Label>{language === 'ar' ? `المبلغ (${rechargeStore?.currency || 'USD'})` : `Amount (${rechargeStore?.currency || 'USD'})`}</Label>
                             <div className="relative">
                                 <DollarSign className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                                 <Input
