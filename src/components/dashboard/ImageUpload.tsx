@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ImagePlus, Trash, Loader2, X } from 'lucide-react';
+import { ImagePlus, Trash, Loader2, Star } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
 
 interface ImageUploadProps {
     value: string[];
@@ -57,14 +58,23 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         } finally {
             setIsUploading(false);
         }
-    }
+    };
+
+    const makeMain = (index: number) => {
+        if (index === 0) return;
+        const newImages = [...value];
+        const [selected] = newImages.splice(index, 1);
+        newImages.unshift(selected);
+        onChange(newImages);
+        toast.success(language === 'ar' ? 'تم تعيين الصورة كصورة رئيسية' : 'Set as main image');
+    };
 
     return (
         <div className="space-y-4">
             <div className="flex flex-wrap gap-4">
-                {value.map((url) => (
+                {value.map((url, index) => (
                     <div key={url} className="relative w-[200px] h-[200px] rounded-md overflow-hidden border group">
-                        <div className="absolute top-2 right-2 z-10">
+                        <div className="absolute top-2 right-2 z-10 flex flex-col gap-2">
                             <Button
                                 type="button"
                                 onClick={() => onRemove(url)}
@@ -73,7 +83,26 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                             >
                                 <Trash className="h-4 w-4" />
                             </Button>
+                            {index !== 0 && (
+                                <Button
+                                    type="button"
+                                    onClick={() => makeMain(index)}
+                                    variant="secondary"
+                                    size="icon"
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                    title={language === 'ar' ? 'تعيين كصورة رئيسية' : 'Set as main'}
+                                >
+                                    <Star className="h-4 w-4" />
+                                </Button>
+                            )}
                         </div>
+                        {index === 0 && (
+                            <div className="absolute top-2 left-2 z-10">
+                                <Badge variant="secondary" className="bg-white/80 backdrop-blur-sm text-black">
+                                    {language === 'ar' ? 'رئيسية' : 'Main'}
+                                </Badge>
+                            </div>
+                        )}
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             className="object-cover w-full h-full"

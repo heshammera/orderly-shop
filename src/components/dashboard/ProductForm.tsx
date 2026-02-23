@@ -35,6 +35,7 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
     const [loading, setLoading] = useState(false);
     const [variants, setVariants] = useState<any[]>([]);
     const [upsellOffers, setUpsellOffers] = useState<UpsellFormData[]>([]);
+    const [storeCurrency, setStoreCurrency] = useState('SAR');
 
     // Load initial Upsells
     useEffect(() => {
@@ -61,7 +62,17 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
             };
             fetchUpsells();
         }
-    }, [initialData?.id]);
+
+        // Fetch store currency
+        const fetchStoreCurrency = async () => {
+            if (!storeId) return;
+            const { data } = await supabase.from('stores').select('currency').eq('id', storeId).single();
+            if (data?.currency) {
+                setStoreCurrency(data.currency);
+            }
+        };
+        fetchStoreCurrency();
+    }, [initialData?.id, storeId]);
 
     // Helper to parse JSON fields safely
     const parseField = (field: any, key: string) => {
@@ -327,7 +338,7 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
 
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                            <Label htmlFor="price">{language === 'ar' ? 'السعر (ر.س) *' : 'Price (SAR) *'}</Label>
+                            <Label htmlFor="price">{language === 'ar' ? `السعر (${storeCurrency}) *` : `Price (${storeCurrency}) *`}</Label>
                             <Input
                                 id="price"
                                 type="number"
@@ -425,7 +436,7 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                         <UpsellManager
                             offers={upsellOffers}
                             onChange={setUpsellOffers}
-                            currency="SAR" // TODO: Get from store settings
+                            currency={storeCurrency}
                             basePrice={parseFloat(formData.price) || 0}
                         />
                     </div>
