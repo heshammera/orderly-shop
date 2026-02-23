@@ -108,7 +108,7 @@ export function StoreProducts({ store, initialCategories, initialProducts }: Sto
                 setProducts(data.map(p => ({
                     ...p,
                     name: typeof p.name === 'string' ? JSON.parse(p.name) : p.name,
-                    images: Array.isArray(p.images) ? (p.images as string[]) : [],
+                    images: typeof p.images === 'string' ? JSON.parse(p.images) : (Array.isArray(p.images) ? (p.images as string[]) : []),
                 })));
             }
         } catch (error) {
