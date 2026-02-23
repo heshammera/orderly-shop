@@ -388,13 +388,13 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                     )}
                                     onClick={() => setQuantity(1)}
                                 >
-                                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                                        <RadioGroupItem value="1" id="q-1" className="flex-shrink-0" />
-                                        <Label htmlFor="q-1" className="cursor-pointer font-medium text-sm truncate">
+                                    <div className="flex items-start sm:items-center gap-2 sm:gap-3 flex-1 pe-2">
+                                        <RadioGroupItem value="1" id="q-1" className="flex-shrink-0 mt-0.5 sm:mt-0" />
+                                        <Label htmlFor="q-1" className="cursor-pointer font-medium text-sm leading-tight">
                                             {language === 'ar' ? 'قطعة واحدة' : '1 Item'}
                                         </Label>
                                     </div>
-                                    <span className="font-bold text-sm flex-shrink-0">{formatPrice(product.price)}</span>
+                                    <span className="font-bold text-sm flex-shrink-0 whitespace-nowrap">{formatPrice(product.price)}</span>
                                 </div>
 
                                 {/* Offers */}
@@ -439,17 +439,17 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                                 "flex items-center justify-between p-3 sm:p-3.5 gap-2",
                                                 isSelected && "bg-primary/5"
                                             )}>
-                                                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                                                <div className="flex items-start sm:items-center gap-2 sm:gap-3 flex-1 pe-2">
                                                     <RadioGroupItem
                                                         value={offer.min_quantity.toString()}
                                                         id={`q-${offer.min_quantity}`}
-                                                        className="flex-shrink-0"
+                                                        className="flex-shrink-0 mt-0.5 sm:mt-0"
                                                     />
-                                                    <div className="grid gap-0.5 min-w-0">
-                                                        <Label htmlFor={`q-${offer.min_quantity}`} className="cursor-pointer font-semibold text-sm truncate">
+                                                    <div className="grid gap-0.5">
+                                                        <Label htmlFor={`q-${offer.min_quantity}`} className="cursor-pointer font-semibold text-sm leading-tight">
                                                             {label || `${language === 'ar' ? 'اشتري' : 'Buy'} ${offer.min_quantity}`}
                                                         </Label>
-                                                        <span className="text-[11px] text-muted-foreground truncate">
+                                                        <span className="text-[11px] text-muted-foreground break-words">
                                                             {formatPrice(perItem)} / {language === 'ar' ? 'للقطعة' : 'each'}
                                                         </span>
                                                     </div>
