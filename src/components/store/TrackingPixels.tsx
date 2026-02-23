@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from 'react';
 import Script from 'next/script';
 
 interface TrackingPixelsProps {
@@ -20,13 +19,17 @@ export function TrackingPixels({ integrations }: TrackingPixelsProps) {
         google_analytics_ids = [],
     } = integrations;
 
+    const hasFb = facebook_pixels.length > 0;
+    const hasTt = tiktok_pixels.length > 0;
+    const hasSc = snapchat_pixels.length > 0;
+    const hasGa = google_analytics_ids.length > 0;
+
     return (
         <>
             {/* Facebook Pixels */}
-            {facebook_pixels.map((pixelId, index) => (
+            {hasFb && (
                 <Script
-                    key={`fb-${index}`}
-                    id={`facebook-pixel-${index}`}
+                    id="facebook-pixel-base"
                     strategy="afterInteractive"
                     dangerouslySetInnerHTML={{
                         __html: `
@@ -38,36 +41,34 @@ n.queue=[];t=b.createElement(e);t.async=!0;
 t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '${pixelId}');
+${facebook_pixels.map(id => `fbq('init', '${id}');`).join('\n')}
 fbq('track', 'PageView');
                         `,
                     }}
                 />
-            ))}
+            )}
 
             {/* TikTok Pixels */}
-            {tiktok_pixels.map((pixelId, index) => (
+            {hasTt && (
                 <Script
-                    key={`tt-${index}`}
-                    id={`tiktok-pixel-${index}`}
+                    id="tiktok-pixel-base"
                     strategy="afterInteractive"
                     dangerouslySetInnerHTML={{
                         __html: `
 !function (w, d, t) {
   w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};
-  ttq.load('${pixelId}');
+  ${tiktok_pixels.map(id => `ttq.load('${id}');`).join('\n  ')}
   ttq.page();
 }(window, document, 'ttq');
                         `,
                     }}
                 />
-            ))}
+            )}
 
             {/* Snapchat Pixels */}
-            {snapchat_pixels.map((pixelId, index) => (
+            {hasSc && (
                 <Script
-                    key={`sc-${index}`}
-                    id={`snapchat-pixel-${index}`}
+                    id="snapchat-pixel-base"
                     strategy="afterInteractive"
                     dangerouslySetInnerHTML={{
                         __html: `
@@ -77,34 +78,36 @@ a.queue=[];var s='script';r=t.createElement(s);r.async=!0;
 r.src=n;var u=t.getElementsByTagName(s)[0];
 u.parentNode.insertBefore(r,u);})(window,document,
 'https://sc-static.net/scevent.min.js');
-snaptr('init', '${pixelId}', {});
+${snapchat_pixels.map(id => `snaptr('init', '${id}', {});`).join('\n')}
 snaptr('track', 'PAGE_VIEW');
                         `,
                     }}
                 />
-            ))}
+            )}
 
             {/* Google Analytics */}
-            {google_analytics_ids.map((gaId, index) => (
-                <div key={`ga-${index}`}>
+            {hasGa && (
+                <>
+                    {/* Load the gtag script for the first ID (it supports multiple IDs once loaded) */}
                     <Script
-                        src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+                        src={`https://www.googletagmanager.com/gtag/js?id=${google_analytics_ids[0]}`}
                         strategy="afterInteractive"
                     />
                     <Script
-                        id={`google-analytics-${index}`}
+                        id="google-analytics-base"
                         strategy="afterInteractive"
                         dangerouslySetInnerHTML={{
                             __html: `
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
-gtag('config', '${gaId}');
+${google_analytics_ids.map(id => `gtag('config', '${id}');`).join('\n')}
                             `,
                         }}
                     />
-                </div>
-            ))}
+                </>
+            )}
         </>
     );
 }
+
