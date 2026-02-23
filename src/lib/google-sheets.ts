@@ -142,3 +142,30 @@ export async function checkSheetAccess(serviceAccount: string, sheetId: string):
         return false;
     }
 }
+
+export async function getSheetValues(
+    serviceAccount: string,
+    sheetId: string,
+    range: string
+) {
+    try {
+        const token = await getGoogleAuthToken(serviceAccount);
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}`;
+
+        const response = await fetch(url, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            return null;
+        }
+
+        const data = await response.json();
+        return data.values || [];
+    } catch (error) {
+        console.error('Error getting values from Google Sheet:', error);
+        return null;
+    }
+}

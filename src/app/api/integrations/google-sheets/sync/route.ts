@@ -1,7 +1,24 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { appendRow } from '@/lib/google-sheets';
+import { appendRow, getSheetValues } from '@/lib/google-sheets';
 import { createAdminClient } from '@/lib/supabase/admin';
+
+const HEADER_ROW = [
+    'Order Number',
+    'Date',
+    'Status',
+    'Customer Name',
+    'Phone',
+    'City',
+    'Address',
+    'Product Name',
+    'Variants',
+    'Quantity',
+    'Unit Price',
+    'Item Total',
+    'Order Total',
+    'Notes'
+];
 
 export async function POST(req: NextRequest) {
     try {
@@ -116,6 +133,18 @@ export async function POST(req: NextRequest) {
                         : (item.product?.name || 'Product');
                 }
 
+                // Extract Variants
+                let variantsStr = '';
+                if (item.product_snapshot?.variants && Array.isArray(item.product_snapshot.variants)) {
+                    variantsStr = item.product_snapshot.variants
+                        .map((v: any) => `${v.variantName || v.name}: ${v.optionLabel || v.value}`)
+                        .join(', ');
+                } else if (item.variants && Array.isArray(item.variants)) {
+                    variantsStr = item.variants
+                        .map((v: any) => `${v.variantName || v.name}: ${v.optionLabel || v.value}`)
+                        .join(', ');
+                }
+
                 return [
                     order.order_number,
                     new Date(order.created_at).toLocaleString('en-US'),
@@ -125,6 +154,7 @@ export async function POST(req: NextRequest) {
                     order.shipping_address?.city || '',
                     order.shipping_address?.address || '',
                     productName,
+                    variantsStr,
                     item.quantity,
                     item.unit_price,
                     item.total_price,
@@ -134,8 +164,18 @@ export async function POST(req: NextRequest) {
             });
 
             try {
-                console.log(`Exporting to sheet ${sheetId}, Tab: ${tabName}, rows: ${rows.length}`);
-                const response = await appendRow(serviceAccount, sheetId, tabName, rows);
+                // Check if we need to add a header
+                console.log(`Checking if header exists for sheet ${sheetId}, Tab: ${tabName}`);
+                const existingValues = await getSheetValues(serviceAccount, sheetId, `${tabName}!A1:A1`);
+
+                const rowsToExport = [...rows];
+                if (!existingValues || existingValues.length === 0) {
+                    console.log('Sheet is empty, adding header row');
+                    rowsToExport.unshift(HEADER_ROW);
+                }
+
+                console.log(`Exporting to sheet ${sheetId}, Tab: ${tabName}, rows: ${rowsToExport.length}`);
+                const response = await appendRow(serviceAccount, sheetId, tabName, rowsToExport);
                 console.log(`Sync success for integration ${integration.id}:`, response);
                 results.push({ id: integration.id, status: 'success' });
             } catch (error: any) {
