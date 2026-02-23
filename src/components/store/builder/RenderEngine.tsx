@@ -74,13 +74,19 @@ const COMPONENT_MAP: Record<string, any> = {
     'ExitIntentPopup': ExitIntentPopup
 };
 
-export function RenderEngine({ schema, storeId, storeCurrency, storeSlug, store, isEditable = false, onUpdate, onSelectComponent, selectedComponentId, onDelete, onMoveUp, onMoveDown }: {
+export function RenderEngine({
+    schema, storeId, storeCurrency, storeSlug, store,
+    isEditable = false,
+    fullHeight = true,
+    onUpdate, onSelectComponent, selectedComponentId, onDelete, onMoveUp, onMoveDown
+}: {
     schema: PageSchema,
     storeId: string,
     storeCurrency?: string,
     storeSlug?: string,
     store?: any,
     isEditable?: boolean,
+    fullHeight?: boolean,
     onUpdate?: (id: string, content: any) => void,
     onSelectComponent?: (id: string) => void,
     selectedComponentId?: string | null,
@@ -91,7 +97,7 @@ export function RenderEngine({ schema, storeId, storeCurrency, storeSlug, store,
     if (!schema || !schema.sections) return null;
 
     return (
-        <div className="min-h-screen bg-background text-foreground" style={{
+        <div className={fullHeight ? "min-h-screen" : ""} style={{
             // Apply global CSS variables/styles if needed based on schema.globalSettings
             // '--primary': schema.globalSettings.colors.primary 
         } as any}>
@@ -127,6 +133,6 @@ export function RenderEngine({ schema, storeId, storeCurrency, storeSlug, store,
                     </div>
                 );
             })}
-        </div>
+        </ div>
     );
 }

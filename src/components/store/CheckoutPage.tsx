@@ -45,6 +45,7 @@ export function CheckoutPage({ store, pageSchema }: CheckoutPageProps) {
                         storeId={store.id}
                         storeCurrency={store.currency}
                         storeSlug={store.slug}
+                        fullHeight={false}
                     />
                 )}
 
@@ -60,6 +61,7 @@ export function CheckoutPage({ store, pageSchema }: CheckoutPageProps) {
                                 storeId={store.id}
                                 storeCurrency={store.currency}
                                 storeSlug={store.slug}
+                                fullHeight={false}
                             />
                         </div>
 
@@ -73,6 +75,7 @@ export function CheckoutPage({ store, pageSchema }: CheckoutPageProps) {
                                 storeId={store.id}
                                 storeCurrency={store.currency}
                                 storeSlug={store.slug}
+                                fullHeight={false}
                             />
                         </aside>
                     </div>
