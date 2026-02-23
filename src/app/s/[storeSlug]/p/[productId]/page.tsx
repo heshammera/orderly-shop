@@ -22,7 +22,12 @@ export async function generateMetadata({ params }: { params: { storeSlug: string
 
     const name = typeof product.name === 'string' ? JSON.parse(product.name) : product.name;
     const desc = typeof product.description === 'string' ? JSON.parse(product.description) : product.description;
-    const images = Array.isArray(product.images) ? product.images : [];
+    let images: string[] = [];
+    try {
+        images = typeof product.images === 'string' ? JSON.parse(product.images) : (Array.isArray(product.images) ? product.images : []);
+    } catch {
+        images = [];
+    }
 
     return {
         title: name?.en || name?.ar || 'Product',
@@ -85,11 +90,18 @@ export default async function ProductPage({ params }: { params: { storeSlug: str
     }
 
     // Parse Data
+    let parsedImages: string[] = [];
+    try {
+        parsedImages = typeof productRes.data.images === 'string' ? JSON.parse(productRes.data.images) : (Array.isArray(productRes.data.images) ? productRes.data.images : []);
+    } catch {
+        parsedImages = [];
+    }
+
     const product = {
         ...productRes.data,
         name: typeof productRes.data.name === 'string' ? JSON.parse(productRes.data.name) : productRes.data.name,
         description: typeof productRes.data.description === 'string' ? JSON.parse(productRes.data.description) : productRes.data.description || { ar: '', en: '' },
-        images: Array.isArray(productRes.data.images) ? (productRes.data.images as string[]) : [],
+        images: parsedImages,
     };
 
     const variants = variantsRes.data?.map((v: any) => ({
