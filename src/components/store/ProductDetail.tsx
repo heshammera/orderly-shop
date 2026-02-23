@@ -279,8 +279,8 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
     const applicableOffer = getApplicableOffer();
 
     return (
-        <div className="container mx-auto px-4 py-6 pb-32 md:py-8 md:pb-8">
-            <div className="grid md:grid-cols-2 gap-6 md:gap-8 lg:gap-12">
+        <div className="container mx-auto px-4 py-6 pb-32 md:py-8 md:pb-8 w-full max-w-[100vw] overflow-hidden">
+            <div className="grid md:grid-cols-2 gap-6 md:gap-8 lg:gap-12 w-full max-w-full">
                 {/* Image Gallery */}
                 <div className="space-y-4">
                     <div className="aspect-square bg-muted rounded-lg overflow-hidden relative">
@@ -340,8 +340,8 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                 </div>
 
                 {/* Product Info */}
-                <div className="space-y-8">
-                    <div className="min-w-0">
+                <div className="space-y-8 w-full max-w-full">
+                    <div className="min-w-0 w-full overflow-hidden">
                         <h1 className="text-2xl md:text-3xl font-bold mb-2 break-words">{productName}</h1>
                         <div className="flex items-center justify-between">
                             <div>
