@@ -156,7 +156,47 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
             // 2. Fetch Orders
             await fetchOrders();
         };
+
         init();
+    }, [storeId]);
+
+    const [linkedProductIds, setLinkedProductIds] = useState<Set<string> | 'all'>(new Set());
+
+    useEffect(() => {
+        const fetchIntegrations = async () => {
+            if (!storeId) return;
+            const { data, error } = await supabase
+                .from('store_integrations')
+                .select('config')
+                .eq('store_id', storeId)
+                .eq('provider', 'google_sheets')
+                .eq('is_active', true);
+
+            if (error || !data || data.length === 0) {
+                setLinkedProductIds(new Set());
+                return;
+            }
+
+            let isAll = false;
+            const productIds = new Set<string>();
+            data.forEach(integration => {
+                const config = integration.config as any;
+                if (!config) return;
+                const mode = config.mode || 'all';
+                if (mode === 'all') {
+                    isAll = true;
+                } else if (config.product_ids && Array.isArray(config.product_ids)) {
+                    config.product_ids.forEach((id: string) => productIds.add(id));
+                }
+            });
+
+            if (isAll) {
+                setLinkedProductIds('all');
+            } else {
+                setLinkedProductIds(productIds);
+            }
+        };
+        fetchIntegrations();
     }, [storeId]);
 
     const fetchOrders = async () => {
@@ -176,6 +216,7 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
                   is_synced,
                   order_items (
                     id,
+                    product_id,
                     product_snapshot,
                     quantity,
                     unit_price
@@ -203,9 +244,8 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
     // ... existing handlers ...
 
     const isProductGoogleSheetLinked = (item: any) => {
-        const snapshot = item.product_snapshot;
-        if (!snapshot) return false;
-        return !!snapshot.google_sheet_url || !!snapshot.integration_details;
+        if (linkedProductIds === 'all') return true;
+        return linkedProductIds.has(item.product_id);
     };
 
     const isOrderGoogleSheetLinked = (order: Order) => {
