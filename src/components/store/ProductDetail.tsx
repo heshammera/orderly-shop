@@ -279,7 +279,7 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
     const applicableOffer = getApplicableOffer();
 
     return (
-        <div className="container mx-auto py-6 pb-32 md:py-8 md:pb-8">
+        <div className="container mx-auto px-4 py-6 pb-32 md:py-8 md:pb-8">
             <div className="grid md:grid-cols-2 gap-6 md:gap-8 lg:gap-12">
                 {/* Image Gallery */}
                 <div className="space-y-4">
