@@ -280,6 +280,16 @@ export function QuickOrderForm({ isOpen, onClose, product, quantity, variants, s
                         />
                     </div>
 
+                    <div className="space-y-2">
+                        <Label htmlFor="qo-notes">{language === 'ar' ? 'ملاحظات (اختياري)' : 'Notes (Optional)'}</Label>
+                        <Textarea
+                            id="qo-notes"
+                            value={formData.notes}
+                            onChange={e => setFormData({ ...formData, notes: e.target.value })}
+                            placeholder={language === 'ar' ? 'أي ملاحظات إضافية...' : 'Any additional notes...'}
+                        />
+                    </div>
+
                     <div className="bg-muted p-4 rounded-lg space-y-2 text-sm">
                         <div className="flex justify-between">
                             <span>{language === 'ar' ? 'سعر المنتج' : 'Product Price'}</span>
