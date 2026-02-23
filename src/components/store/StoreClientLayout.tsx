@@ -148,7 +148,7 @@ export function StoreClientLayout({ children, store, integrations = {} }: StoreL
     const { dir } = useLanguage();
 
     return (
-        <div className="min-h-screen bg-background" dir={dir}>
+        <div className="min-h-[100dvh] bg-background flex flex-col overflow-x-hidden relative max-w-[100vw]" dir={dir}>
             <CartProvider storeId={store.id}>
                 <TrackingPixels integrations={integrations} />
                 <StoreHeader store={store} />
