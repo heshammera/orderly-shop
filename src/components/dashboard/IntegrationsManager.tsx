@@ -56,7 +56,6 @@ interface Product {
     id: string;
     name_ar: string;
     name_en: string;
-    image_url: string;
 }
 
 // Move PixelCard outside to prevent re-creation
@@ -216,12 +215,24 @@ export function IntegrationsManager({ storeId }: IntegrationsManagerProps) {
                 // 3. Fetch Products for Selector
                 const { data: productsData } = await supabase
                     .from('products')
-                    .select('id, name_ar, name_en, image_url')
+                    .select('id, name')
                     .eq('store_id', storeId)
-                    .eq('is_archived', false);
+                    .eq('status', 'active');
 
                 if (productsData) {
-                    setProducts(productsData);
+                    setProducts(productsData.map((p: any) => {
+                        let nameObj: any = {};
+                        try {
+                            nameObj = typeof p.name === 'string' ? JSON.parse(p.name) : (p.name || {});
+                        } catch (e) {
+                            nameObj = { ar: p.name, en: p.name };
+                        }
+                        return {
+                            id: p.id,
+                            name_ar: nameObj.ar || '',
+                            name_en: nameObj.en || ''
+                        };
+                    }));
                 }
 
             } catch (error) {
@@ -689,8 +700,8 @@ export function IntegrationsManager({ storeId }: IntegrationsManagerProps) {
                             {/* Validation / Status Message */}
                             {sheetTestStatus !== 'idle' && (
                                 <div className={`text-xs flex items-center gap-1 ${sheetTestStatus === 'success' ? 'text-green-600' :
-                                        sheetTestStatus === 'duplicate' ? 'text-orange-600 font-medium' :
-                                            'text-red-500'
+                                    sheetTestStatus === 'duplicate' ? 'text-orange-600 font-medium' :
+                                        'text-red-500'
                                     }`}>
                                     {sheetTestStatus === 'success' && <CheckCircle2 className="w-3 h-3" />}
                                     {sheetTestStatus === 'duplicate' && <AlertTriangle className="w-3 h-3" />}
