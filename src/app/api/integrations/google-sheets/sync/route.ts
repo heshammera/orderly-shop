@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
                 *,
                 order_items (
                     *,
-                    product:products(name_ar, name_en)
+                    product:products(name)
                 ),
                 customer:customers(*)
             `)
@@ -114,6 +114,17 @@ export async function POST(req: NextRequest) {
             // Or aggregate? Let's do one row per item for now as it's standard.
 
             const rows = itemsToExport.map((item: any) => {
+                let productName = 'Unknown Product';
+                if (item.product_snapshot?.name) {
+                    productName = typeof item.product_snapshot.name === 'string'
+                        ? (JSON.parse(item.product_snapshot.name).ar || JSON.parse(item.product_snapshot.name).en)
+                        : (item.product_snapshot.name.ar || item.product_snapshot.name.en);
+                } else if (item.product?.name) {
+                    productName = typeof item.product.name === 'string'
+                        ? (JSON.parse(item.product.name).ar || JSON.parse(item.product.name).en)
+                        : (item.product.name.ar || item.product.name.en);
+                }
+
                 return [
                     order.order_number,
                     new Date(order.created_at).toLocaleString('en-US'),
@@ -122,7 +133,7 @@ export async function POST(req: NextRequest) {
                     order.customer_snapshot?.phone || order.customer?.phone || '',
                     order.shipping_address?.city || '',
                     order.shipping_address?.address || '',
-                    item.product_snapshot?.name || item.product?.name_en || 'Unknown Product',
+                    productName,
                     item.quantity,
                     item.unit_price,
                     item.total_price,

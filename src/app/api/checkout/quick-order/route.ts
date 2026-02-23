@@ -113,6 +113,22 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Failed to create order items: ' + itemError.message }, { status: 500 });
         }
 
+        // 4. Trigger Google Sheets Sync
+        try {
+            // We use absolute URL for server-side fetch or just fire and forget
+            const protocol = request.headers.get('x-forwarded-proto') || 'http';
+            const host = request.headers.get('host');
+            const baseUrl = `${protocol}://${host}`;
+
+            fetch(`${baseUrl}/api/integrations/google-sheets/sync`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId: orderData.id, storeId: store_id })
+            }).catch(e => console.error('Failed to trigger GS sync:', e));
+        } catch (e) {
+            console.error('Failed to initiate sync call:', e);
+        }
+
         return NextResponse.json({
             success: true,
             order_number: orderData.order_number,
