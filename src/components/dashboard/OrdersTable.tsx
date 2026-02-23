@@ -23,7 +23,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, Search, Download, Loader2, Plus, Calendar as CalendarIcon, Filter, X, Trash2, Printer, AlertTriangle } from 'lucide-react';
+import { Eye, Search, Download, Loader2, Plus, Calendar as CalendarIcon, Filter, X, Trash2, Printer, AlertTriangle, RefreshCw, FileSpreadsheet } from 'lucide-react';
 import { PrintableOrderInvoice } from './PrintableOrderInvoice';
 import { format } from 'date-fns';
 import { OrderDetailsDialog } from './OrderDetailsDialog';
@@ -32,6 +32,16 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 
 interface Order {
     id: string;
@@ -41,6 +51,8 @@ interface Order {
     currency: string;
     customer_snapshot: any;
     created_at: string;
+    is_viewed?: boolean;
+    is_synced?: boolean;
     items: any[];
 }
 
@@ -73,6 +85,12 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
     // Bulk Selection State
     const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
     const printRef = useRef<HTMLDivElement>(null);
+
+    // Export and Sync State
+    const [exportDialogOpen, setExportDialogOpen] = useState(false);
+    const [exportDateRange, setExportDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
+    const [exporting, setExporting] = useState(false);
+    const [syncingOrders, setSyncingOrders] = useState<Set<string>>(new Set());
 
     // Enable Real-time updates
     useRealtimeOrders(storeId, setOrders);
@@ -154,6 +172,8 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
                   currency,
                   customer_snapshot,
                   created_at,
+                  is_viewed,
+                  is_synced,
                   order_items (
                     id,
                     product_snapshot,
@@ -182,6 +202,159 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
 
     // ... existing handlers ...
 
+    const isProductGoogleSheetLinked = (item: any) => {
+        const snapshot = item.product_snapshot;
+        if (!snapshot) return false;
+        return !!snapshot.google_sheet_url || !!snapshot.integration_details;
+    };
+
+    const isOrderGoogleSheetLinked = (order: Order) => {
+        return order.items.some(isProductGoogleSheetLinked);
+    };
+
+    const handleSyncOrder = async (order: Order) => {
+        if (order.is_synced) {
+            toast.error(language === 'ar' ? 'الطلب متزامن مسبقاً' : 'Order already synced');
+            return;
+        }
+
+        if (!isOrderGoogleSheetLinked(order)) {
+            toast.error(language === 'ar' ? 'لا توجد منتجات مرتبطة بجوجل شيت' : 'No Google Sheet linked products');
+            return;
+        }
+
+        setSyncingOrders(prev => new Set(prev).add(order.id));
+        try {
+            const res = await fetch('/api/store/google-sheets/sync-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId: order.id, storeId })
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Sync failed');
+            }
+
+            const { error } = await supabase.from('orders').update({ is_synced: true }).eq('id', order.id);
+            if (error) throw error;
+
+            toast.success(language === 'ar' ? 'تمت مزامنة الطلب' : 'Order synced successfully');
+            setOrders(prev => prev.map(o => o.id === order.id ? { ...o, is_synced: true } : o));
+        } catch (error) {
+            console.error('Sync error:', error);
+            toast.error(language === 'ar' ? 'فشل المزامنة، حاول مجدداً' : 'Failed to sync order');
+        } finally {
+            setSyncingOrders(prev => {
+                const next = new Set(prev);
+                next.delete(order.id);
+                return next;
+            });
+        }
+    };
+
+    const handleBulkSync = async () => {
+        const eligibleOrders = orders.filter(o => selectedOrders.includes(o.id) && !o.is_synced && isOrderGoogleSheetLinked(o));
+
+        if (eligibleOrders.length === 0) {
+            toast.error(language === 'ar' ? 'لا توجد طلبات قابلة للمزامنة' : 'No eligible orders to sync');
+            return;
+        }
+
+        const idsToSync = eligibleOrders.map(o => o.id);
+        idsToSync.forEach(id => setSyncingOrders(prev => new Set(prev).add(id)));
+
+        try {
+            const promises = idsToSync.map(id => fetch('/api/store/google-sheets/sync-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId: id, storeId })
+            }).then(res => {
+                if (!res.ok) throw new Error(`Sync failed for ${id}`);
+                return res;
+            }));
+
+            await Promise.allSettled(promises);
+
+            const { error } = await supabase.from('orders').update({ is_synced: true }).in('id', idsToSync);
+            if (error) throw error;
+
+            toast.success(language === 'ar' ? `تمت مزامنة ${eligibleOrders.length} طلب بنجاح` : `${eligibleOrders.length} orders synced successfully`);
+            setOrders(prev => prev.map(o => idsToSync.includes(o.id) ? { ...o, is_synced: true } : o));
+            setSelectedOrders([]);
+        } catch (error) {
+            console.error('Bulk sync error:', error);
+            toast.error(language === 'ar' ? 'حدث خطأ أثناء المزامنة المجمعة' : 'Failed to sync orders');
+        } finally {
+            setSyncingOrders(prev => {
+                const next = new Set(prev);
+                idsToSync.forEach(id => next.delete(id));
+                return next;
+            });
+        }
+    };
+
+    const handleExportExcel = async () => {
+        if (!exportDateRange.from || !exportDateRange.to) {
+            toast.error(language === 'ar' ? 'يرجى تحديد تفضيلات التاريخ' : 'Please select date range');
+            return;
+        }
+
+        setExporting(true);
+        try {
+            const endOfDay = new Date(exportDateRange.to);
+            endOfDay.setHours(23, 59, 59, 999);
+
+            const { data, error } = await supabase
+                .from('orders')
+                .select(`
+                  order_number,
+                  status,
+                  total,
+                  currency,
+                  created_at,
+                  customer_snapshot,
+                  is_synced
+                `)
+                .eq('store_id', storeId)
+                .gte('created_at', exportDateRange.from.toISOString())
+                .lte('created_at', endOfDay.toISOString())
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            if (!data || data.length === 0) {
+                toast.error(language === 'ar' ? 'لا توجد طلبات في هذا النطاق الزمني' : 'No orders found in this date range');
+                setExporting(false);
+                return;
+            }
+
+            const excelData = data.map(order => ({
+                [language === 'ar' ? 'رقم الطلب' : 'Order ID']: order.order_number,
+                [language === 'ar' ? 'التاريخ' : 'Date']: format(new Date(order.created_at), 'yyyy-MM-dd HH:mm'),
+                [language === 'ar' ? 'العميل' : 'Customer']: order.customer_snapshot?.name || '',
+                [language === 'ar' ? 'رقم الهاتف' : 'Phone']: order.customer_snapshot?.phone || '',
+                [language === 'ar' ? 'الحالة' : 'Status']: order.status,
+                [language === 'ar' ? 'الإجمالي' : 'Total']: `${order.total} ${order.currency}`,
+                [language === 'ar' ? 'متزامن؟' : 'Synced?']: order.is_synced ? 'Yes' : 'No'
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Orders');
+
+            XLSX.writeFile(workbook, `orders -export -${format(new Date(), 'yyyy-MM-dd')
+                }.xlsx`);
+            toast.success(language === 'ar' ? 'تم التصدير بنجاح' : 'Exported successfully');
+            setExportDialogOpen(false);
+        } catch (error) {
+            console.error('Export error:', error);
+            toast.error(language === 'ar' ? 'فشل التصدير' : 'Failed to export orders');
+        } finally {
+            setExporting(false);
+        }
+    };
+
     // Data Masking Helper
     const maskData = (text: string | undefined | null) => {
         if (!text) return '';
@@ -192,7 +365,7 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
             if (word.length <= 2) return '**';
             const first = word[0];
             const last = word[word.length - 1];
-            return `${first}****${last}`;
+            return `${first}**** ${last} `;
         }).join(' ');
     };
 
@@ -218,13 +391,22 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
         }
     };
 
-    const handleViewDetails = (order: Order) => {
+    const handleViewDetails = async (order: Order) => {
         setSelectedOrder(order);
         setDetailsOpen(true);
+
+        if (!order.is_viewed) {
+            try {
+                setOrders(prev => prev.map(o => o.id === order.id ? { ...o, is_viewed: true } : o));
+                await supabase.from('orders').update({ is_viewed: true }).eq('id', order.id);
+            } catch (error) {
+                console.error('Failed to mark as viewed', error);
+            }
+        }
     };
 
     // Dynamic Filters
-    type FilterType = 'status' | 'order_number' | 'customer_name' | 'customer_phone' | 'customer_address' | 'product_name' | 'date_range' | 'total_min' | 'total_max';
+    type FilterType = 'status' | 'sync_status' | 'order_number' | 'customer_name' | 'customer_phone' | 'customer_address' | 'product_name' | 'date_range' | 'total_min' | 'total_max';
 
     interface ActiveFilter {
         id: string;
@@ -258,6 +440,11 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
             switch (filter.type) {
                 case 'status':
                     return order.status === filter.value;
+                case 'sync_status':
+                    if (filter.value === 'synced') return order.is_synced === true;
+                    if (filter.value === 'pending') return !order.is_synced && isOrderGoogleSheetLinked(order);
+                    if (filter.value === 'not_linked') return !order.is_synced && !isOrderGoogleSheetLinked(order);
+                    return true;
                 case 'order_number':
                     return order.order_number.toLowerCase().includes(filter.value.toLowerCase());
                 case 'customer_name':
@@ -294,6 +481,7 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
     const getFilterLabel = (type: FilterType) => {
         const labels: Record<FilterType, { ar: string, en: string }> = {
             status: { ar: 'حالة الطلب', en: 'Status' },
+            sync_status: { ar: 'حالة المزامنة', en: 'Sync Status' },
             order_number: { ar: 'رقم الطلب', en: 'Order Number' },
             customer_name: { ar: 'اسم العميل', en: 'Customer Name' },
             customer_phone: { ar: 'رقم الهاتف', en: 'Phone Number' },
@@ -354,29 +542,29 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
             // Add print styles
             const style = document.createElement('style');
             style.innerHTML = `
-                @media print {
-                    body * {
-                        visibility: hidden;
-                    }
-                    #print-container, #print-container * {
-                        visibility: visible;
-                    }
-                    #print-container {
-                        position: absolute;
-                        left: 0;
-                        top: 0;
-                        width: 100%;
-                        background: white;
-                    }
-                    .page-break {
-                        page-break-after: always;
-                    }
-                    @page {
-                        size: A4;
-                        margin: 1cm;
-                    }
-                }
-            `;
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #print - container, #print - container * {
+                visibility: visible;
+            }
+            #print - container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100 %;
+                background: white;
+            }
+                    .page -break {
+        page -break-after: always;
+    }
+    @page {
+        size: A4;
+        margin: 1cm;
+    }
+}
+`;
             document.head.appendChild(style);
 
             window.print();
@@ -426,7 +614,7 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
                         {language === 'ar' ? 'طلب جديد' : 'New Order'}
                     </Button>
                     {!storeRestricted && (
-                        <Button variant="outline">
+                        <Button variant="outline" onClick={() => setExportDialogOpen(true)}>
                             <Download className="w-4 h-4 mr-2" />
                             {language === 'ar' ? 'تصدير' : 'Export'}
                         </Button>
@@ -483,6 +671,7 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="status">{getFilterLabel('status')}</SelectItem>
+                            <SelectItem value="sync_status">{getFilterLabel('sync_status')}</SelectItem>
                             <SelectItem value="order_number">{getFilterLabel('order_number')}</SelectItem>
                             <SelectItem value="customer_name">{getFilterLabel('customer_name')}</SelectItem>
                             <SelectItem value="customer_phone">{getFilterLabel('customer_phone')}</SelectItem>
@@ -519,6 +708,19 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
                                                 <SelectItem value="shipped">Shipped</SelectItem>
                                                 <SelectItem value="delivered">Delivered</SelectItem>
                                                 <SelectItem value="cancelled">Cancelled</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+
+                                    {filter.type === 'sync_status' && (
+                                        <Select value={filter.value} onValueChange={(val) => updateFilterValue(filter.id, val)}>
+                                            <SelectTrigger className="h-8 border-none bg-transparent focus:ring-0">
+                                                <SelectValue placeholder="Select..." />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="synced">{language === 'ar' ? 'متزامن' : 'Synced'}</SelectItem>
+                                                <SelectItem value="pending">{language === 'ar' ? 'بانتظار المزامنة' : 'Pending Sync'}</SelectItem>
+                                                <SelectItem value="not_linked">{language === 'ar' ? 'غير مرتبط' : 'Not Linked'}</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     )}
@@ -603,7 +805,14 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
                                                 onCheckedChange={(checked) => handleSelectOrder(order.id, checked as boolean)}
                                             />
                                         </TableCell>
-                                        <TableCell className="font-medium">#{order.order_number}</TableCell>
+                                        <TableCell className="font-medium">
+                                            #{order.order_number}
+                                            {!order.is_viewed && (
+                                                <Badge className="ml-2 bg-blue-500 hover:bg-blue-600 animate-pulse">
+                                                    {language === 'ar' ? 'جديد' : 'New'}
+                                                </Badge>
+                                            )}
+                                        </TableCell>
                                         <TableCell>
                                             <div className="flex flex-col">
                                                 <span className="font-medium text-sm">{maskData(order.customer_snapshot?.name || 'N/A')}</span>
@@ -631,19 +840,64 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
                                         </TableCell>
                                         <TableCell className="text-muted-foreground text-sm">
                                             {format(new Date(order.created_at), 'MMM dd, HH:mm')}
+                                            <div className="mt-1 flex items-center gap-1">
+                                                {order.is_synced ? (
+                                                    <Badge variant="outline" className="text-xs py-0 h-5 bg-green-50 text-green-700 border-green-200">
+                                                        <FileSpreadsheet className="w-3 h-3 mr-1" />
+                                                        {language === 'ar' ? 'متزامن' : 'Synced'}
+                                                    </Badge>
+                                                ) : isOrderGoogleSheetLinked(order) ? (
+                                                    <Badge variant="outline" className="text-xs py-0 h-5 bg-yellow-50 text-yellow-700 border-yellow-200">
+                                                        <AlertTriangle className="w-3 h-3 mr-1" />
+                                                        {language === 'ar' ? 'بانتظار المزامنة' : 'Pending Sync'}
+                                                    </Badge>
+                                                ) : (
+                                                    <Badge variant="outline" className="text-xs py-0 h-5 bg-gray-50 text-gray-500 border-gray-200">
+                                                        {language === 'ar' ? 'غير مرتبط' : 'Not Linked'}
+                                                    </Badge>
+                                                )}
+                                            </div>
                                         </TableCell>
                                         <TableCell className="font-semibold">
                                             {order.total} {order.currency}
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => handleViewDetails(order)}
-                                            >
-                                                <Eye className="w-4 h-4 mr-1" />
-                                                {language === 'ar' ? 'تفاصيل' : 'Details'}
-                                            </Button>
+                                            <div className="flex justify-end gap-2">
+                                                {!order.is_synced && isOrderGoogleSheetLinked(order) && !storeRestricted && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => handleSyncOrder(order)}
+                                                        disabled={syncingOrders.has(order.id)}
+                                                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                        title={language === 'ar' ? 'مزامنة' : 'Sync'}
+                                                    >
+                                                        <RefreshCw className={cn("w-4 h-4", syncingOrders.has(order.id) && "animate-spin")} />
+                                                    </Button>
+                                                )}
+                                                {!order.is_synced && !isOrderGoogleSheetLinked(order) && !storeRestricted && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => {
+                                                            setExportDateRange({ from: new Date(order.created_at), to: new Date(order.created_at) });
+                                                            setExportDialogOpen(true);
+                                                        }}
+                                                        className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                                                        title={language === 'ar' ? 'تصدير مرجعي كإكسل' : 'Export Excel'}
+                                                    >
+                                                        <FileSpreadsheet className="w-4 h-4" />
+                                                    </Button>
+                                                )}
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => handleViewDetails(order)}
+                                                >
+                                                    <Eye className="w-4 h-4 mr-1" />
+                                                    {language === 'ar' ? 'تفاصيل' : 'Details'}
+                                                </Button>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ))
@@ -681,10 +935,16 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
                     <div className="h-4 w-px bg-green-200" />
 
                     {!storeRestricted && (
-                        <Button variant="ghost" size="sm" onClick={handleBulkPrint} className="text-green-700 hover:text-green-900 hover:bg-green-100">
-                            <Printer className="w-4 h-4 mr-2" />
-                            {language === 'ar' ? 'طباعة الطلبات المحددة' : 'Print Selected'}
-                        </Button>
+                        <>
+                            <Button variant="ghost" size="sm" onClick={handleBulkSync} className="text-blue-700 hover:text-blue-900 hover:bg-blue-100">
+                                <RefreshCw className="w-4 h-4 mr-2" />
+                                {language === 'ar' ? 'مزامنة المحدد' : 'Sync Selected'}
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={handleBulkPrint} className="text-green-700 hover:text-green-900 hover:bg-green-100">
+                                <Printer className="w-4 h-4 mr-2" />
+                                {language === 'ar' ? 'طباعة الطلبات المحددة' : 'Print Selected'}
+                            </Button>
+                        </>
                     )}
 
                     <Button variant="ghost" size="sm" onClick={handleBulkDelete} className="text-red-600 hover:text-red-700 hover:bg-red-50">
@@ -720,6 +980,72 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
                 storeId={storeId}
                 onOrderCreated={fetchOrders}
             />
+
+            {/* Export Dialog */}
+            <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{language === 'ar' ? 'تصدير الطلبات' : 'Export Orders'}</DialogTitle>
+                        <DialogDescription>
+                            {language === 'ar' ? 'اختر النطاق الزمني للطلبات التي تريد تصديرها.' : 'Select date range for the orders you want to export.'}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="flex gap-4">
+                            <div className="flex flex-col gap-2 flex-1">
+                                <span className="text-sm font-medium">{language === 'ar' ? 'من' : 'From'}</span>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !exportDateRange.from && "text-muted-foreground")}>
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {exportDateRange.from ? format(exportDateRange.from, "PPP") : <span>Pick a date</span>}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar
+                                            mode="single"
+                                            selected={exportDateRange.from}
+                                            onSelect={(date) => setExportDateRange(prev => ({ ...prev, from: date }))}
+                                            initialFocus
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+                            <div className="flex flex-col gap-2 flex-1">
+                                <span className="text-sm font-medium">{language === 'ar' ? 'إلى' : 'To'}</span>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !exportDateRange.to && "text-muted-foreground")}>
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {exportDateRange.to ? format(exportDateRange.to, "PPP") : <span>Pick a date</span>}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar
+                                            mode="single"
+                                            selected={exportDateRange.to}
+                                            onSelect={(date) => setExportDateRange(prev => ({ ...prev, to: date }))}
+                                            initialFocus
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setExportDialogOpen(false)}>
+                            {language === 'ar' ? 'إلغاء' : 'Cancel'}
+                        </Button>
+                        <Button
+                            onClick={handleExportExcel}
+                            disabled={exporting || !exportDateRange.from || !exportDateRange.to}
+                        >
+                            {exporting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                            {language === 'ar' ? 'تصدير Excel' : 'Export Excel'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

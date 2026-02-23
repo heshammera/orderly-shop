@@ -55,15 +55,25 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ success: false, message: 'Order not found' }, { status: 404 });
         }
 
-        // 2. Fetch Store Settings (for Service Account)
+        // 2. Fetch Store Settings (for Service Account + Wallet Balance)
         const { data: store, error: storeError } = await supabase
             .from('stores')
-            .select('settings')
+            .select('settings, balance, has_unlimited_balance')
             .eq('id', storeId)
             .single();
 
         if (storeError || !store) {
             return NextResponse.json({ success: false, message: 'Store not found' }, { status: 404 });
+        }
+
+        // Check wallet balance - stop sync if balance <= 0 (unless unlimited)
+        if (!store.has_unlimited_balance && (store.balance ?? 0) <= 0) {
+            console.log(`Google Sheets sync blocked for store ${storeId}: wallet balance is ${store.balance}`);
+            return NextResponse.json({
+                success: false,
+                message: 'Wallet balance is insufficient. Please recharge to continue syncing.',
+                reason: 'insufficient_balance'
+            }, { status: 402 });
         }
 
         const serviceAccount = store.settings?.integrations?.google_service_account;
