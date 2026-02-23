@@ -230,141 +230,53 @@ export function CheckoutProvider({ store, children, isEditable = false }: Checko
                 cityOrGovName = gov ? (language === 'ar' ? gov.ar : gov.en) : selectedGovernorate;
             }
 
-            // 1. Find or Create Customer
-            let customerId = crypto.randomUUID();
-            const { data: existingCustomer } = await supabase
-                .from('customers')
-                .select('id, loyalty_points')
-                .eq('store_id', store.id)
-                .eq('phone', formData.phone)
-                .single();
-
-            if (existingCustomer) {
-                customerId = existingCustomer.id;
-            } else {
-                const { error: customerError } = await supabase
-                    .from('customers')
-                    .insert({
-                        id: customerId,
-                        store_id: store.id,
-                        name: formData.name,
-                        phone: formData.phone,
-                        address: {
-                            city: cityOrGovName,
-                            full_address: formData.address,
-                            governorate_id: selectedGovernorate,
-                            alt_phone: formData.alt_phone
-                        },
-                        total_orders: 1,
-                        total_spent: total
-                    });
-                if (customerError) throw customerError;
-            }
-
-            // 2. Create Order
-            const { data: orderData, error: orderError } = await supabase
-                .from('orders')
-                .insert({
+            // Call server-side API route (uses service_role to bypass RLS)
+            const res = await fetch('/api/checkout/place-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                     store_id: store.id,
-                    customer_id: customerId,
-                    order_number: `ORD-${Date.now().toString().slice(-6)}`,
-                    status: 'pending',
-                    subtotal: subtotal + bumpOfferTotal,
-                    discount_amount: discount,
-                    coupon_code: appliedCoupon?.code || null,
-                    subtotal_amount: subtotal,
-                    total: total,
-                    shipping_cost: shippingCost,
-                    currency: store.currency,
-                    customer_snapshot: {
+                    cart: cart.map(item => ({
+                        productId: item.productId,
+                        quantity: item.quantity,
+                        unitPrice: item.unitPrice,
+                        productName: item.productName,
+                        variants: item.variants,
+                    })),
+                    formData: {
                         name: formData.name,
                         phone: formData.phone,
                         alt_phone: formData.alt_phone,
-                        city: cityOrGovName,
-                        governorate_id: selectedGovernorate,
-                        address: formData.address
-                    },
-                    shipping_address: {
-                        city: cityOrGovName,
                         address: formData.address,
-                        governorate_id: selectedGovernorate
+                        city: formData.city,
+                        notes: formData.notes,
                     },
+                    selectedGovernorate,
+                    cityOrGovName,
+                    shippingCost,
+                    subtotal,
+                    total,
+                    discount,
+                    couponCode: appliedCoupon?.code || null,
+                    currency: store.currency,
                     notes: formData.notes,
-                    affiliate_code: document.cookie.split('; ').find(row => row.startsWith('affiliate_code='))?.split('=')[1] || null
-                })
-                .select()
-                .single();
+                    affiliate_code: document.cookie.split('; ').find(row => row.startsWith('affiliate_code='))?.split('=')[1] || null,
+                    bumpOffer: bumpOffer ? { selected: bumpOffer.selected, price: bumpOffer.price, label: bumpOffer.label } : null,
+                    redeemPoints,
+                    pointsToRedeem,
+                    language,
+                }),
+            });
 
-            if (orderError) throw orderError;
+            const result = await res.json();
 
-            // 3. Create Order Items
-            const orderItems = cart.map(item => ({
-                order_id: orderData.id,
-                product_id: item.productId,
-                quantity: item.quantity,
-                unit_price: item.unitPrice,
-                total_price: item.unitPrice * item.quantity,
-                product_snapshot: {
-                    name: typeof item.productName === 'string' ? item.productName : item.productName[language],
-                    variants: item.variants.map(v => ({
-                        ...v,
-                        variantName: typeof v.variantName === 'string' ? v.variantName : (v.variantName[language] || v.variantName.ar),
-                        optionLabel: typeof v.optionLabel === 'string' ? v.optionLabel : (v.optionLabel[language] || v.optionLabel.ar)
-                    }))
-                }
-            }));
-
-            if (bumpOffer?.selected) {
-                orderItems.push({
-                    order_id: orderData.id,
-                    product_id: 'bump-offer',
-                    quantity: 1,
-                    unit_price: bumpOffer.price,
-                    total_price: bumpOffer.price,
-                    product_snapshot: {
-                        name: bumpOffer.label,
-                        variants: []
-                    }
-                });
+            if (!res.ok) {
+                throw new Error(result.error || 'Failed to place order');
             }
-
-            const { error: itemsError } = await supabase
-                .from('order_items')
-                .insert(orderItems);
-
-            if (itemsError) throw itemsError;
-
-            // 4. Increment Coupon Usage
-            if (appliedCoupon) {
-                await supabase.rpc('increment_coupon_usage', {
-                    coupon_code: appliedCoupon.code,
-                    store_id_param: store.id
-                });
-            }
-
-            // 5. Redeem Loyalty Points
-            if (redeemPoints && pointsToRedeem > 0) {
-                await supabase.from('loyalty_transactions').insert({
-                    store_id: store.id,
-                    customer_id: customerId,
-                    points: -Math.floor(pointsToRedeem),
-                    type: 'redeem',
-                    order_id: orderData.id,
-                    description: `Redeemed for Order #${orderData.order_number}`
-                });
-            }
-
-            // 6. Trigger Google Sheets Sync (Fire and Forget)
-            fetch('/api/integrations/google-sheets/sync', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ orderId: orderData.id, storeId: store.id })
-            }).catch(err => console.error('Failed to trigger Google Sheets sync:', err));
-
 
             await clearCart();
             setSuccess(true);
-            router.replace(`/s/${store.slug}/checkout/success?orderId=${orderData.order_number}`);
+            router.replace(`/s/${store.slug}/checkout/success?orderId=${result.order_number}`);
 
         } catch (error: any) {
             console.error(error);
