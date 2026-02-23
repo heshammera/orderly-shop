@@ -209,23 +209,15 @@ export function StoreManagement() {
             const rawAmount = data.type === 'deduct' ? -Math.abs(data.amount) : Math.abs(data.amount);
             const amountLocal = rawAmount * exchangeRate;
 
-            // 2. Update balance via RPC
-            const { error: rpcError } = await supabase.rpc('increment_store_balance', {
-                store_id_input: data.id,
-                amount_input: amountLocal
+            // 2. Update balance and log transaction via secure RPC
+            const { error: rpcError } = await supabase.rpc('admin_recharge_wallet', {
+                p_store_id: data.id,
+                p_amount: amountLocal,
+                p_type: data.type === 'deduct' ? 'withdrawal' : 'deposit',
+                p_description: `Manual ${data.type === 'add' ? 'Deposit' : 'Deduction'} by Admin ($${Math.abs(data.amount)})`
             });
 
             if (rpcError) throw rpcError;
-
-            // 3. Log transaction
-            const { error: txError } = await supabase.from('wallet_transactions').insert({
-                store_id: data.id,
-                amount: amountLocal,
-                type: data.type === 'deduct' ? 'withdrawal' : 'deposit',
-                description: `Manual ${data.type === 'add' ? 'Deposit' : 'Deduction'} by Admin ($${Math.abs(data.amount)})`,
-            });
-
-            if (txError) throw txError;
         },
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ['admin-stores'] });
