@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { governorates } from '@/lib/governorates';
 import { useRouter } from 'next/navigation';
+import { trackInitiateCheckout, trackPurchase } from '@/lib/pixelTracker';
 
 interface CheckoutContextType {
     // State
@@ -125,6 +126,17 @@ export function CheckoutProvider({ store, children, isEditable = false }: Checko
             router.push(`/s/${store.slug}/products`);
         }
     }, [cartCount, success, store.slug, router, isEditable]);
+
+    // Pixel: InitiateCheckout on mount
+    useEffect(() => {
+        if (isEditable || cart.length === 0) return;
+        trackInitiateCheckout({
+            content_ids: cart.map(item => item.productId),
+            currency: store.currency,
+            value: subtotal,
+            num_items: cartCount,
+        });
+    }, []);
 
     // Fetch Points
     useEffect(() => {
@@ -273,6 +285,15 @@ export function CheckoutProvider({ store, children, isEditable = false }: Checko
             if (!res.ok) {
                 throw new Error(result.error || 'Failed to place order');
             }
+
+            // Pixel: Purchase
+            trackPurchase({
+                content_ids: cart.map(item => item.productId),
+                currency: store.currency,
+                value: total,
+                num_items: cartCount,
+                order_id: result.order_number,
+            });
 
             await clearCart();
             setSuccess(true);

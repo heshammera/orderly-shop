@@ -12,6 +12,7 @@ import { ShoppingCart, ChevronLeft, ChevronRight, Zap, Check, Loader2 } from 'lu
 import { QuickOrderForm } from '@/components/store/QuickOrderForm';
 import { cn } from '@/lib/utils';
 import { useCart } from '@/contexts/CartContext';
+import { trackViewContent, trackAddToCart } from '@/lib/pixelTracker';
 
 // Define types here or import shared types
 type DiscountType = 'fixed' | 'percentage';
@@ -79,6 +80,18 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [addingToCart, setAddingToCart] = useState(false);
     const [quickOrderOpen, setQuickOrderOpen] = useState(false);
+
+    // Pixel: ViewContent on mount
+    useEffect(() => {
+        const productName = product.name[language] || product.name.ar;
+        trackViewContent({
+            content_id: product.id,
+            content_name: productName,
+            content_type: 'product',
+            currency: store.currency,
+            value: product.price,
+        });
+    }, [product.id]);
 
     const ChevronPrev = language === 'ar' ? ChevronRight : ChevronLeft;
     const ChevronNext = language === 'ar' ? ChevronLeft : ChevronRight;
@@ -234,6 +247,17 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
 
                 await addToCart(cartItem);
             }
+
+            // Pixel: AddToCart
+            const pName = product.name[language] || product.name.ar;
+            trackAddToCart({
+                content_id: product.id,
+                content_name: pName,
+                content_type: 'product',
+                currency: store.currency,
+                value: total,
+                quantity,
+            });
 
             toast({
                 title: language === 'ar' ? 'تمت الإضافة للسلة' : 'Added to cart',
