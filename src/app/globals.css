@@ -114,11 +114,15 @@
 
   html {
     font-family: 'Cairo', 'Noto Sans Arabic', sans-serif;
+    overflow-x: hidden;
+    max-width: 100vw;
   }
 
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
+    overflow-x: hidden;
+    max-width: 100vw;
   }
 
   /* RTL Support */
@@ -132,6 +136,7 @@
 }
 
 @layer utilities {
+
   /* Direction utilities */
   .flip-x {
     transform: scaleX(-1);
@@ -144,7 +149,7 @@
 
   /* Gradient utilities */
   .gradient-accent {
-      background: linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(25 90% 55%) 100%);
+    background: linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(25 90% 55%) 100%);
   }
 
   /* Glass effect */
