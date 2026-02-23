@@ -19,24 +19,64 @@ export function CheckoutPage({ store, pageSchema }: CheckoutPageProps) {
             font: 'Inter'
         },
         sections: [
-            { ...COMPONENT_DEFAULTS['CheckoutHeader'], id: 'default-header' } as ComponentSchema,
-            { ...COMPONENT_DEFAULTS['CheckoutForm'], id: 'default-form' } as ComponentSchema,
-            { ...COMPONENT_DEFAULTS['OrderSummary'], id: 'default-summary' } as ComponentSchema,
-            { ...COMPONENT_DEFAULTS['TrustBadges'], id: 'default-badges' } as ComponentSchema,
+            { type: 'CheckoutHeader', id: 'default-header', settings: {}, content: {} },
+            { type: 'CheckoutForm', id: 'default-form', settings: { layout: 'split', showLabels: true }, content: {} },
+            { type: 'OrderSummary', id: 'default-summary', settings: { sticky: true }, content: {} },
+            { type: 'TrustBadges', id: 'default-badges', settings: {}, content: {} },
         ]
     } as PageSchema;
 
-    if (!store) return <Loader2 className="animate-spin" />;
+    const headerSection = schema.sections.find(s => s.type === 'CheckoutHeader');
+    const otherSections = schema.sections.filter(s => s.type !== 'CheckoutHeader');
+
+    if (!store) return (
+        <div className="min-h-screen flex items-center justify-center">
+            <Loader2 className="animate-spin w-8 h-8 text-primary" />
+        </div>
+    );
 
     return (
         <CheckoutProvider store={store}>
-            <div className="min-h-screen bg-slate-50">
-                <RenderEngine
-                    schema={schema}
-                    storeId={store.id}
-                    storeCurrency={store.currency}
-                    storeSlug={store.slug}
-                />
+            <div className="min-h-screen bg-[#f8fafc]">
+                {/* Fixed Header */}
+                {headerSection && (
+                    <RenderEngine
+                        schema={{ ...schema, sections: [headerSection] }}
+                        storeId={store.id}
+                        storeCurrency={store.currency}
+                        storeSlug={store.slug}
+                    />
+                )}
+
+                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+                    <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8 items-start">
+                        {/* Left Side: Forms */}
+                        <div className="w-full lg:col-span-7 xl:col-span-8 space-y-8">
+                            <RenderEngine
+                                schema={{
+                                    ...schema,
+                                    sections: otherSections.filter(s => s.type !== 'OrderSummary')
+                                }}
+                                storeId={store.id}
+                                storeCurrency={store.currency}
+                                storeSlug={store.slug}
+                            />
+                        </div>
+
+                        {/* Right Side: Order Summary (Sticky) */}
+                        <aside className="w-full lg:col-span-5 xl:col-span-4 sticky top-24">
+                            <RenderEngine
+                                schema={{
+                                    ...schema,
+                                    sections: otherSections.filter(s => s.type === 'OrderSummary')
+                                }}
+                                storeId={store.id}
+                                storeCurrency={store.currency}
+                                storeSlug={store.slug}
+                            />
+                        </aside>
+                    </div>
+                </main>
             </div>
         </CheckoutProvider>
     );
