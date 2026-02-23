@@ -153,7 +153,7 @@ export function StoreClientLayout({ children, store, integrations = {} }: StoreL
                 <TrackingPixels integrations={integrations} />
                 <StoreHeader store={store} />
                 <CartDrawer store={{ id: store.id, currency: store.currency, slug: store.slug }} />
-                <main className="overflow-x-hidden">
+                <main>
                     {children}
                 </main>
                 <Footer
