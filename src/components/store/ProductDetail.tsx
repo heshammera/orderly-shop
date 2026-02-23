@@ -341,8 +341,8 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
 
                 {/* Product Info */}
                 <div className="space-y-8">
-                    <div>
-                        <h1 className="text-2xl md:text-3xl font-bold mb-2">{productName}</h1>
+                    <div className="min-w-0">
+                        <h1 className="text-2xl md:text-3xl font-bold mb-2 break-words">{productName}</h1>
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-3xl font-bold text-primary">
@@ -379,23 +379,22 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                 onValueChange={(val) => setQuantity(parseInt(val))}
                                 className="grid gap-2.5"
                             >
-                                {/* Default option (1 item) */}
                                 <div
                                     className={cn(
-                                        "relative flex items-center justify-between p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200",
+                                        "relative flex items-center justify-between p-3 sm:p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 gap-2",
                                         quantity === 1
                                             ? "border-primary bg-primary/5 shadow-sm"
                                             : "border-border/60 hover:border-primary/40 bg-card"
                                     )}
                                     onClick={() => setQuantity(1)}
                                 >
-                                    <div className="flex items-center gap-3">
-                                        <RadioGroupItem value="1" id="q-1" />
-                                        <Label htmlFor="q-1" className="cursor-pointer font-medium text-sm">
+                                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                                        <RadioGroupItem value="1" id="q-1" className="flex-shrink-0" />
+                                        <Label htmlFor="q-1" className="cursor-pointer font-medium text-sm truncate">
                                             {language === 'ar' ? 'قطعة واحدة' : '1 Item'}
                                         </Label>
                                     </div>
-                                    <span className="font-bold text-sm">{formatPrice(product.price)}</span>
+                                    <span className="font-bold text-sm flex-shrink-0">{formatPrice(product.price)}</span>
                                 </div>
 
                                 {/* Offers */}
@@ -437,33 +436,36 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                             )}
 
                                             <div className={cn(
-                                                "flex items-center justify-between p-3.5",
+                                                "flex items-center justify-between p-3 sm:p-3.5 gap-2",
                                                 isSelected && "bg-primary/5"
                                             )}>
-                                                <div className="flex items-center gap-3">
+                                                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                                                     <RadioGroupItem
                                                         value={offer.min_quantity.toString()}
                                                         id={`q-${offer.min_quantity}`}
+                                                        className="flex-shrink-0"
                                                     />
-                                                    <div className="grid gap-0.5">
-                                                        <Label htmlFor={`q-${offer.min_quantity}`} className="cursor-pointer font-semibold text-sm">
+                                                    <div className="grid gap-0.5 min-w-0">
+                                                        <Label htmlFor={`q-${offer.min_quantity}`} className="cursor-pointer font-semibold text-sm truncate">
                                                             {label || `${language === 'ar' ? 'اشتري' : 'Buy'} ${offer.min_quantity}`}
                                                         </Label>
-                                                        <span className="text-[11px] text-muted-foreground">
+                                                        <span className="text-[11px] text-muted-foreground truncate">
                                                             {formatPrice(perItem)} / {language === 'ar' ? 'للقطعة' : 'each'}
                                                         </span>
                                                     </div>
                                                 </div>
 
-                                                <div className="text-end flex items-center gap-2">
-                                                    {/* Original price (strikethrough) */}
-                                                    <span className="text-xs text-muted-foreground line-through">
-                                                        {formatPrice(originalTotal)}
-                                                    </span>
-                                                    {/* Discounted price */}
-                                                    <span className="font-bold text-sm">
-                                                        {formatPrice(discountedTotal)}
-                                                    </span>
+                                                <div className="text-end flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-2 flex-shrink-0">
+                                                    <div className="flex items-center gap-1.5">
+                                                        {/* Original price (strikethrough) */}
+                                                        <span className="text-xs text-muted-foreground line-through">
+                                                            {formatPrice(originalTotal)}
+                                                        </span>
+                                                        {/* Discounted price */}
+                                                        <span className="font-bold text-sm">
+                                                            {formatPrice(discountedTotal)}
+                                                        </span>
+                                                    </div>
                                                     {/* Savings badge */}
                                                     <span className="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-[10px] font-bold px-1.5 py-0.5 rounded-md whitespace-nowrap">
                                                         {language === 'ar' ? 'وفّر ' : '-'}
