@@ -103,14 +103,17 @@ export async function POST(req: NextRequest) {
 
             const rows = itemsToExport.map((item: any) => {
                 let productName = 'Unknown Product';
-                if (item.product_snapshot?.name) {
-                    productName = typeof item.product_snapshot.name === 'string'
-                        ? (JSON.parse(item.product_snapshot.name).ar || JSON.parse(item.product_snapshot.name).en)
-                        : (item.product_snapshot.name.ar || item.product_snapshot.name.en);
-                } else if (item.product?.name) {
-                    productName = typeof item.product.name === 'string'
-                        ? (JSON.parse(item.product.name).ar || JSON.parse(item.product.name).en)
-                        : (item.product.name.ar || item.product.name.en);
+                try {
+                    const nameData = item.product_snapshot?.name || item.product?.name;
+                    if (nameData) {
+                        const nameObj = typeof nameData === 'string' ? JSON.parse(nameData) : nameData;
+                        productName = nameObj.ar || nameObj.en || (typeof nameData === 'string' ? nameData : 'Product');
+                    }
+                } catch (e) {
+                    console.error('Error parsing product name for GS sync:', e);
+                    productName = typeof item.product_snapshot?.name === 'string'
+                        ? item.product_snapshot.name
+                        : (item.product?.name || 'Product');
                 }
 
                 return [
@@ -131,7 +134,9 @@ export async function POST(req: NextRequest) {
             });
 
             try {
-                await appendRow(serviceAccount, sheetId, tabName, rows);
+                console.log(`Exporting to sheet ${sheetId}, Tab: ${tabName}, rows: ${rows.length}`);
+                const response = await appendRow(serviceAccount, sheetId, tabName, rows);
+                console.log(`Sync success for integration ${integration.id}:`, response);
                 results.push({ id: integration.id, status: 'success' });
             } catch (error: any) {
                 console.error(`Failed to export to sheet ${sheetId}:`, error);
@@ -139,6 +144,7 @@ export async function POST(req: NextRequest) {
             }
         }
 
+        console.log('Sync finished with results:', results);
         return NextResponse.json({ success: true, results });
 
     } catch (error: any) {
