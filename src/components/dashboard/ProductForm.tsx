@@ -136,14 +136,7 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                 stock_quantity: parseInt(formData.stock_quantity),
                 sku: formData.sku,
                 images: formData.images && formData.images.length > 0 ? JSON.stringify(formData.images) : null,
-                status: 'active',
-                metadata: {
-                    seo: {
-                        title: formData.meta_title,
-                        description: formData.meta_description,
-                        keywords: formData.seo_keywords
-                    }
-                }
+                status: 'active'
             };
 
             let savedProductId = initialData?.id;
