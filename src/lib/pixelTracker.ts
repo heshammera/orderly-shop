@@ -207,16 +207,6 @@ export function trackPurchase(params: {
 
         const ttq = getTtq();
         if (ttq) {
-            ttq.track('PlaceAnOrder', {
-                contents: params.content_ids.map(id => ({
-                    content_id: id,
-                    content_type: params.content_type || 'product',
-                })),
-                currency: params.currency,
-                value: params.value,
-            });
-
-            // TikTok also supports CompletePayment for COD
             ttq.track('CompletePayment', {
                 contents: params.content_ids.map(id => ({
                     content_id: id,
