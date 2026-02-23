@@ -135,14 +135,49 @@ export async function POST(req: NextRequest) {
 
                 // Extract Variants
                 let variantsStr = '';
-                if (item.product_snapshot?.variants && Array.isArray(item.product_snapshot.variants)) {
-                    variantsStr = item.product_snapshot.variants
-                        .map((v: any) => `${v.variantName || v.name}: ${v.optionLabel || v.value}`)
-                        .join(', ');
-                } else if (item.variants && Array.isArray(item.variants)) {
-                    variantsStr = item.variants
-                        .map((v: any) => `${v.variantName || v.name}: ${v.optionLabel || v.value}`)
-                        .join(', ');
+                try {
+                    const variantsSource = item.product_snapshot?.variants || item.variants;
+                    if (variantsSource && Array.isArray(variantsSource)) {
+                        variantsStr = variantsSource
+                            .map((v: any) => {
+                                const nameData = v.variantName || v.name;
+                                const labelData = v.optionLabel || v.value;
+
+                                let name = 'Variant';
+                                let label = 'Option';
+
+                                if (nameData) {
+                                    if (typeof nameData === 'string') {
+                                        try {
+                                            const parsed = JSON.parse(nameData);
+                                            name = parsed.ar || parsed.en || nameData;
+                                        } catch {
+                                            name = nameData;
+                                        }
+                                    } else {
+                                        name = nameData.ar || nameData.en || 'Variant';
+                                    }
+                                }
+
+                                if (labelData) {
+                                    if (typeof labelData === 'string') {
+                                        try {
+                                            const parsed = JSON.parse(labelData);
+                                            label = parsed.ar || parsed.en || labelData;
+                                        } catch {
+                                            label = labelData;
+                                        }
+                                    } else {
+                                        label = labelData.ar || labelData.en || 'Option';
+                                    }
+                                }
+
+                                return `${name}: ${label}`;
+                            })
+                            .join(', ');
+                    }
+                } catch (e) {
+                    console.error('Error parsing variants for GS sync:', e);
                 }
 
                 return [
