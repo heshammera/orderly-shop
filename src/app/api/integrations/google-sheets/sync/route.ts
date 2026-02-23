@@ -1,9 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/client';
 import { appendRow } from '@/lib/google-sheets';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function POST(req: NextRequest) {
     try {
@@ -17,18 +15,8 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const cookieStore = cookies();
-        const supabase = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            {
-                cookies: {
-                    get(name: string) {
-                        return cookieStore.get(name)?.value
-                    },
-                },
-            }
-        );
+        const supabase = createAdminClient();
+
 
         // 1. Fetch Order Details with Items
         const { data: order, error: orderError } = await supabase

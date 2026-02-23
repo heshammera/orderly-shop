@@ -1,9 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/client';
 import { checkSheetAccess } from '@/lib/google-sheets';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function POST(req: NextRequest) {
     try {
@@ -18,25 +16,7 @@ export async function POST(req: NextRequest) {
         }
 
         // 1. Check for Duplicate Sheet ID for this store
-        const cookieStore = cookies();
-        const supabase = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            {
-                cookies: {
-                    get(name: string) {
-                        return cookieStore.get(name)?.value;
-                    },
-                },
-            }
-        );
-
-        // Fetch existing integrations for this store
-        // We only care about active ones or all? Probably all to avoid confusion, or at least check conflict.
-
-        // Since we are using a JSONB config in store_integrations, we need to query it.
-        // We can use the contained-in operator @> or just select and filter in JS if the volume is low.
-        // Let's select all google_sheets integrations for this store.
+        const supabase = createAdminClient();
 
         const { data: existingIntegrations, error: fetchError } = await supabase
             .from('store_integrations')
@@ -46,8 +26,6 @@ export async function POST(req: NextRequest) {
 
         if (fetchError) {
             console.error('Error checking duplicates:', fetchError);
-            // We continue? Or fail? Let's treat it as a non-blocker for connection test but warn?
-            // Better to fail safe.
             return NextResponse.json(
                 { success: false, message: 'Failed to validate duplicate sheets' },
                 { status: 500 }
@@ -59,29 +37,29 @@ export async function POST(req: NextRequest) {
             for (const integration of existingIntegrations) {
                 const config = integration.config as any;
                 if (config.sheet_id === sheetId) {
-                    // Duplicate found!
-                    // Construct a nice message.
                     let relatedTo = 'All Products';
                     if (config.mode === 'specific' && config.product_ids?.length > 0) {
-                        // Ideally we would fetch the product name here, but simple "Specific Product" is okay for now,
-                        // OR we can make a quick call if we want to be fancy.
-                        // The user requested: "preferably mention the product name".
-                        // So let's try to fetch it.
                         const productId = config.product_ids[0];
                         const { data: product } = await supabase
                             .from('products')
-                            .select('name_ar, name_en')
+                            .select('name')
                             .eq('id', productId)
                             .single();
 
                         if (product) {
-                            relatedTo = product.name_ar || product.name_en || 'Product';
+                            try {
+                                const nameObj = typeof product.name === 'string' ? JSON.parse(product.name) : product.name;
+                                relatedTo = nameObj?.ar || nameObj?.en || 'Product';
+                            } catch {
+                                relatedTo = 'Product';
+                            }
                         } else {
                             relatedTo = 'Unknown Product';
                         }
                     } else if (config.mode === 'include') {
                         relatedTo = 'Selected Products';
                     }
+
 
                     return NextResponse.json(
                         {
