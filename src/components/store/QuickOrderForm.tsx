@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2, CheckCircle2 } from 'lucide-react';
 import { governorates } from '@/lib/governorates';
+import { trackPurchase } from '@/lib/pixelTracker';
 
 interface QuickOrderFormProps {
     isOpen: boolean;
@@ -139,6 +140,16 @@ export function QuickOrderForm({ isOpen, onClose, product, quantity, variants, s
 
             setOrderId(result.order_number);
             setSuccess(true);
+
+            // Track quick order as a purchase
+            trackPurchase({
+                content_ids: [product.id],
+                content_type: 'product',
+                currency: store.currency,
+                value: total,
+                num_items: quantity,
+            });
+
             toast({
                 title: language === 'ar' ? 'تم الطلب بنجاح' : 'Order Placed Successfully',
                 description: language === 'ar' ? `رقم الطلب: ${result.order_number}` : `Order #${result.order_number}`,
