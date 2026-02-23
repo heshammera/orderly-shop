@@ -279,8 +279,8 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
     const applicableOffer = getApplicableOffer();
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+        <div className="container mx-auto px-4 py-6 pb-32 md:py-8 md:pb-8">
+            <div className="grid md:grid-cols-2 gap-6 md:gap-8 lg:gap-12">
                 {/* Image Gallery */}
                 <div className="space-y-4">
                     <div className="aspect-square bg-muted rounded-lg overflow-hidden relative">
@@ -322,7 +322,7 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
 
                     {/* Thumbnails */}
                     {product.images.length > 1 && (
-                        <div className="flex gap-2 overflow-x-auto pb-2">
+                        <div className="flex gap-2 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                             {product.images.map((img, idx) => (
                                 <button
                                     key={idx}
@@ -596,17 +596,17 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
 
                         {/* Action Buttons */}
                         <div className="flex flex-col gap-3">
-                            <div className="flex gap-4">
+                            <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur border-t shadow-[0_-10px_30px_rgba(0,0,0,0.1)] md:static md:p-0 md:bg-transparent md:border-t-0 md:shadow-none z-50 flex gap-3 md:gap-4">
                                 <Button
                                     size="lg"
-                                    className="flex-1"
+                                    className="flex-1 h-14 md:h-11 rounded-xl md:rounded-md text-base md:text-sm font-semibold md:font-medium shadow-md md:shadow-none"
                                     onClick={handleAddToCart}
                                     disabled={addingToCart || product.stock_quantity === 0}
                                 >
                                     {addingToCart ? (
-                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <Loader2 className="w-5 h-5 md:w-4 md:h-4 animate-spin" />
                                     ) : (
-                                        <ShoppingCart className="w-4 h-4 me-2" />
+                                        <ShoppingCart className="w-5 h-5 md:w-4 md:h-4 me-2" />
                                     )}
                                     {product.stock_quantity === 0
                                         ? (language === 'ar' ? 'نفذت الكمية' : 'Out of Stock')
@@ -617,11 +617,11 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                 <Button
                                     size="lg"
                                     variant="outline"
-                                    className="flex-1 border-primary text-primary hover:bg-primary/10"
+                                    className="flex-1 h-14 md:h-11 rounded-xl md:rounded-md text-base md:text-sm font-semibold md:font-medium border-primary text-primary hover:bg-primary/10 bg-background shadow-sm md:shadow-none"
                                     onClick={handleQuickOrder}
                                     disabled={product.stock_quantity === 0}
                                 >
-                                    <Zap className="w-4 h-4 me-2" />
+                                    <Zap className="w-5 h-5 md:w-4 md:h-4 me-2" />
                                     {language === 'ar' ? 'طلب سريع' : 'Quick Order'}
                                 </Button>
                             </div>
