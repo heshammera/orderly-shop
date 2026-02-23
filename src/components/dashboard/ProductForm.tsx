@@ -126,7 +126,6 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                 sku: formData.sku,
                 images: formData.images && formData.images.length > 0 ? JSON.stringify(formData.images) : null,
                 status: 'active',
-                currency: 'SAR', // TODO: Get from store settings
                 metadata: {
                     seo: {
                         title: formData.meta_title,
