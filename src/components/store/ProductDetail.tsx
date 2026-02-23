@@ -381,20 +381,22 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                             >
                                 <div
                                     className={cn(
-                                        "relative flex items-center justify-between p-3 sm:p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 gap-2",
+                                        "relative flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 gap-2 sm:gap-4",
                                         quantity === 1
                                             ? "border-primary bg-primary/5 shadow-sm"
                                             : "border-border/60 hover:border-primary/40 bg-card"
                                     )}
                                     onClick={() => setQuantity(1)}
                                 >
-                                    <div className="flex items-start sm:items-center gap-2 sm:gap-3 flex-1 pe-2">
+                                    <div className="flex items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
                                         <RadioGroupItem value="1" id="q-1" className="flex-shrink-0 mt-0.5 sm:mt-0" />
-                                        <Label htmlFor="q-1" className="cursor-pointer font-medium text-sm leading-tight">
+                                        <Label htmlFor="q-1" className="cursor-pointer font-medium text-sm leading-tight flex-1">
                                             {language === 'ar' ? 'قطعة واحدة' : '1 Item'}
                                         </Label>
                                     </div>
-                                    <span className="font-bold text-sm flex-shrink-0 whitespace-nowrap">{formatPrice(product.price)}</span>
+                                    <span className="font-bold text-sm w-full sm:w-auto text-end sm:text-start ps-7 sm:ps-0 whitespace-nowrap">
+                                        {formatPrice(product.price)}
+                                    </span>
                                 </div>
 
                                 {/* Offers */}
@@ -436,16 +438,16 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                             )}
 
                                             <div className={cn(
-                                                "flex items-center justify-between p-3 sm:p-3.5 gap-2",
+                                                "flex flex-col xl:flex-row items-start xl:items-center justify-between p-3 sm:p-3.5 gap-2 sm:gap-4",
                                                 isSelected && "bg-primary/5"
                                             )}>
-                                                <div className="flex items-start sm:items-center gap-2 sm:gap-3 flex-1 pe-2">
+                                                <div className="flex items-start sm:items-center gap-2 sm:gap-3 w-full xl:w-auto">
                                                     <RadioGroupItem
                                                         value={offer.min_quantity.toString()}
                                                         id={`q-${offer.min_quantity}`}
                                                         className="flex-shrink-0 mt-0.5 sm:mt-0"
                                                     />
-                                                    <div className="grid gap-0.5">
+                                                    <div className="grid gap-0.5 flex-1">
                                                         <Label htmlFor={`q-${offer.min_quantity}`} className="cursor-pointer font-semibold text-sm leading-tight">
                                                             {label || `${language === 'ar' ? 'اشتري' : 'Buy'} ${offer.min_quantity}`}
                                                         </Label>
@@ -455,19 +457,19 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                                     </div>
                                                 </div>
 
-                                                <div className="text-end flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-2 flex-shrink-0">
-                                                    <div className="flex items-center gap-1.5">
+                                                <div className="flex flex-row items-center justify-end w-full xl:w-auto gap-2 xl:gap-3 ps-7 xl:ps-0">
+                                                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
                                                         {/* Original price (strikethrough) */}
-                                                        <span className="text-xs text-muted-foreground line-through">
+                                                        <span className="text-xs text-muted-foreground line-through whitespace-nowrap">
                                                             {formatPrice(originalTotal)}
                                                         </span>
                                                         {/* Discounted price */}
-                                                        <span className="font-bold text-sm">
+                                                        <span className="font-bold text-sm whitespace-nowrap">
                                                             {formatPrice(discountedTotal)}
                                                         </span>
                                                     </div>
                                                     {/* Savings badge */}
-                                                    <span className="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-[10px] font-bold px-1.5 py-0.5 rounded-md whitespace-nowrap">
+                                                    <span className="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-[10px] sm:text-[11px] font-bold px-1.5 py-0.5 rounded-md whitespace-nowrap flex-shrink-0">
                                                         {language === 'ar' ? 'وفّر ' : '-'}
                                                         {offer.discount_type === 'percentage'
                                                             ? `${offer.discount_value}%`
