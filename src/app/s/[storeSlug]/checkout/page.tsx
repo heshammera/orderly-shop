@@ -25,26 +25,6 @@ export default async function Page({ params }: { params: { storeSlug: string } }
         }
     );
 
-    const [storeRes, pageRes] = await Promise.all([
-        supabase
-            .from('stores')
-            .select('id, currency, settings, slug, name') // Added name
-            .eq('slug', params.storeSlug)
-            .eq('status', 'active')
-            .single(),
-        supabase
-            .from('store_pages')
-            .select('content')
-            .eq('store_slug', params.storeSlug) // Check if store_pages uses store_id or slug? 
-        // In editor page we used store_id. Here we have storeSlug from params.
-        // Ideally we need store_id to query store_pages.
-        // So we must fetch store first, OR join.
-        // Let's fetch store first, then page.
-        // Or use a join if possible? store_pages usually linked by store_id.
-        // I'll fetch store first.
-    ]);
-    // ... wait, I can't double await easily in parallel if one depends on other.
-    // Let's split.
 
     const { data: store, error: storeError } = await supabase
         .from('stores')
