@@ -19,6 +19,9 @@ interface CartContextType {
     cart: CartItem[];
     cartCount: number;
     loading: boolean;
+    isCartOpen: boolean;
+    openCart: () => void;
+    closeCart: () => void;
     addToCart: (item: CartItem) => Promise<void>;
     removeFromCart: (productId: string, variants: any[]) => Promise<void>;
     updateQuantity: (productId: string, variants: any[], quantity: number) => Promise<void>;
@@ -35,6 +38,10 @@ export function CartProvider({ children, storeId }: { children: React.ReactNode;
     const [sessionId, setSessionId] = useState<string | null>(null);
     const [cartId, setCartId] = useState<string | null>(null);
     const [customerId, setCustomerId] = useState<string | null>(null);
+    const [isCartOpen, setIsCartOpen] = useState(false);
+
+    const openCart = () => setIsCartOpen(true);
+    const closeCart = () => setIsCartOpen(false);
 
     // Initial Load & Session Setup
     useEffect(() => {
@@ -187,6 +194,9 @@ export function CartProvider({ children, storeId }: { children: React.ReactNode;
             return [...prev, newItem];
         });
 
+        // Auto-open cart drawer when item is added
+        setIsCartOpen(true);
+
         // Sync to DB (Debounced ideal, but direct for now)
         try {
             const cId = await getOrCreateCartId();
@@ -251,6 +261,9 @@ export function CartProvider({ children, storeId }: { children: React.ReactNode;
             cart,
             cartCount,
             loading,
+            isCartOpen,
+            openCart,
+            closeCart,
             addToCart,
             removeFromCart,
             updateQuantity,

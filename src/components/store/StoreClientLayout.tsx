@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Menu, ShoppingCart, Globe, Store as StoreIcon, Truck } from 'lucide-react';
 import { CartProvider, useCart } from '@/contexts/CartContext';
+import { CartDrawer } from '@/components/store/CartDrawer';
 import { TrackingPixels } from '@/components/store/TrackingPixels';
 import { StoreDashboardLink } from '@/components/store/StoreDashboardLink';
 import { Footer } from '@/components/store/builder/Footer';
@@ -44,7 +45,7 @@ interface StoreLayoutProps {
 function StoreHeader({ store }: { store: StoreData }) {
     const { language, setLanguage } = useLanguage();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const { cartCount } = useCart();
+    const { cartCount, openCart } = useCart();
 
     const toggleLanguage = () => {
         setLanguage(language === 'ar' ? 'en' : 'ar');
@@ -91,16 +92,14 @@ function StoreHeader({ store }: { store: StoreData }) {
                         {/* Dashboard Link for Store Owners/Admins */}
                         <StoreDashboardLink storeId={store.id} />
 
-                        <Link href={`/s/${store.slug}/cart`}>
-                            <Button variant="ghost" size="icon" className="relative">
-                                <ShoppingCart className="w-5 h-5" />
-                                {cartCount > 0 && (
-                                    <Badge className="absolute -top-1 -end-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
-                                        {cartCount}
-                                    </Badge>
-                                )}
-                            </Button>
-                        </Link>
+                        <Button variant="ghost" size="icon" className="relative" onClick={openCart}>
+                            <ShoppingCart className="w-5 h-5" />
+                            {cartCount > 0 && (
+                                <Badge className="absolute -top-1 -end-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
+                                    {cartCount}
+                                </Badge>
+                            )}
+                        </Button>
 
                         {/* Mobile Menu */}
                         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -153,6 +152,7 @@ export function StoreClientLayout({ children, store, integrations = {} }: StoreL
             <CartProvider storeId={store.id}>
                 <TrackingPixels integrations={integrations} />
                 <StoreHeader store={store} />
+                <CartDrawer store={{ id: store.id, currency: store.currency, slug: store.slug }} />
                 <main>
                     {children}
                 </main>
