@@ -48,7 +48,7 @@ export function CheckoutPage({ store, pageSchema }: CheckoutPageProps) {
                     />
                 )}
 
-                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
                     <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8 items-start">
                         {/* Left Side: Forms */}
                         <div className="w-full lg:col-span-7 xl:col-span-8 space-y-8">

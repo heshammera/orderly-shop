@@ -22,27 +22,9 @@ export function CheckoutHeader({ data }: { data: ComponentSchema }) {
             style={{ backgroundColor: settings.backgroundColor ? `${settings.backgroundColor}cc` : undefined }}
         >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between h-16 sm:h-20">
-                    {/* Logo/Store Name */}
-                    <div className="flex items-center">
-                        {logo ? (
-                            <div className="relative h-8 w-24 sm:h-10 sm:w-32">
-                                <Image
-                                    src={logo}
-                                    alt={storeName}
-                                    fill
-                                    className="object-contain object-left"
-                                />
-                            </div>
-                        ) : (
-                            <h1 className="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600">
-                                {storeName}
-                            </h1>
-                        )}
-                    </div>
-
-                    {/* Progress Indicator (Hidden on very small screens) */}
-                    <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
+                <div className="flex items-center justify-between h-14 sm:h-16">
+                    {/* Progress Indicator */}
+                    <nav className="flex items-center gap-4 sm:gap-8 text-xs sm:text-sm font-medium">
                         <div className="flex items-center gap-2 text-slate-400">
                             <span className="w-6 h-6 rounded-full border border-slate-200 flex items-center justify-center text-xs">1</span>
                             <span>{language === 'ar' ? 'السلة' : 'Cart'}</span>
