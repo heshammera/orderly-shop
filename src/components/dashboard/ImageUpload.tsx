@@ -26,37 +26,49 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     const supabase = createClient();
 
     const onUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
 
         setIsUploading(true);
-        const timestamp = Date.now();
-        const fileName = `${timestamp}-${file.name.replace(/\s/g, '_')}`; // Sanitize filename
-        const filePath = `products/${fileName}`;
+        const newUrls: string[] = [];
 
         try {
-            // Upload the file
-            const { error: uploadError } = await supabase.storage
-                .from('products')
-                .upload(filePath, file);
+            const uploadPromises = Array.from(files).map(async (file) => {
+                const timestamp = Date.now();
+                const randomSuffix = Math.random().toString(36).substring(2, 8);
+                const fileName = `${timestamp}-${randomSuffix}-${file.name.replace(/\s/g, '_')}`;
+                const filePath = `products/${fileName}`;
 
-            if (uploadError) {
-                throw uploadError;
-            }
+                const { error: uploadError } = await supabase.storage
+                    .from('products')
+                    .upload(filePath, file);
 
-            // Get public URL
-            const { data: { publicUrl } } = supabase.storage
-                .from('products')
-                .getPublicUrl(filePath);
+                if (uploadError) {
+                    throw uploadError;
+                }
 
-            onChange([...value, publicUrl]);
-            toast.success(language === 'ar' ? 'تم رفع الصورة بنجاح' : 'Image uploaded successfully');
+                const { data: { publicUrl } } = supabase.storage
+                    .from('products')
+                    .getPublicUrl(filePath);
+
+                return publicUrl;
+            });
+
+            const urls = await Promise.all(uploadPromises);
+            onChange([...value, ...urls]);
+            toast.success(
+                language === 'ar'
+                    ? `تم رفع ${urls.length} صورة بنجاح`
+                    : `${urls.length} image${urls.length > 1 ? 's' : ''} uploaded successfully`
+            );
 
         } catch (error: any) {
             console.error('Upload Error:', error);
-            toast.error(language === 'ar' ? 'فشل رفع الصورة' : 'Image upload failed');
+            toast.error(language === 'ar' ? 'فشل رفع بعض الصور' : 'Some images failed to upload');
         } finally {
             setIsUploading(false);
+            // Reset the input so the same files can be selected again
+            e.target.value = '';
         }
     };
 
@@ -127,7 +139,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                     ) : (
                         <>
                             <ImagePlus className="h-4 w-4 mr-2" />
-                            {language === 'ar' ? 'رفع صورة' : 'Upload an Image'}
+                            {language === 'ar' ? 'رفع صور' : 'Upload Images'}
                         </>
                     )}
                 </Button>
@@ -135,6 +147,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                     id="image-upload-input"
                     type="file"
                     accept="image/*"
+                    multiple
                     className="hidden"
                     onChange={onUpload}
                     disabled={disabled || isUploading}
