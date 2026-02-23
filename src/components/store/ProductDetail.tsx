@@ -279,7 +279,7 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
     const applicableOffer = getApplicableOffer();
 
     return (
-        <div className="container mx-auto px-4 py-6 pb-32 md:py-8 md:pb-8">
+        <div className="container mx-auto py-6 pb-32 md:py-8 md:pb-8">
             <div className="grid md:grid-cols-2 gap-6 md:gap-8 lg:gap-12">
                 {/* Image Gallery */}
                 <div className="space-y-4">
@@ -381,22 +381,20 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                             >
                                 <div
                                     className={cn(
-                                        "relative flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 gap-2 sm:gap-4",
+                                        "relative flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 gap-2",
                                         quantity === 1
                                             ? "border-primary bg-primary/5 shadow-sm"
                                             : "border-border/60 hover:border-primary/40 bg-card"
                                     )}
                                     onClick={() => setQuantity(1)}
                                 >
-                                    <div className="flex items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
-                                        <RadioGroupItem value="1" id="q-1" className="flex-shrink-0 mt-0.5 sm:mt-0" />
-                                        <Label htmlFor="q-1" className="cursor-pointer font-medium text-sm leading-tight flex-1">
+                                    <div className="flex items-center gap-2">
+                                        <RadioGroupItem value="1" id="q-1" className="flex-shrink-0" />
+                                        <Label htmlFor="q-1" className="cursor-pointer font-medium text-sm">
                                             {language === 'ar' ? 'قطعة واحدة' : '1 Item'}
                                         </Label>
                                     </div>
-                                    <span className="font-bold text-sm w-full sm:w-auto text-end sm:text-start ps-7 sm:ps-0 whitespace-nowrap">
-                                        {formatPrice(product.price)}
-                                    </span>
+                                    <span className="font-bold text-sm">{formatPrice(product.price)}</span>
                                 </div>
 
                                 {/* Offers */}
@@ -438,43 +436,39 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                             )}
 
                                             <div className={cn(
-                                                "flex flex-col xl:flex-row items-start xl:items-center justify-between p-3 sm:p-3.5 gap-2 sm:gap-4",
+                                                "p-3 space-y-2",
                                                 isSelected && "bg-primary/5"
                                             )}>
-                                                <div className="flex items-start sm:items-center gap-2 sm:gap-3 w-full xl:w-auto">
+                                                {/* Row 1: Radio + Label */}
+                                                <div className="flex items-center gap-2">
                                                     <RadioGroupItem
                                                         value={offer.min_quantity.toString()}
                                                         id={`q-${offer.min_quantity}`}
-                                                        className="flex-shrink-0 mt-0.5 sm:mt-0"
+                                                        className="flex-shrink-0"
                                                     />
-                                                    <div className="grid gap-0.5 flex-1">
-                                                        <Label htmlFor={`q-${offer.min_quantity}`} className="cursor-pointer font-semibold text-sm leading-tight">
-                                                            {label || `${language === 'ar' ? 'اشتري' : 'Buy'} ${offer.min_quantity}`}
-                                                        </Label>
-                                                        <span className="text-[11px] text-muted-foreground break-words">
-                                                            {formatPrice(perItem)} / {language === 'ar' ? 'للقطعة' : 'each'}
-                                                        </span>
-                                                    </div>
+                                                    <Label htmlFor={`q-${offer.min_quantity}`} className="cursor-pointer font-semibold text-sm flex-1">
+                                                        {label || `${language === 'ar' ? 'اشتري' : 'Buy'} ${offer.min_quantity}`}
+                                                    </Label>
                                                 </div>
-
-                                                <div className="flex flex-row items-center justify-end w-full xl:w-auto gap-2 xl:gap-3 ps-7 xl:ps-0">
+                                                {/* Row 2: Prices */}
+                                                <div className="flex items-center justify-between ps-6">
+                                                    <span className="text-[11px] text-muted-foreground">
+                                                        {formatPrice(perItem)} / {language === 'ar' ? 'للقطعة' : 'each'}
+                                                    </span>
                                                     <div className="flex items-center gap-1.5 flex-wrap justify-end">
-                                                        {/* Original price (strikethrough) */}
-                                                        <span className="text-xs text-muted-foreground line-through whitespace-nowrap">
+                                                        <span className="text-xs text-muted-foreground line-through">
                                                             {formatPrice(originalTotal)}
                                                         </span>
-                                                        {/* Discounted price */}
-                                                        <span className="font-bold text-sm whitespace-nowrap">
+                                                        <span className="font-bold text-sm">
                                                             {formatPrice(discountedTotal)}
                                                         </span>
+                                                        <span className="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-[10px] font-bold px-1.5 py-0.5 rounded-md">
+                                                            {language === 'ar' ? 'وفّر ' : '-'}
+                                                            {offer.discount_type === 'percentage'
+                                                                ? `${offer.discount_value}%`
+                                                                : formatPrice(savedAmount)}
+                                                        </span>
                                                     </div>
-                                                    {/* Savings badge */}
-                                                    <span className="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-[10px] sm:text-[11px] font-bold px-1.5 py-0.5 rounded-md whitespace-nowrap flex-shrink-0">
-                                                        {language === 'ar' ? 'وفّر ' : '-'}
-                                                        {offer.discount_type === 'percentage'
-                                                            ? `${offer.discount_value}%`
-                                                            : formatPrice(savedAmount)}
-                                                    </span>
                                                 </div>
                                             </div>
                                         </div>

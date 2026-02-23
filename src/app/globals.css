@@ -114,15 +114,11 @@
 
   html {
     font-family: 'Cairo', 'Noto Sans Arabic', sans-serif;
-    overflow-x: hidden;
-    max-width: 100vw;
   }
 
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
-    overflow-x: hidden;
-    max-width: 100vw;
   }
 
   /* RTL Support */
