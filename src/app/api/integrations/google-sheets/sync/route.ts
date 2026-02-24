@@ -232,6 +232,20 @@ export async function POST(req: NextRequest) {
         }
 
         console.log('Sync finished with results:', results);
+
+        // Mark order as synced if at least one export succeeded
+        const hasSuccess = results.some(r => r.status === 'success');
+        if (hasSuccess) {
+            const { error: updateError } = await supabase
+                .from('orders')
+                .update({ is_synced: true })
+                .eq('id', orderId);
+
+            if (updateError) {
+                console.error('Failed to update order is_synced status:', updateError);
+            }
+        }
+
         return NextResponse.json({ success: true, results });
 
     } catch (error: any) {
