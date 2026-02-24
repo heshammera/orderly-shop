@@ -143,7 +143,7 @@ export async function POST(req: NextRequest) {
                         ? item.product_snapshot.name
                         : (item.product?.name || 'Product');
                 }
-                productNames.push(`${index + 1}. ${productName}`);
+                productNames.push(productName);
 
                 // Extract Variants
                 let variantsStr = '';
@@ -191,9 +191,9 @@ export async function POST(req: NextRequest) {
                 } catch (e) {
                     // ignore
                 }
-                variantsStrs.push(`${index + 1}. ${variantsStr || 'None'}`);
-                quantities.push(`${index + 1}. ${item.quantity}`);
-                unitPrices.push(`${index + 1}. ${item.unit_price}`);
+                variantsStrs.push(variantsStr || 'None');
+                quantities.push(item.quantity.toString());
+                unitPrices.push(item.unit_price.toString());
             });
 
             const singleRow = [
