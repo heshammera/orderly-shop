@@ -501,23 +501,39 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                                 {language === 'ar' ? 'كمية مخصصة' : 'Custom Quantity'}
                                             </Label>
 
-                                            {(!upsellOffers.some(o => o.min_quantity === quantity) && quantity !== 1) && (
-                                                <div className="flex items-center gap-2 z-10" onClick={(e) => e.stopPropagation()}>
-                                                    <button
-                                                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                                        className="w-8 h-8 flex items-center justify-center rounded-md border bg-background hover:bg-muted"
-                                                    >
-                                                        -
-                                                    </button>
-                                                    <span className="w-8 text-center font-bold">{quantity}</span>
-                                                    <button
-                                                        onClick={() => setQuantity(Math.min(product.stock_quantity || 100, quantity + 1))}
-                                                        className="w-8 h-8 flex items-center justify-center rounded-md border bg-background hover:bg-muted"
-                                                    >
-                                                        +
-                                                    </button>
-                                                </div>
-                                            )}
+                                            <div className="flex items-center gap-2 z-10" onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        e.preventDefault();
+                                                        if (quantity === 1 || Object.values(upsellOffers).some(o => o.min_quantity === quantity)) {
+                                                            setQuantity(Math.max(1, 2 - 1));
+                                                        } else {
+                                                            setQuantity(Math.max(1, quantity - 1));
+                                                        }
+                                                    }}
+                                                    className="w-8 h-8 flex items-center justify-center rounded-md border bg-background hover:bg-muted"
+                                                >
+                                                    -
+                                                </button>
+                                                <span className="w-8 text-center font-bold">
+                                                    {(!upsellOffers.some(o => o.min_quantity === quantity) && quantity !== 1) ? quantity : '-'}
+                                                </span>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        e.preventDefault();
+                                                        if (quantity === 1 || Object.values(upsellOffers).some(o => o.min_quantity === quantity)) {
+                                                            setQuantity(Math.min(product.stock_quantity || 100, 2 + 1));
+                                                        } else {
+                                                            setQuantity(Math.min(product.stock_quantity || 100, quantity + 1));
+                                                        }
+                                                    }}
+                                                    className="w-8 h-8 flex items-center justify-center rounded-md border bg-background hover:bg-muted"
+                                                >
+                                                    +
+                                                </button>
+                                            </div>
                                         </div>
                                         {(!upsellOffers.some(o => o.min_quantity === quantity) && quantity !== 1) && (
                                             <div className="flex items-center justify-between ps-6">
