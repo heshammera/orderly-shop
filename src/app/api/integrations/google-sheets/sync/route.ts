@@ -124,13 +124,7 @@ export async function POST(req: NextRequest) {
                 continue;
             }
 
-            // Format single row consolidating all items
-            const productNames: string[] = [];
-            const variantsStrs: string[] = [];
-            const quantities: string[] = [];
-            const unitPrices: string[] = [];
-
-            itemsToExport.forEach((item: any, index: number) => {
+            const rows = itemsToExport.map((item: any) => {
                 let productName = 'Unknown Product';
                 try {
                     const nameData = item.product_snapshot?.name || item.product?.name;
@@ -143,7 +137,6 @@ export async function POST(req: NextRequest) {
                         ? item.product_snapshot.name
                         : (item.product?.name || 'Product');
                 }
-                productNames.push(productName);
 
                 // Extract Variants
                 let variantsStr = '';
@@ -191,30 +184,46 @@ export async function POST(req: NextRequest) {
                 } catch (e) {
                     // ignore
                 }
-                variantsStrs.push(variantsStr || 'None');
-                quantities.push(item.quantity.toString());
-                unitPrices.push(item.unit_price.toString());
+
+                return [
+                    order.order_number,
+                    new Date(order.created_at).toLocaleString('en-US'),
+                    order.status,
+                    order.customer_snapshot?.name || order.customer?.name || 'Guest',
+                    order.customer_snapshot?.phone || order.customer?.phone || '',
+                    order.customer_snapshot?.alt_phone || order.customer?.address?.alt_phone || '',
+                    order.shipping_address?.city || '',
+                    order.shipping_address?.address || '',
+                    productName,
+                    variantsStr || 'None',
+                    item.quantity,
+                    item.unit_price,
+                    item.total_price || (item.quantity * item.unit_price),
+                    order.total,
+                    order.notes || ''
+                ];
             });
 
-            const singleRow = [
-                order.order_number,
-                new Date(order.created_at).toLocaleString('en-US'),
-                order.status,
-                order.customer_snapshot?.name || order.customer?.name || 'Guest',
-                order.customer_snapshot?.phone || order.customer?.phone || '',
-                order.customer_snapshot?.alt_phone || order.customer?.address?.alt_phone || '',
-                order.shipping_address?.city || '',
-                order.shipping_address?.address || '',
-                productNames.join('\n'), // Consolidate products with line breaks
-                variantsStrs.join('\n'),
-                quantities.join('\n'),
-                unitPrices.join('\n'),
-                order.total, // Replace Item total with Order Total directly since it's 1 row
-                order.total,
-                order.notes || ''
-            ];
-
-            const rows = [singleRow];
+            // If an order somehow has no items, export an empty item row to record the order exists
+            if (rows.length === 0) {
+                rows.push([
+                    order.order_number,
+                    new Date(order.created_at).toLocaleString('en-US'),
+                    order.status,
+                    order.customer_snapshot?.name || order.customer?.name || 'Guest',
+                    order.customer_snapshot?.phone || order.customer?.phone || '',
+                    order.customer_snapshot?.alt_phone || order.customer?.address?.alt_phone || '',
+                    order.shipping_address?.city || '',
+                    order.shipping_address?.address || '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    0,
+                    order.total,
+                    order.notes || ''
+                ]);
+            }
 
             try {
                 // Check if we need to add a header
