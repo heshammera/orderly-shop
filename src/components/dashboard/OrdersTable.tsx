@@ -265,15 +265,22 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
 
         setSyncingOrders(prev => new Set(prev).add(order.id));
         try {
-            const res = await fetch('/api/store/google-sheets/sync-order', {
+            const res = await fetch('/api/integrations/google-sheets/sync', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ orderId: order.id, storeId })
             });
 
-            if (!res.ok) {
-                const errorData = await res.json().catch(() => ({}));
-                throw new Error(errorData.error || 'Sync failed');
+            const resData = await res.json().catch(() => ({}));
+
+            if (!res.ok || resData.success === false) {
+                throw new Error(resData.message || resData.error || 'Sync failed');
+            }
+
+            const hasSuccess = resData.results?.some((r: any) => r.status === 'success');
+            if (resData.results && !hasSuccess) {
+                const errorStr = resData.results.find((r: any) => r.error)?.error || 'No matching logic found';
+                throw new Error(errorStr);
             }
 
             const { error } = await supabase.from('orders').update({ is_synced: true }).eq('id', order.id);
@@ -281,9 +288,9 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
 
             toast.success(language === 'ar' ? 'تمت مزامنة الطلب' : 'Order synced successfully');
             setOrders(prev => prev.map(o => o.id === order.id ? { ...o, is_synced: true } : o));
-        } catch (error) {
+        } catch (error: any) {
             console.error('Sync error:', error);
-            toast.error(language === 'ar' ? 'فشل المزامنة، حاول مجدداً' : 'Failed to sync order');
+            toast.error(error.message || (language === 'ar' ? 'فشل المزامنة، حاول مجدداً' : 'Failed to sync order'));
         } finally {
             setSyncingOrders(prev => {
                 const next = new Set(prev);
@@ -305,13 +312,19 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
         idsToSync.forEach(id => setSyncingOrders(prev => new Set(prev).add(id)));
 
         try {
-            const promises = idsToSync.map(id => fetch('/api/store/google-sheets/sync-order', {
+            const promises = idsToSync.map(id => fetch('/api/integrations/google-sheets/sync', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ orderId: id, storeId })
-            }).then(res => {
-                if (!res.ok) throw new Error(`Sync failed for ${id}`);
-                return res;
+            }).then(async res => {
+                const resData = await res.json().catch(() => ({}));
+                if (!res.ok || resData.success === false) throw new Error(resData.message || resData.error || `Sync failed for ${id}`);
+                const hasSuccess = resData.results?.some((r: any) => r.status === 'success');
+                if (resData.results && !hasSuccess) {
+                    const errMessage = resData.results.find((r: any) => r.error)?.error || `No products verified for ${id}`;
+                    throw new Error(errMessage);
+                }
+                return resData;
             }));
 
             await Promise.allSettled(promises);
