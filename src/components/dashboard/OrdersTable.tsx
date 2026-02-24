@@ -312,28 +312,43 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
         idsToSync.forEach(id => setSyncingOrders(prev => new Set(prev).add(id)));
 
         try {
-            const promises = idsToSync.map(id => fetch('/api/integrations/google-sheets/sync', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ orderId: id, storeId })
-            }).then(async res => {
-                const resData = await res.json().catch(() => ({}));
-                if (!res.ok || resData.success === false) throw new Error(resData.message || resData.error || `Sync failed for ${id}`);
-                const hasSuccess = resData.results?.some((r: any) => r.status === 'success');
-                if (resData.results && !hasSuccess) {
-                    const errMessage = resData.results.find((r: any) => r.error)?.error || `No products verified for ${id}`;
-                    throw new Error(errMessage);
+            const successfulIds: string[] = [];
+            let failedCount = 0;
+
+            for (const id of idsToSync) {
+                try {
+                    const res = await fetch('/api/integrations/google-sheets/sync', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderId: id, storeId })
+                    });
+
+                    const resData = await res.json().catch(() => ({}));
+                    if (!res.ok || resData.success === false) {
+                        throw new Error(resData.message || resData.error || `Sync failed for ${id}`);
+                    }
+
+                    const hasSuccess = resData.results?.some((r: any) => r.status === 'success');
+                    if (resData.results && !hasSuccess) {
+                        const errMessage = resData.results.find((r: any) => r.error)?.error || `No products verified for ${id}`;
+                        throw new Error(errMessage);
+                    }
+
+                    successfulIds.push(id);
+                } catch (error) {
+                    console.error(`Error syncing order ${id}:`, error);
+                    failedCount++;
                 }
-                return resData;
-            }));
+            }
 
-            await Promise.allSettled(promises);
+            if (successfulIds.length > 0) {
+                toast.success(language === 'ar' ? `تمت مزامنة ${successfulIds.length} طلب بنجاح` : `${successfulIds.length} orders synced successfully`);
+                setOrders(prev => prev.map(o => successfulIds.includes(o.id) ? { ...o, is_synced: true } : o));
+            }
+            if (failedCount > 0) {
+                toast.error(language === 'ar' ? `فشلت مزامنة ${failedCount} طلبات` : `Failed to sync ${failedCount} orders`);
+            }
 
-            const { error } = await supabase.from('orders').update({ is_synced: true }).in('id', idsToSync);
-            if (error) throw error;
-
-            toast.success(language === 'ar' ? `تمت مزامنة ${eligibleOrders.length} طلب بنجاح` : `${eligibleOrders.length} orders synced successfully`);
-            setOrders(prev => prev.map(o => idsToSync.includes(o.id) ? { ...o, is_synced: true } : o));
             setSelectedOrders([]);
         } catch (error) {
             console.error('Bulk sync error:', error);
