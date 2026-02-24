@@ -124,12 +124,13 @@ export async function POST(req: NextRequest) {
                 continue;
             }
 
-            // Prepare Row Data
-            // We'll create one row per order item, or one row per order?
-            // Usually, for detailed export, one row per item is better.
-            // Or aggregate? Let's do one row per item for now as it's standard.
+            // Format single row consolidating all items
+            const productNames: string[] = [];
+            const variantsStrs: string[] = [];
+            const quantities: string[] = [];
+            const unitPrices: string[] = [];
 
-            const rows = itemsToExport.map((item: any) => {
+            itemsToExport.forEach((item: any, index: number) => {
                 let productName = 'Unknown Product';
                 try {
                     const nameData = item.product_snapshot?.name || item.product?.name;
@@ -138,11 +139,11 @@ export async function POST(req: NextRequest) {
                         productName = nameObj.ar || nameObj.en || (typeof nameData === 'string' ? nameData : 'Product');
                     }
                 } catch (e) {
-                    console.error('Error parsing product name for GS sync:', e);
                     productName = typeof item.product_snapshot?.name === 'string'
                         ? item.product_snapshot.name
                         : (item.product?.name || 'Product');
                 }
+                productNames.push(`${index + 1}. ${productName}`);
 
                 // Extract Variants
                 let variantsStr = '';
@@ -188,27 +189,32 @@ export async function POST(req: NextRequest) {
                             .join(', ');
                     }
                 } catch (e) {
-                    console.error('Error parsing variants for GS sync:', e);
+                    // ignore
                 }
-
-                return [
-                    order.order_number,
-                    new Date(order.created_at).toLocaleString('en-US'),
-                    order.status,
-                    order.customer_snapshot?.name || order.customer?.name || 'Guest',
-                    order.customer_snapshot?.phone || order.customer?.phone || '',
-                    order.customer_snapshot?.alt_phone || order.customer?.address?.alt_phone || '',
-                    order.shipping_address?.city || '',
-                    order.shipping_address?.address || '',
-                    productName,
-                    variantsStr,
-                    item.quantity,
-                    item.unit_price,
-                    item.total_price,
-                    order.total,
-                    order.notes || ''
-                ];
+                variantsStrs.push(`${index + 1}. ${variantsStr || 'None'}`);
+                quantities.push(`${index + 1}. ${item.quantity}`);
+                unitPrices.push(`${index + 1}. ${item.unit_price}`);
             });
+
+            const singleRow = [
+                order.order_number,
+                new Date(order.created_at).toLocaleString('en-US'),
+                order.status,
+                order.customer_snapshot?.name || order.customer?.name || 'Guest',
+                order.customer_snapshot?.phone || order.customer?.phone || '',
+                order.customer_snapshot?.alt_phone || order.customer?.address?.alt_phone || '',
+                order.shipping_address?.city || '',
+                order.shipping_address?.address || '',
+                productNames.join('\n'), // Consolidate products with line breaks
+                variantsStrs.join('\n'),
+                quantities.join('\n'),
+                unitPrices.join('\n'),
+                order.total, // Replace Item total with Order Total directly since it's 1 row
+                order.total,
+                order.notes || ''
+            ];
+
+            const rows = [singleRow];
 
             try {
                 // Check if we need to add a header
