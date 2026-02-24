@@ -371,6 +371,34 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                         </div>
                     </div>
 
+                    {/* Quantity Selector - Always Visible Above Offers */}
+                    <div className="space-y-3">
+                        <Label className="text-sm font-medium">
+                            {language === 'ar' ? 'الكمية الإجمالية' : 'Total Quantity'}
+                        </Label>
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center border-2 border-border/60 rounded-xl overflow-hidden bg-card">
+                                <button
+                                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                                    className="w-12 h-12 flex items-center justify-center bg-muted/30 hover:bg-muted transition-colors border-e-2 border-border/60 disabled:opacity-50"
+                                    disabled={quantity <= 1}
+                                >
+                                    -
+                                </button>
+                                <div className="w-16 h-12 flex items-center justify-center font-bold text-lg">
+                                    {quantity}
+                                </div>
+                                <button
+                                    onClick={() => setQuantity(Math.min(product.stock_quantity || 100, quantity + 1))}
+                                    className="w-12 h-12 flex items-center justify-center bg-muted/30 hover:bg-muted transition-colors border-s-2 border-border/60 disabled:opacity-50"
+                                    disabled={quantity >= (product.stock_quantity || 100)}
+                                >
+                                    +
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Upsell Offers - Premium Design */}
                     {upsellOffers.length > 0 && (
                         <div className="space-y-2.5">
@@ -475,107 +503,7 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                     );
                                 })}
 
-                                {/* Custom Quantity Option */}
-                                <div
-                                    className={cn(
-                                        "relative flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 gap-2",
-                                        !upsellOffers.some(o => o.min_quantity === quantity) && quantity !== 1
-                                            ? "border-primary bg-primary/5 shadow-sm"
-                                            : "border-border/60 hover:border-primary/40 bg-card"
-                                    )}
-                                    onClick={() => {
-                                        // When clicked, if it's currently on an offer or 1, switch to 2 as a default custom starting point (or keep current if it's already a custom number)
-                                        if (quantity === 1 || upsellOffers.some(o => o.min_quantity === quantity)) {
-                                            setQuantity(2);
-                                        }
-                                    }}
-                                >
-                                    <div className="flex flex-col gap-2 w-full">
-                                        <div className="flex items-center gap-2">
-                                            <RadioGroupItem
-                                                value={(!upsellOffers.some(o => o.min_quantity === quantity) && quantity !== 1) ? quantity.toString() : "custom"}
-                                                id="q-custom"
-                                                className="flex-shrink-0"
-                                            />
-                                            <Label htmlFor="q-custom" className="cursor-pointer font-medium text-sm flex-1">
-                                                {language === 'ar' ? 'كمية مخصصة' : 'Custom Quantity'}
-                                            </Label>
-
-                                            <div className="flex items-center gap-2 z-10" onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}>
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        e.preventDefault();
-                                                        if (quantity === 1 || Object.values(upsellOffers).some(o => o.min_quantity === quantity)) {
-                                                            setQuantity(Math.max(1, 2 - 1));
-                                                        } else {
-                                                            setQuantity(Math.max(1, quantity - 1));
-                                                        }
-                                                    }}
-                                                    className="w-8 h-8 flex items-center justify-center rounded-md border bg-background hover:bg-muted"
-                                                >
-                                                    -
-                                                </button>
-                                                <span className="w-8 text-center font-bold">
-                                                    {(!upsellOffers.some(o => o.min_quantity === quantity) && quantity !== 1) ? quantity : '-'}
-                                                </span>
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        e.preventDefault();
-                                                        if (quantity === 1 || Object.values(upsellOffers).some(o => o.min_quantity === quantity)) {
-                                                            setQuantity(Math.min(product.stock_quantity || 100, 2 + 1));
-                                                        } else {
-                                                            setQuantity(Math.min(product.stock_quantity || 100, quantity + 1));
-                                                        }
-                                                    }}
-                                                    className="w-8 h-8 flex items-center justify-center rounded-md border bg-background hover:bg-muted"
-                                                >
-                                                    +
-                                                </button>
-                                            </div>
-                                        </div>
-                                        {(!upsellOffers.some(o => o.min_quantity === quantity) && quantity !== 1) && (
-                                            <div className="flex items-center justify-between ps-6">
-                                                <span className="text-[11px] text-muted-foreground mt-1">
-                                                    {formatPrice(calculateTotalPrice() / quantity)} / {language === 'ar' ? 'للقطعة (بعد الخصم إن وجد)' : 'each (after applicable discount)'}
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
                             </RadioGroup>
-                        </div>
-                    )}
-
-                    {/* If no upsell offers exist, show standard quantity selector */}
-                    {upsellOffers.length === 0 && (
-                        <div className="space-y-3">
-                            <Label className="text-sm font-medium">
-                                {language === 'ar' ? 'الكمية الإجمالية' : 'Total Quantity'}
-                            </Label>
-                            <div className="flex items-center gap-4">
-                                <div className="flex items-center border-2 border-border/60 rounded-xl overflow-hidden bg-card">
-                                    <button
-                                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                        className="w-12 h-12 flex items-center justify-center bg-muted/30 hover:bg-muted transition-colors"
-                                    >
-                                        -
-                                    </button>
-                                    <div className="w-16 h-12 flex items-center justify-center font-bold text-lg border-x-2 border-border/60">
-                                        {quantity}
-                                    </div>
-                                    <button
-                                        onClick={() => setQuantity(Math.min(product.stock_quantity || 100, quantity + 1))}
-                                        className="w-12 h-12 flex items-center justify-center bg-muted/30 hover:bg-muted transition-colors"
-                                    >
-                                        +
-                                    </button>
-                                </div>
-                                <span className="text-sm text-muted-foreground font-medium">
-                                    {formatPrice(calculateTotalPrice())}
-                                </span>
-                            </div>
                         </div>
                     )}
 
