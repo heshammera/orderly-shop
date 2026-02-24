@@ -28,7 +28,7 @@ export default async function Page({ params, searchParams }: { params: { storeSl
     };
 
     // Fetch order details if orderId provided
-    let order = null;
+    let order: any = null;
     if (searchParams.orderId) {
         const { data } = await supabase
             .from('orders')
