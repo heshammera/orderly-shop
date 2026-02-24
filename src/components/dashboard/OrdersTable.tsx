@@ -376,13 +376,11 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
             const { data, error } = await supabase
                 .from('orders')
                 .select(`
-                  order_number,
-                  status,
-                  total,
-                  currency,
-                  created_at,
-                  customer_snapshot,
-                  is_synced
+                  *,
+                  order_items (
+                    *,
+                    product:products(name)
+                  )
                 `)
                 .eq('store_id', storeId)
                 .gte('created_at', exportDateRange.from.toISOString())
@@ -397,22 +395,103 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
                 return;
             }
 
-            const excelData = data.map(order => ({
-                [language === 'ar' ? 'رقم الطلب' : 'Order ID']: order.order_number,
-                [language === 'ar' ? 'التاريخ' : 'Date']: format(new Date(order.created_at), 'yyyy-MM-dd HH:mm'),
-                [language === 'ar' ? 'العميل' : 'Customer']: order.customer_snapshot?.name || '',
-                [language === 'ar' ? 'رقم الهاتف' : 'Phone']: order.customer_snapshot?.phone || '',
-                [language === 'ar' ? 'الحالة' : 'Status']: order.status,
-                [language === 'ar' ? 'الإجمالي' : 'Total']: `${order.total} ${order.currency}`,
-                [language === 'ar' ? 'متزامن؟' : 'Synced?']: order.is_synced ? 'Yes' : 'No'
-            }));
+            const excelData = data.map(order => {
+                const productNames: string[] = [];
+                const variantsStrs: string[] = [];
+                const quantities: string[] = [];
+                const unitPrices: string[] = [];
+                let itemTotal = 0;
+
+                const items = order.order_items || [];
+                items.forEach((item: any, index: number) => {
+                    let productName = 'Unknown Product';
+                    try {
+                        const nameData = item.product_snapshot?.name || item.product?.name;
+                        if (nameData) {
+                            const nameObj = typeof nameData === 'string' ? JSON.parse(nameData) : nameData;
+                            productName = nameObj.ar || nameObj.en || (typeof nameData === 'string' ? nameData : 'Product');
+                        }
+                    } catch (e) {
+                        productName = typeof item.product_snapshot?.name === 'string'
+                            ? item.product_snapshot.name
+                            : (item.product?.name || 'Product');
+                    }
+                    productNames.push(`${index + 1}. ${productName}`);
+
+                    let variantsStr = '';
+                    try {
+                        const variantsSource = item.product_snapshot?.variants || item.variants;
+                        if (variantsSource && Array.isArray(variantsSource)) {
+                            variantsStr = variantsSource
+                                .map((v: any) => {
+                                    const nameData = v.variantName || v.name;
+                                    const labelData = v.optionLabel || v.value;
+
+                                    let name = 'Variant';
+                                    let label = 'Option';
+
+                                    if (nameData) {
+                                        if (typeof nameData === 'string') {
+                                            try {
+                                                const parsed = JSON.parse(nameData);
+                                                name = parsed.ar || parsed.en || nameData;
+                                            } catch {
+                                                name = nameData;
+                                            }
+                                        } else {
+                                            name = nameData.ar || nameData.en || 'Variant';
+                                        }
+                                    }
+
+                                    if (labelData) {
+                                        if (typeof labelData === 'string') {
+                                            try {
+                                                const parsed = JSON.parse(labelData);
+                                                label = parsed.ar || parsed.en || labelData;
+                                            } catch {
+                                                label = labelData;
+                                            }
+                                        } else {
+                                            label = labelData.ar || labelData.en || 'Option';
+                                        }
+                                    }
+
+                                    return `${name}: ${label}`;
+                                })
+                                .join(', ');
+                        }
+                    } catch (e) { }
+
+                    variantsStrs.push(`${index + 1}. ${variantsStr || 'None'}`);
+                    quantities.push(`${index + 1}. ${item.quantity}`);
+                    unitPrices.push(`${index + 1}. ${item.unit_price}`);
+                    itemTotal += Number(item.total_price) || 0;
+                });
+
+                return {
+                    'Order Number': order.order_number,
+                    'Date': format(new Date(order.created_at), 'yyyy-MM-dd HH:mm:ss'),
+                    'Status': order.status,
+                    'Customer Name': order.customer_snapshot?.name || order.customer?.name || 'Guest',
+                    'Phone': order.customer_snapshot?.phone || order.customer?.phone || '',
+                    'City': order.shipping_address?.city || '',
+                    'Address': order.shipping_address?.address || '',
+                    'Product Name': productNames.join('\n'),
+                    'Variants': variantsStrs.join('\n'),
+                    'Quantity': quantities.join('\n'),
+                    'Unit Price': unitPrices.join('\n'),
+                    'Item Total': itemTotal,
+                    'Order Total': order.total,
+                    'Notes': order.notes || ''
+                };
+            });
 
             const worksheet = XLSX.utils.json_to_sheet(excelData);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, 'Orders');
 
-            XLSX.writeFile(workbook, `orders -export -${format(new Date(), 'yyyy-MM-dd')
-                }.xlsx`);
+            const timestamp = format(new Date(), 'yyyyMMdd_HHmmss');
+            XLSX.writeFile(workbook, `Orders_Export_${timestamp}.xlsx`);
             toast.success(language === 'ar' ? 'تم التصدير بنجاح' : 'Exported successfully');
             setExportDialogOpen(false);
         } catch (error) {
