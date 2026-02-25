@@ -258,6 +258,85 @@ export function PropertiesPanel({
                                         }
                                         return null;
                                     })}
+
+                                    {/* Form Fields Editor (shown in Content tab for CheckoutForm) */}
+                                    {selectedComponent.type === 'CheckoutForm' && selectedComponent.settings.formFields && (
+                                        <div className="space-y-3 pt-4 border-t">
+                                            <h4 className="font-semibold text-sm flex items-center gap-2">
+                                                <span className="w-1 h-4 bg-primary rounded-full" />
+                                                {language === 'ar' ? '⚙️ التحكم في حقول النموذج' : '⚙️ Form Fields Control'}
+                                            </h4>
+                                            <p className="text-xs text-muted-foreground">
+                                                {language === 'ar'
+                                                    ? 'تحكم في إظهار وإخفاء حقول نموذج الطلب وجعلها إلزامية أو اختيارية.'
+                                                    : 'Control which fields are shown or hidden and whether they are required.'}
+                                            </p>
+                                            <div className="space-y-2">
+                                                {[...selectedComponent.settings.formFields]
+                                                    .sort((a: any, b: any) => a.order - b.order)
+                                                    .map((field: any) => {
+                                                        const fieldLabel = typeof field.label === 'object'
+                                                            ? (field.label[language] || field.label.ar || field.label.en)
+                                                            : field.label;
+
+                                                        return (
+                                                            <div
+                                                                key={field.id}
+                                                                className={`flex items-center justify-between p-3 rounded-lg border transition-all ${field.visible
+                                                                        ? 'bg-white border-slate-200 shadow-sm'
+                                                                        : 'bg-slate-50 border-dashed border-slate-200 opacity-60'
+                                                                    }`}
+                                                            >
+                                                                <div className="flex items-center gap-2 min-w-0">
+                                                                    <span className="text-sm font-medium truncate">{fieldLabel}</span>
+                                                                    {field.locked && (
+                                                                        <span className="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded font-medium shrink-0">
+                                                                            {language === 'ar' ? 'مقفل' : 'Locked'}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <div className="flex items-center gap-3 shrink-0">
+                                                                    {/* Required Toggle */}
+                                                                    <label className="flex items-center gap-1 cursor-pointer" title={language === 'ar' ? 'إلزامي' : 'Required'}>
+                                                                        <span className="text-[10px] text-muted-foreground">{language === 'ar' ? 'إلزامي' : 'Req'}</span>
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={field.required}
+                                                                            disabled={field.locked || !field.visible}
+                                                                            onChange={(e) => {
+                                                                                const newFields = selectedComponent.settings.formFields.map((f: any) =>
+                                                                                    f.id === field.id ? { ...f, required: e.target.checked } : f
+                                                                                );
+                                                                                onUpdateSettings(selectedComponent.id, { formFields: newFields });
+                                                                            }}
+                                                                            className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary/20 disabled:opacity-40"
+                                                                        />
+                                                                    </label>
+                                                                    {/* Visible Toggle */}
+                                                                    <label className="flex items-center gap-1 cursor-pointer" title={language === 'ar' ? 'إظهار' : 'Visible'}>
+                                                                        <span className="text-[10px] text-muted-foreground">{language === 'ar' ? 'إظهار' : 'Show'}</span>
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={field.visible}
+                                                                            disabled={field.locked}
+                                                                            onChange={(e) => {
+                                                                                const newFields = selectedComponent.settings.formFields.map((f: any) =>
+                                                                                    f.id === field.id
+                                                                                        ? { ...f, visible: e.target.checked, required: e.target.checked ? f.required : false }
+                                                                                        : f
+                                                                                );
+                                                                                onUpdateSettings(selectedComponent.id, { formFields: newFields });
+                                                                            }}
+                                                                            className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary/20 disabled:opacity-40"
+                                                                        />
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             ) : (
                                 <div className="text-center py-12 text-muted-foreground text-sm">Select a component to edit content</div>
@@ -303,8 +382,8 @@ export function PropertiesPanel({
                                                             <div
                                                                 key={field.id}
                                                                 className={`flex items-center justify-between p-3 rounded-lg border transition-all ${field.visible
-                                                                        ? 'bg-white border-slate-200 shadow-sm'
-                                                                        : 'bg-slate-50 border-dashed border-slate-200 opacity-60'
+                                                                    ? 'bg-white border-slate-200 shadow-sm'
+                                                                    : 'bg-slate-50 border-dashed border-slate-200 opacity-60'
                                                                     }`}
                                                             >
                                                                 <div className="flex items-center gap-2 min-w-0">
