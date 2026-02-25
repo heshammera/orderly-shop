@@ -266,7 +266,16 @@ export const COMPONENT_DEFAULTS: Record<ComponentType, Partial<ComponentSchema>>
         settings: {
             layout: 'default',
             inputStyle: 'outline',
-            showLabels: true
+            showLabels: true,
+            formFields: [
+                { id: 'name', type: 'text', label: { ar: 'الاسم الكامل', en: 'Full Name' }, visible: true, required: true, locked: true, order: 1 },
+                { id: 'phone', type: 'tel', label: { ar: 'رقم الهاتف', en: 'Phone Number' }, visible: true, required: true, locked: true, order: 2 },
+                { id: 'alt_phone', type: 'tel', label: { ar: 'رقم هاتف بديل', en: 'Alternative Phone' }, visible: true, required: false, locked: false, order: 3 },
+                { id: 'email', type: 'email', label: { ar: 'البريد الإلكتروني', en: 'Email Address' }, visible: false, required: false, locked: false, order: 4 },
+                { id: 'city', type: 'city', label: { ar: 'المدينة / المحافظة', en: 'City / Governorate' }, visible: true, required: true, locked: false, order: 5 },
+                { id: 'address', type: 'textarea', label: { ar: 'العنوان التفصيلي', en: 'Address Details' }, visible: true, required: true, locked: false, order: 6 },
+                { id: 'notes', type: 'textarea', label: { ar: 'ملاحظات إضافية', en: 'Order Notes' }, visible: true, required: false, locked: false, order: 7 },
+            ]
         },
         content: {
             title: { en: 'Customer Information', ar: 'بيانات العميل' }

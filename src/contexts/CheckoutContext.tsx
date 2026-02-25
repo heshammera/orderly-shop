@@ -78,6 +78,7 @@ export function CheckoutProvider({ store, children, isEditable = false }: Checko
         name: '',
         phone: '',
         alt_phone: '',
+        email: '',
         address: '',
         city: '',
         notes: ''
@@ -259,6 +260,7 @@ export function CheckoutProvider({ store, children, isEditable = false }: Checko
                         name: formData.name,
                         phone: formData.phone,
                         alt_phone: formData.alt_phone,
+                        email: formData.email,
                         address: formData.address,
                         city: formData.city,
                         notes: formData.notes,
