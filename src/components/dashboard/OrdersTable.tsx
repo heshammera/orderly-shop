@@ -721,27 +721,27 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
             const style = document.createElement('style');
             style.innerHTML = `
         @media print {
-            body * {
-                visibility: hidden;
+            body > *:not(#print-container) {
+                display: none !important;
             }
-            #print - container, #print - container * {
-                visibility: visible;
-            }
-            #print - container {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100 %;
+            #print-container {
+                display: block !important;
+                position: relative !important;
+                width: 100% !important;
+                left: 0 !important;
+                top: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
                 background: white;
             }
-                    .page -break {
-        page -break-after: always;
-    }
-    @page {
-        size: A4;
-        margin: 1cm;
-    }
-}
+            .page-break {
+                page-break-after: always;
+            }
+            @page {
+                size: A4;
+                margin: 1cm;
+            }
+        }
 `;
             document.head.appendChild(style);
 

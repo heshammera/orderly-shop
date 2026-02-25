@@ -62,18 +62,17 @@ export function OrderDetailsDialog({
             const style = document.createElement('style');
             style.innerHTML = `
                 @media print {
-                    body * {
-                        visibility: hidden;
-                    }
-                    #print-container, #print-container * {
-                        visibility: visible;
+                    body > *:not(#print-container) {
+                        display: none !important;
                     }
                     #print-container {
-                        position: absolute;
-                        left: 0;
-                        top: 0;
-                        width: 100%;
-                        padding: 20px;
+                        display: block !important;
+                        position: relative !important;
+                        width: 100% !important;
+                        left: 0 !important;
+                        top: 0 !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
                         background: white;
                     }
                     @page {
