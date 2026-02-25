@@ -66,7 +66,21 @@ export default function EditorPage({ params }: { params: { storeId: string } }) 
                 ]);
 
                 if (pageRes.data?.content) {
-                    setLayout(pageRes.data.content);
+                    // Merge saved sections with latest COMPONENT_DEFAULTS to backfill new settings
+                    const savedLayout = pageRes.data.content as PageSchema;
+                    if (savedLayout.sections) {
+                        savedLayout.sections = savedLayout.sections.map(section => {
+                            const defaults = COMPONENT_DEFAULTS[section.type];
+                            if (defaults?.settings) {
+                                return {
+                                    ...section,
+                                    settings: { ...defaults.settings, ...section.settings }
+                                };
+                            }
+                            return section;
+                        });
+                    }
+                    setLayout(savedLayout);
                 } else {
                     // Default layouts
                     if (pageSlug === 'checkout') {
