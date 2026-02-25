@@ -1,0 +1,33 @@
+[
+  {
+    "order_number": "ORD-560399",
+    "total": 285,
+    "order_items": [
+      {
+        "id": "2d748ec8-f616-48eb-a991-b4a13d4c2812",
+        "quantity": 1,
+        "product_id": "0b5b8441-5eb5-4258-9386-f1d0cbd9ed97",
+        "unit_price": 220,
+        "product_snapshot": {
+          "name": "بيزك دريس كم (صباع)",
+          "variants": [
+            {
+              "optionId": "6f4f3171-e1dc-49d7-b33f-d63b55d23fa0",
+              "variantId": "249ef059-b702-4bf5-a801-932d662cab82",
+              "optionLabel": "بني",
+              "variantName": "اللون",
+              "priceModifier": 0
+            },
+            {
+              "optionId": "0cbc5825-cc42-40ae-96ed-f8bafbb827cb",
+              "variantId": "3f963ea9-8517-43ed-bf0f-e74e467e3974",
+              "optionLabel": "مقاس 1 من 50ك ل 70ك",
+              "variantName": "المقاس",
+              "priceModifier": 0
+            }
+          ]
+        }
+      }
+    ]
+  }
+]
