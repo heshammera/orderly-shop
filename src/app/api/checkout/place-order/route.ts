@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
             const protocol = request.headers.get('x-forwarded-proto') || 'http';
             const host = request.headers.get('host');
             const baseUrl = `${protocol}://${host}`;
-            fetch(`${baseUrl}/api/integrations/google-sheets/sync`, {
+            await fetch(`${baseUrl}/api/integrations/google-sheets/sync`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ orderId: orderData.id, storeId: store_id })

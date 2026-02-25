@@ -418,83 +418,90 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
                     }];
                 }
 
-                // Map each item to its own row
-                return items.map((item: any) => {
-                    let productName = 'Unknown Product';
-                    try {
-                        const nameData = item.product_snapshot?.name || item.product?.name;
-                        if (nameData) {
-                            const nameObj = typeof nameData === 'string' ? JSON.parse(nameData) : nameData;
-                            productName = nameObj.ar || nameObj.en || (typeof nameData === 'string' ? nameData : 'Product');
+                // Map each item to its own row(s) based on quantity
+                return items.flatMap((item: any) => {
+                    const q = Math.max(1, item.quantity || 1);
+                    return Array.from({ length: q }).map((_, pieceIndex) => {
+                        let productName = 'Unknown Product';
+                        try {
+                            const nameData = item.product_snapshot?.name || item.product?.name;
+                            if (nameData) {
+                                const nameObj = typeof nameData === 'string' ? JSON.parse(nameData) : nameData;
+                                productName = nameObj.ar || nameObj.en || (typeof nameData === 'string' ? nameData : 'Product');
+                            }
+                        } catch (e) {
+                            productName = typeof item.product_snapshot?.name === 'string'
+                                ? item.product_snapshot.name
+                                : (item.product?.name || 'Product');
                         }
-                    } catch (e) {
-                        productName = typeof item.product_snapshot?.name === 'string'
-                            ? item.product_snapshot.name
-                            : (item.product?.name || 'Product');
-                    }
 
-                    let variantsStr = '';
-                    try {
-                        const variantsSource = item.product_snapshot?.variants || item.variants;
-                        if (variantsSource && Array.isArray(variantsSource)) {
-                            variantsStr = variantsSource
-                                .map((v: any) => {
-                                    const nameData = v.variantName || v.name;
-                                    const labelData = v.optionLabel || v.value;
+                        let variantsStr = '';
+                        try {
+                            const variantsSource = item.product_snapshot?.variants || item.variants;
+                            if (variantsSource && Array.isArray(variantsSource)) {
+                                const isMultiPiece = variantsSource.length > 0 && variantsSource.length % q === 0 && variantsSource.length >= q;
+                                const variantsPerPiece = isMultiPiece ? variantsSource.length / q : variantsSource.length;
+                                const pieceVariants = isMultiPiece
+                                    ? variantsSource.slice(pieceIndex * variantsPerPiece, (pieceIndex + 1) * variantsPerPiece)
+                                    : variantsSource;
 
-                                    let name = 'Variant';
-                                    let label = 'Option';
+                                variantsStr = pieceVariants
+                                    .map((v: any) => {
+                                        const nameData = v.variantName || v.name;
+                                        const labelData = v.optionLabel || v.value;
 
-                                    if (nameData) {
-                                        if (typeof nameData === 'string') {
-                                            try {
-                                                const parsed = JSON.parse(nameData);
-                                                name = parsed.ar || parsed.en || nameData;
-                                            } catch {
-                                                name = nameData;
+                                        let name = 'Variant';
+                                        let label = 'Option';
+
+                                        if (nameData) {
+                                            if (typeof nameData === 'string') {
+                                                try {
+                                                    const parsed = JSON.parse(nameData);
+                                                    name = parsed.ar || parsed.en || nameData;
+                                                } catch {
+                                                    name = nameData;
+                                                }
+                                            } else {
+                                                name = nameData.ar || nameData.en || 'Variant';
                                             }
-                                        } else {
-                                            name = nameData.ar || nameData.en || 'Variant';
                                         }
-                                    }
 
-                                    if (labelData) {
-                                        if (typeof labelData === 'string') {
-                                            try {
-                                                const parsed = JSON.parse(labelData);
-                                                label = parsed.ar || parsed.en || labelData;
-                                            } catch {
-                                                label = labelData;
+                                        if (labelData) {
+                                            if (typeof labelData === 'string') {
+                                                try {
+                                                    const parsed = JSON.parse(labelData);
+                                                    label = parsed.ar || parsed.en || labelData;
+                                                } catch {
+                                                    label = labelData;
+                                                }
+                                            } else {
+                                                label = labelData.ar || labelData.en || 'Option';
                                             }
-                                        } else {
-                                            label = labelData.ar || labelData.en || 'Option';
                                         }
-                                    }
 
-                                    return `${name}: ${label}`;
-                                })
-                                .join(', ');
-                        }
-                    } catch (e) { }
+                                        return `${name}: ${label}`;
+                                    })
+                                    .join(', ');
+                            }
+                        } catch (e) { }
 
-                    const itemTotal = Number(item.total_price) || 0;
-
-                    return {
-                        'Order Number': order.order_number,
-                        'Date': format(new Date(order.created_at), 'yyyy-MM-dd HH:mm:ss'),
-                        'Status': order.status,
-                        'Customer Name': order.customer_snapshot?.name || order.customer?.name || 'Guest',
-                        'Phone': order.customer_snapshot?.phone || order.customer?.phone || '',
-                        'City': order.shipping_address?.city || '',
-                        'Address': order.shipping_address?.address || '',
-                        'Product Name': productName,
-                        'Variants': variantsStr || 'None',
-                        'Quantity': item.quantity,
-                        'Unit Price': item.unit_price,
-                        'Item Total': itemTotal,
-                        'Order Total': order.total,
-                        'Notes': order.notes || ''
-                    };
+                        return {
+                            'Order Number': order.order_number,
+                            'Date': format(new Date(order.created_at), 'yyyy-MM-dd HH:mm:ss'),
+                            'Status': order.status,
+                            'Customer Name': order.customer_snapshot?.name || order.customer?.name || 'Guest',
+                            'Phone': order.customer_snapshot?.phone || order.customer?.phone || '',
+                            'City': order.shipping_address?.city || '',
+                            'Address': order.shipping_address?.address || '',
+                            'Product Name': productName,
+                            'Variants': variantsStr || 'None',
+                            'Quantity': 1, // Split into 1 per row
+                            'Unit Price': item.unit_price,
+                            'Item Total': item.unit_price,
+                            'Order Total': order.total,
+                            'Notes': order.notes || ''
+                        };
+                    });
                 });
             });
 
