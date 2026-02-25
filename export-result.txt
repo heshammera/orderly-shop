@@ -1,0 +1,105 @@
+﻿[dotenv@17.3.1] injecting env (7) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+=== ORDERS FROM DB ===
+
+ORD-259705 (total: 285)
+  DB items count: 1
+  -> "بيزك دريس كم (صباع)" qty=1 price=220
+
+ORD-527341 (total: 285)
+  DB items count: 1
+  -> "بيزك دريس كم (صباع)" qty=1 price=220
+
+ORD-240808 (total: 505)
+  DB items count: 2
+  -> "بيزك دريس كم (صباع)" qty=1 price=220
+  -> "بيزك دريس كم (صباع)" qty=1 price=220
+
+ORD-560399 (total: 285)
+  DB items count: 1
+  -> "بيزك دريس كم (صباع)" qty=1 price=220
+
+ORD-061678 (total: 285)
+  DB items count: 1
+  -> "بيزك دريس كم (صباع)" qty=1 price=220
+
+ORD-869772 (total: 495)
+  DB items count: 2
+  -> "بيزك دريس كم (صباع)" qty=1 price=215
+  -> "بيزك دريس كم (صباع)" qty=1 price=215
+
+ORD-246838 (total: 285)
+  DB items count: 1
+  -> "بيزك دريس كم (صباع)" qty=1 price=220
+
+ORD-956957 (total: 285)
+  DB items count: 1
+  -> "بيزك دريس كم (صباع)" qty=1 price=220
+
+ORD-633832 (total: 285)
+  DB items count: 1
+  -> "بيزك دريس كم (صباع)" qty=1 price=220
+
+ORD-242934 (total: 945)
+  DB items count: 4
+  -> "بيزك دريس كم (صباع)" qty=1 price=220
+  -> "بيزك دريس كم (صباع)" qty=1 price=220
+  -> "بيزك دريس كم (صباع)" qty=1 price=220
+  -> "بيزك دريس كم (صباع)" qty=1 price=220
+
+ORD-184007 (total: 945)
+  DB items count: 4
+  -> "بيزك دريس كم (صباع)" qty=1 price=220
+  -> "بيزك دريس كم (صباع)" qty=1 price=220
+  -> "بيزك دريس كم (صباع)" qty=1 price=220
+  -> "بيزك دريس كم (صباع)" qty=1 price=220
+
+ORD-059022 (total: 725)
+  DB items count: 3
+  -> "بيزك دريس كم (صباع)" qty=1 price=220
+  -> "بيزك دريس كم (صباع)" qty=1 price=220
+  -> "بيزك دريس كم (صباع)" qty=1 price=220
+
+ORD-812340 (total: 505)
+  DB items count: 2
+  -> "بيزك دريس كم (صباع)" qty=1 price=220
+  -> "بيزك دريس كم (صباع)" qty=1 price=220
+
+ORD-774255 (total: 325)
+  DB items count: 2
+  -> "بيزك ديربي" qty=1 price=130
+  -> "بيزك ديربي" qty=1 price=130
+
+ORD-414002 (total: 195)
+  DB items count: 1
+  -> "بيزك ديربي" qty=1 price=130
+
+
+=== SIMULATED EXPORT OUTPUT ===
+Total export rows: 27
+  ORD-259705 | بيزك دريس كم (صباع) | qty=1 | price=220 | orderTotal=285
+  ORD-527341 | بيزك دريس كم (صباع) | qty=1 | price=220 | orderTotal=285
+  ORD-240808 | بيزك دريس كم (صباع) | qty=1 | price=220 | orderTotal=505
+  ORD-240808 | بيزك دريس كم (صباع) | qty=1 | price=220 | orderTotal=505
+  ORD-560399 | بيزك دريس كم (صباع) | qty=1 | price=220 | orderTotal=285
+  ORD-061678 | بيزك دريس كم (صباع) | qty=1 | price=220 | orderTotal=285
+  ORD-869772 | بيزك دريس كم (صباع) | qty=1 | price=215 | orderTotal=495
+  ORD-869772 | بيزك دريس كم (صباع) | qty=1 | price=215 | orderTotal=495
+  ORD-246838 | بيزك دريس كم (صباع) | qty=1 | price=220 | orderTotal=285
+  ORD-956957 | بيزك دريس كم (صباع) | qty=1 | price=220 | orderTotal=285
+  ORD-633832 | بيزك دريس كم (صباع) | qty=1 | price=220 | orderTotal=285
+  ORD-242934 | بيزك دريس كم (صباع) | qty=1 | price=220 | orderTotal=945
+  ORD-242934 | بيزك دريس كم (صباع) | qty=1 | price=220 | orderTotal=945
+  ORD-242934 | بيزك دريس كم (صباع) | qty=1 | price=220 | orderTotal=945
+  ORD-242934 | بيزك دريس كم (صباع) | qty=1 | price=220 | orderTotal=945
+  ORD-184007 | بيزك دريس كم (صباع) | qty=1 | price=220 | orderTotal=945
+  ORD-184007 | بيزك دريس كم (صباع) | qty=1 | price=220 | orderTotal=945
+  ORD-184007 | بيزك دريس كم (صباع) | qty=1 | price=220 | orderTotal=945
+  ORD-184007 | بيزك دريس كم (صباع) | qty=1 | price=220 | orderTotal=945
+  ORD-059022 | بيزك دريس كم (صباع) | qty=1 | price=220 | orderTotal=725
+  ORD-059022 | بيزك دريس كم (صباع) | qty=1 | price=220 | orderTotal=725
+  ORD-059022 | بيزك دريس كم (صباع) | qty=1 | price=220 | orderTotal=725
+  ORD-812340 | بيزك دريس كم (صباع) | qty=1 | price=220 | orderTotal=505
+  ORD-812340 | بيزك دريس كم (صباع) | qty=1 | price=220 | orderTotal=505
+  ORD-774255 | بيزك ديربي | qty=1 | price=130 | orderTotal=325
+  ORD-774255 | بيزك ديربي | qty=1 | price=130 | orderTotal=325
+  ORD-414002 | بيزك ديربي | qty=1 | price=130 | orderTotal=195

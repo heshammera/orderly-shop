@@ -395,12 +395,12 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
                 return;
             }
 
-            const excelData = data.flatMap(order => {
+            const excelData = data.map(order => {
                 const items = order.order_items || [];
 
                 // If an order somehow has no items, still export it as one row with empty product details
                 if (items.length === 0) {
-                    return [{
+                    return {
                         'Order Number': order.order_number,
                         'Date': format(new Date(order.created_at), 'yyyy-MM-dd HH:mm:ss'),
                         'Status': order.status,
@@ -415,13 +415,19 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
                         'Item Total': 0,
                         'Order Total': order.total,
                         'Notes': order.notes || ''
-                    }];
+                    };
                 }
 
+                const allProductNames: string[] = [];
+                const allVariants: string[] = [];
+                const allQuantities: string[] = [];
+                const allUnitPrices: string[] = [];
+                const allItemTotals: string[] = [];
+
                 // Map each item to its own row(s) based on quantity
-                return items.flatMap((item: any) => {
+                items.forEach((item: any) => {
                     const q = Math.max(1, item.quantity || 1);
-                    return Array.from({ length: q }).map((_, pieceIndex) => {
+                    Array.from({ length: q }).forEach((_, pieceIndex) => {
                         let productName = 'Unknown Product';
                         try {
                             const nameData = item.product_snapshot?.name || item.product?.name;
@@ -485,24 +491,30 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
                             }
                         } catch (e) { }
 
-                        return {
-                            'Order Number': order.order_number,
-                            'Date': format(new Date(order.created_at), 'yyyy-MM-dd HH:mm:ss'),
-                            'Status': order.status,
-                            'Customer Name': order.customer_snapshot?.name || order.customer?.name || 'Guest',
-                            'Phone': order.customer_snapshot?.phone || order.customer?.phone || '',
-                            'City': order.shipping_address?.city || '',
-                            'Address': order.shipping_address?.address || '',
-                            'Product Name': productName,
-                            'Variants': variantsStr || 'None',
-                            'Quantity': 1, // Split into 1 per row
-                            'Unit Price': item.unit_price,
-                            'Item Total': item.unit_price,
-                            'Order Total': order.total,
-                            'Notes': order.notes || ''
-                        };
+                        allProductNames.push(productName);
+                        allVariants.push(variantsStr || 'None');
+                        allQuantities.push('1');
+                        allUnitPrices.push(String(item.unit_price));
+                        allItemTotals.push(String(item.unit_price));
                     });
                 });
+
+                return {
+                    'Order Number': order.order_number,
+                    'Date': format(new Date(order.created_at), 'yyyy-MM-dd HH:mm:ss'),
+                    'Status': order.status,
+                    'Customer Name': order.customer_snapshot?.name || order.customer?.name || 'Guest',
+                    'Phone': order.customer_snapshot?.phone || order.customer?.phone || '',
+                    'City': order.shipping_address?.city || '',
+                    'Address': order.shipping_address?.address || '',
+                    'Product Name': allProductNames.join('\n'),
+                    'Variants': allVariants.join('\n'),
+                    'Quantity': allQuantities.join('\n'),
+                    'Unit Price': allUnitPrices.join('\n'),
+                    'Item Total': allItemTotals.join('\n'),
+                    'Order Total': order.total,
+                    'Notes': order.notes || ''
+                };
             });
 
             const worksheet = XLSX.utils.json_to_sheet(excelData);

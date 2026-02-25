@@ -1,0 +1,74 @@
+[
+  {
+    "product_snapshot": {
+      "name": {
+        "ar": "بيزك دريس كم (صباع)",
+        "en": ""
+      },
+      "variants": [
+        {
+          "optionId": "2f40e9b8-0fa7-4b95-9f71-bfdf6ea3ef01",
+          "variantId": "249ef059-b702-4bf5-a801-932d662cab82",
+          "optionLabel": {
+            "ar": "اسود",
+            "en": ""
+          },
+          "variantName": {
+            "ar": "اللون",
+            "en": ""
+          },
+          "priceModifier": 0
+        },
+        {
+          "optionId": "3e06a9fd-9aba-4606-b15e-c0ad7982d0e0",
+          "variantId": "3f963ea9-8517-43ed-bf0f-e74e467e3974",
+          "optionLabel": {
+            "ar": "مقاس 2 من 70ك ل 90ك",
+            "en": ""
+          },
+          "variantName": {
+            "ar": "المقاس",
+            "en": ""
+          },
+          "priceModifier": 0
+        }
+      ]
+    }
+  },
+  {
+    "product_snapshot": {
+      "name": {
+        "ar": "بيزك دريس كم (صباع)",
+        "en": ""
+      },
+      "variants": [
+        {
+          "optionId": "6f4f3171-e1dc-49d7-b33f-d63b55d23fa0",
+          "variantId": "249ef059-b702-4bf5-a801-932d662cab82",
+          "optionLabel": {
+            "ar": "بني",
+            "en": ""
+          },
+          "variantName": {
+            "ar": "اللون",
+            "en": ""
+          },
+          "priceModifier": 0
+        },
+        {
+          "optionId": "3e06a9fd-9aba-4606-b15e-c0ad7982d0e0",
+          "variantId": "3f963ea9-8517-43ed-bf0f-e74e467e3974",
+          "optionLabel": {
+            "ar": "مقاس 2 من 70ك ل 90ك",
+            "en": ""
+          },
+          "variantName": {
+            "ar": "المقاس",
+            "en": ""
+          },
+          "priceModifier": 0
+        }
+      ]
+    }
+  }
+]

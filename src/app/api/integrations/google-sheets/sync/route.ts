@@ -124,9 +124,15 @@ export async function POST(req: NextRequest) {
                 continue;
             }
 
-            const rows = itemsToExport.flatMap((item: any) => {
+            const allProductNames: string[] = [];
+            const allVariants: string[] = [];
+            const allQuantities: string[] = [];
+            const allUnitPrices: string[] = [];
+            const allItemTotals: string[] = [];
+
+            itemsToExport.forEach((item: any) => {
                 const q = Math.max(1, item.quantity || 1);
-                return Array.from({ length: q }).map((_, pieceIndex) => {
+                Array.from({ length: q }).forEach((_, pieceIndex) => {
                     let productName = 'Unknown Product';
                     try {
                         const nameData = item.product_snapshot?.name || item.product?.name;
@@ -193,25 +199,33 @@ export async function POST(req: NextRequest) {
                         // ignore
                     }
 
-                    return [
-                        order.order_number,
-                        new Date(order.created_at).toLocaleString('en-US'),
-                        order.status,
-                        order.customer_snapshot?.name || order.customer?.name || 'Guest',
-                        order.customer_snapshot?.phone || order.customer?.phone || '',
-                        order.customer_snapshot?.alt_phone || order.customer?.address?.alt_phone || '',
-                        order.shipping_address?.city || '',
-                        order.shipping_address?.address || '',
-                        productName,
-                        variantsStr || 'None',
-                        1, // Item quantity for this row
-                        item.unit_price,
-                        item.unit_price, // Total for this row is just the unit price
-                        order.total,
-                        order.notes || ''
-                    ];
+                    allProductNames.push(productName);
+                    allVariants.push(variantsStr || 'None');
+                    allQuantities.push('1');
+                    allUnitPrices.push(String(item.unit_price));
+                    allItemTotals.push(String(item.unit_price));
                 });
             });
+
+            const rows = [
+                [
+                    order.order_number,
+                    new Date(order.created_at).toLocaleString('en-US'),
+                    order.status,
+                    order.customer_snapshot?.name || order.customer?.name || 'Guest',
+                    order.customer_snapshot?.phone || order.customer?.phone || '',
+                    order.customer_snapshot?.alt_phone || order.customer?.address?.alt_phone || '',
+                    order.shipping_address?.city || '',
+                    order.shipping_address?.address || '',
+                    allProductNames.join('\n'),
+                    allVariants.join('\n'),
+                    allQuantities.join('\n'),
+                    allUnitPrices.join('\n'),
+                    allItemTotals.join('\n'),
+                    order.total,
+                    order.notes || ''
+                ]
+            ];
 
             // If an order somehow has no items, export an empty item row to record the order exists
             if (rows.length === 0) {
