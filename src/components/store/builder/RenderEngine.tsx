@@ -108,7 +108,14 @@ export function RenderEngine({
                     return null;
                 }
                 return (
-                    <div key={section.id} className="relative group/section">
+                    <div
+                        key={section.id}
+                        className={`relative group/section ${isEditable ? 'cursor-pointer' : ''} ${isEditable && selectedComponentId === section.id ? 'ring-2 ring-primary ring-offset-1 rounded-md' : ''}`}
+                        onClick={isEditable && onSelectComponent ? (e) => {
+                            e.stopPropagation();
+                            onSelectComponent(section.id);
+                        } : undefined}
+                    >
                         {isEditable && onDelete && onMoveUp && onMoveDown && onSelectComponent && (
                             <SectionControls
                                 section={section}
