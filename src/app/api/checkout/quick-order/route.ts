@@ -113,20 +113,26 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Failed to create order items: ' + itemError.message }, { status: 500 });
         }
 
-        // 4. Trigger Google Sheets Sync
+        // 4. Trigger Google Sheets Sync (await with timeout, so Vercel doesn't kill the process)
         try {
-            // We use absolute URL for server-side fetch or just fire and forget
-            const protocol = request.headers.get('x-forwarded-proto') || 'http';
+            const protocol = request.headers.get('x-forwarded-proto') || 'https';
             const host = request.headers.get('host');
             const baseUrl = `${protocol}://${host}`;
+            const syncUrl = `${baseUrl}/api/integrations/google-sheets/sync`;
 
-            fetch(`${baseUrl}/api/integrations/google-sheets/sync`, {
+            const syncRes = await fetch(syncUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ orderId: orderData.id, storeId: store_id })
-            }).catch(e => console.error('Failed to trigger GS sync:', e));
-        } catch (e) {
-            console.error('Failed to initiate sync call:', e);
+                body: JSON.stringify({ orderId: orderData.id, storeId: store_id }),
+                signal: AbortSignal.timeout(15000),
+            });
+
+            if (!syncRes.ok) {
+                const syncBody = await syncRes.text().catch(() => '');
+                console.error(`GS sync failed for order ${orderData.id}: HTTP ${syncRes.status}`, syncBody);
+            }
+        } catch (e: any) {
+            console.error(`GS sync error for order ${orderData.id}:`, e.message);
         }
 
         return NextResponse.json({

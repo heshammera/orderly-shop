@@ -201,12 +201,19 @@ export function CreateOrderDialog({ open, onOpenChange, storeId, onOrderCreated 
 
             if (itemsError) throw itemsError;
 
-            // Trigger Google Sheets Sync (Fire and Forget)
-            fetch('/api/integrations/google-sheets/sync', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ orderId: order.id, storeId: storeId })
-            }).catch(err => console.error('Failed to trigger Google Sheets sync:', err));
+            // Trigger Google Sheets Sync
+            try {
+                const syncRes = await fetch('/api/integrations/google-sheets/sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId: order.id, storeId: storeId })
+                });
+                if (!syncRes.ok) {
+                    console.error('Google Sheets sync failed:', syncRes.status);
+                }
+            } catch (syncErr) {
+                console.error('Google Sheets sync error:', syncErr);
+            }
 
             toast.success(language === 'ar' ? 'تم إنشاء الطلب بنجاح' : 'Order created successfully');
             onOrderCreated();
