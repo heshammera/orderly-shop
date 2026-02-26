@@ -200,7 +200,7 @@ export function Hero() {
 
               <video
                 ref={videoRef}
-                src="/videos/demo.mp4"
+                src="/videos/demo2.mp4"
                 controls
                 autoPlay
                 playsInline
