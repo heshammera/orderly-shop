@@ -317,7 +317,7 @@ export function ProductDetailsDialog({ open, onOpenChange, product, language }: 
                                                     <span className="font-bold text-green-600">
                                                         {upsell.discount_type === 'percentage'
                                                             ? `${upsell.discount_value}%`
-                                                            : `${upsell.discount_value} ${product.currency} ${language === 'ar' ? 'لكل قطعة' : 'per item'}`}
+                                                            : `${upsell.discount_value} ${product.currency || ''} ${language === 'ar' ? 'لكل قطعة' : 'per item'}`}
                                                     </span>
                                                 </div>
                                             </div>
