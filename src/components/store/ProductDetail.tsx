@@ -43,6 +43,7 @@ interface VariantOption {
     value: string;
     price_modifier: number | null;
     is_default: boolean;
+    in_stock?: boolean;
 }
 
 interface UpsellOffer {
@@ -547,15 +548,22 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                                             return (
                                                                 <button
                                                                     key={option.id}
-                                                                    onClick={() => handleOptionSelect(itemIndex, variant.id, option.id)}
+                                                                    onClick={() => option.in_stock !== false && handleOptionSelect(itemIndex, variant.id, option.id)}
+                                                                    disabled={option.in_stock === false}
                                                                     className={cn(
-                                                                        "w-10 h-10 rounded-full border-2 transition-all relative flex items-center justify-center",
-                                                                        isSelected ? "border-primary ring-2 ring-primary/20 scale-110" : "border-transparent ring-1 ring-border hover:scale-105"
+                                                                        "w-10 h-10 rounded-full border-2 transition-all relative flex items-center justify-center disabled:cursor-not-allowed",
+                                                                        isSelected ? "border-primary ring-2 ring-primary/20 scale-110" : "border-transparent ring-1 ring-border hover:scale-105",
+                                                                        option.in_stock === false && "opacity-40 grayscale"
                                                                     )}
                                                                     style={{ backgroundColor: option.value }}
                                                                     title={option.label[language] || option.label.ar}
                                                                 >
                                                                     {isSelected && <Check className="w-4 h-4 text-white drop-shadow-md" />}
+                                                                    {option.in_stock === false && (
+                                                                        <div className="absolute inset-0 flex items-center justify-center">
+                                                                            <div className="w-full h-[2px] bg-red-500/80 rotate-45 transform" />
+                                                                        </div>
+                                                                    )}
                                                                 </button>
                                                             );
                                                         }
@@ -564,10 +572,12 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                                             return (
                                                                 <button
                                                                     key={option.id}
-                                                                    onClick={() => handleOptionSelect(itemIndex, variant.id, option.id)}
+                                                                    onClick={() => option.in_stock !== false && handleOptionSelect(itemIndex, variant.id, option.id)}
+                                                                    disabled={option.in_stock === false}
                                                                     className={cn(
-                                                                        "w-16 h-16 rounded-md border-2 overflow-hidden relative transition-all",
-                                                                        isSelected ? "border-primary ring-2 ring-primary/20" : "border-transparent ring-1 ring-border opacity-80 hover:opacity-100"
+                                                                        "w-16 h-16 rounded-md border-2 overflow-hidden relative transition-all disabled:cursor-not-allowed",
+                                                                        isSelected ? "border-primary ring-2 ring-primary/20" : "border-transparent ring-1 ring-border opacity-80 hover:opacity-100",
+                                                                        option.in_stock === false && "opacity-40 grayscale"
                                                                     )}
                                                                     title={option.label[language] || option.label.ar}
                                                                 >
@@ -581,6 +591,13 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                                                             <Check className="w-6 h-6 text-white" />
                                                                         </div>
                                                                     )}
+                                                                    {option.in_stock === false && (
+                                                                        <div className="absolute inset-0 flex items-center justify-center bg-white/30 backdrop-blur-[1px]">
+                                                                            <span className="text-[10px] font-bold text-destructive bg-white/90 px-1 py-0.5 rounded shadow-sm border border-destructive/20 whitespace-nowrap">
+                                                                                {language === 'ar' ? 'نفد' : 'Out'}
+                                                                            </span>
+                                                                        </div>
+                                                                    )}
                                                                 </button>
                                                             );
                                                         }
@@ -588,15 +605,21 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                                         return (
                                                             <button
                                                                 key={option.id}
-                                                                onClick={() => handleOptionSelect(itemIndex, variant.id, option.id)}
+                                                                onClick={() => option.in_stock !== false && handleOptionSelect(itemIndex, variant.id, option.id)}
+                                                                disabled={option.in_stock === false}
                                                                 className={cn(
-                                                                    "px-4 py-2 rounded-md border text-sm transition-all min-w-[3rem]",
+                                                                    "px-4 py-2 rounded-md border text-sm transition-all min-w-[3rem] disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-muted/50 disabled:line-through",
                                                                     isSelected
                                                                         ? "border-primary bg-primary/10 text-primary font-medium"
                                                                         : "border-border hover:border-primary/50 text-muted-foreground bg-card"
                                                                 )}
                                                             >
                                                                 {option.label[language] || option.label.ar}
+                                                                {option.in_stock === false && (
+                                                                    <span className="ms-1 text-xs opacity-70">
+                                                                        ({language === 'ar' ? 'نفد' : 'Out'})
+                                                                    </span>
+                                                                )}
                                                             </button>
                                                         );
                                                     })}

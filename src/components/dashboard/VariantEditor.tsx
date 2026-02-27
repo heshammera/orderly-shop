@@ -25,6 +25,7 @@ interface VariantOption {
     price_modifier: number;
     is_default: boolean;
     sort_order: number;
+    in_stock: boolean;
 }
 
 interface Variant {
@@ -102,7 +103,8 @@ export function VariantEditor({ productId, value, onChange, standalone = true, s
                     value: o.value,
                     price_modifier: o.price_modifier || 0,
                     is_default: o.is_default,
-                    sort_order: o.sort_order
+                    sort_order: o.sort_order,
+                    in_stock: o.in_stock !== false
                 }))
         }));
 
@@ -140,7 +142,8 @@ export function VariantEditor({ productId, value, onChange, standalone = true, s
                     value: '',
                     price_modifier: 0,
                     is_default: v.options.length === 0,
-                    sort_order: v.options.length
+                    sort_order: v.options.length,
+                    in_stock: true
                 }]
             };
         }));
@@ -228,7 +231,8 @@ export function VariantEditor({ productId, value, onChange, standalone = true, s
                         value: o.value || (o.label.ar || o.label.en),
                         price_modifier: o.price_modifier || 0,
                         is_default: o.is_default,
-                        sort_order: j
+                        sort_order: j,
+                        in_stock: o.in_stock !== false
                     }));
 
                     const { error: oError } = await supabase
@@ -463,6 +467,16 @@ export function VariantEditor({ productId, value, onChange, standalone = true, s
                                                 className="h-8 text-xs w-16"
                                                 title={language === 'ar' ? 'تعديل السعر' : 'Price modifier'}
                                             />
+                                            <div className="flex items-center gap-1 mx-2" title={language === 'ar' ? 'متوفر بالمخزون' : 'In Stock'}>
+                                                <Switch
+                                                    checked={option.in_stock !== false}
+                                                    onCheckedChange={(v) => updateOption(vIndex, oIndex, 'in_stock', v)}
+                                                    className="scale-75 data-[state=unchecked]:bg-destructive"
+                                                />
+                                                <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                                                    {option.in_stock !== false ? (language === 'ar' ? 'متوفر' : 'In Stock') : (language === 'ar' ? 'نفد' : 'Out')}
+                                                </span>
+                                            </div>
                                             <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0"
                                                 onClick={() => removeOption(vIndex, oIndex)}>
                                                 <Trash2 className="w-3 h-3 text-destructive" />

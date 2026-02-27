@@ -116,6 +116,7 @@ export default async function ProductPage({ params }: { params: { storeSlug: str
             value: o.value,
             price_modifier: o.price_modifier,
             is_default: o.is_default,
+            in_stock: o.in_stock !== false,
         })),
     })) || [];
 

@@ -665,6 +665,7 @@ export type Database = {
                     option_name: string
                     option_value: string
                     variant_id: string
+                    in_stock: boolean
                 }
                 Insert: {
                     created_at?: string
@@ -672,6 +673,7 @@ export type Database = {
                     option_name: string
                     option_value: string
                     variant_id: string
+                    in_stock?: boolean
                 }
                 Update: {
                     created_at?: string
@@ -679,6 +681,7 @@ export type Database = {
                     option_name?: string
                     option_value?: string
                     variant_id?: string
+                    in_stock?: boolean
                 }
                 Relationships: [
                     {
