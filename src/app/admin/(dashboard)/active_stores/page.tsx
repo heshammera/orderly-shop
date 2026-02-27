@@ -8,7 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Edit, MoreHorizontal, ShieldAlert, CheckCircle, Lock } from 'lucide-react';
+import { Search, Edit, MoreHorizontal, ShieldAlert, CheckCircle, Lock, Eye, ExternalLink } from 'lucide-react';
+import Link from 'next/link';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -198,6 +199,17 @@ export default function ActiveStoresPage() {
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuLabel>الإجراءات</DropdownMenuLabel>
+                                                    <DropdownMenuItem asChild>
+                                                        <Link href={`/admin/stores/${store.id}`}>
+                                                            <Eye className="ml-2 h-4 w-4" /> عرض تفاصيل المتجر
+                                                        </Link>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem asChild>
+                                                        <a href={`/api/admin/impersonate?storeId=${store.id}`} target="_blank" rel="noopener noreferrer">
+                                                            <ExternalLink className="ml-2 h-4 w-4" /> الدخول للمتجر
+                                                        </a>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
                                                     <DropdownMenuItem onClick={() => handleEditClick(store)}>
                                                         <Edit className="ml-2 h-4 w-4" /> تعديل الحالة
                                                     </DropdownMenuItem>

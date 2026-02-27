@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
@@ -14,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, Search, Ban, CheckCircle, Edit, CreditCard, DollarSign, MoreHorizontal, ShieldAlert, Lock, Trash2, AlertTriangle } from 'lucide-react';
+import { Loader2, Search, Ban, CheckCircle, Edit, CreditCard, DollarSign, MoreHorizontal, ShieldAlert, Lock, Trash2, AlertTriangle, Eye, ExternalLink } from 'lucide-react';
 import {
     Dialog,
     DialogContent,
@@ -373,6 +374,17 @@ export function StoreManagement() {
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuLabel>{language === 'ar' ? 'الإجراءات' : 'Actions'}</DropdownMenuLabel>
+                                                <DropdownMenuItem asChild>
+                                                    <Link href={`/admin/stores/${store.id}`}>
+                                                        <Eye className="ml-2 h-4 w-4" /> {language === 'ar' ? 'عرض تفاصيل المتجر' : 'View Store Details'}
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem asChild>
+                                                    <a href={`/api/admin/impersonate?storeId=${store.id}`} target="_blank" rel="noopener noreferrer">
+                                                        <ExternalLink className="ml-2 h-4 w-4" /> {language === 'ar' ? 'الدخول للمتجر' : 'Enter Store Dashboard'}
+                                                    </a>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
                                                 <DropdownMenuItem onClick={() => handleEditClick(store)}>
                                                     <Edit className="ml-2 h-4 w-4" /> {language === 'ar' ? 'تعديل العمولة وإزالة الحقوق' : 'Edit Commission & Copyright'}
                                                 </DropdownMenuItem>

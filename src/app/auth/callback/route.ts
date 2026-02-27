@@ -35,7 +35,12 @@ export async function GET(request: NextRequest) {
         const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
         if (!error && data?.session) {
-            // Get user's store to redirect to subdomain
+            // If this is an impersonation flow, respect the 'next' parameter directly
+            if (searchParams.get('impersonate') === 'true' && next !== '/') {
+                return NextResponse.redirect(`${origin}${next}`);
+            }
+
+            // Normal login flow: Get user's store to redirect to subdomain
             const { data: store } = await supabase
                 .from('stores')
                 .select('slug')
@@ -52,9 +57,7 @@ export async function GET(request: NextRequest) {
                 }
 
                 // Construct Tenant URL
-                // e.g. http://my-store.localhost:3000/dashboard?verified=true
                 let tenantUrl = '';
-
                 if (host.endsWith('.vercel.app')) {
                     tenantUrl = `${protocol}//${host}/s/${store.slug}/dashboard?verified=true`;
                 } else {
@@ -64,7 +67,7 @@ export async function GET(request: NextRequest) {
                 return NextResponse.redirect(tenantUrl);
             }
 
-            return NextResponse.redirect(`${origin}${next}`)
+            return NextResponse.redirect(`${origin}${next}`);
         }
     }
 

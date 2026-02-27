@@ -221,7 +221,9 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
             const total = calculateTotalPrice();
             const effectiveUnitPrice = total / quantity;
 
-            // Add each item
+            // Group identical items before adding
+            const addedItems: Record<string, any> = {};
+
             for (let i = 0; i < quantity; i++) {
                 const itemSelections = selections[i] || {};
                 const selectedVariants = Object.entries(itemSelections).map(([variantId, optionId]) => {
@@ -236,18 +238,25 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                     };
                 });
 
-                const cartItem = {
-                    productId: product.id,
-                    productName: product.name,
-                    productImage: product.images[0] || null,
-                    basePrice: product.price,
-                    unitPrice: effectiveUnitPrice,
-                    quantity: 1,
-                    variants: selectedVariants,
-                    addedAt: new Date().toISOString(),
-                };
+                const variantKey = JSON.stringify(selectedVariants);
+                if (addedItems[variantKey]) {
+                    addedItems[variantKey].quantity += 1;
+                } else {
+                    addedItems[variantKey] = {
+                        productId: product.id,
+                        productName: product.name,
+                        productImage: product.images[0] || null,
+                        basePrice: product.price,
+                        unitPrice: effectiveUnitPrice,
+                        quantity: 1,
+                        variants: selectedVariants,
+                        addedAt: new Date().toISOString(),
+                    };
+                }
+            }
 
-                await addToCart(cartItem);
+            for (const item of Object.values(addedItems)) {
+                await addToCart(item);
             }
 
             // Pixel: AddToCart
@@ -700,6 +709,7 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                             onClose={() => setQuickOrderOpen(false)}
                             product={product}
                             quantity={quantity}
+                            subtotal={totalPrice}
                             variants={variants}
                             selections={selections}
                             store={store}

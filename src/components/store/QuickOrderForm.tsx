@@ -17,12 +17,13 @@ interface QuickOrderFormProps {
     onClose: () => void;
     product: any;
     quantity: number;
+    subtotal: number;
     variants: any[];
     selections: Record<number, Record<string, string>>; // itemIndex -> variantId -> optionId
     store: any;
 }
 
-export function QuickOrderForm({ isOpen, onClose, product, quantity, variants, selections, store }: QuickOrderFormProps) {
+export function QuickOrderForm({ isOpen, onClose, product, quantity, subtotal, variants, selections, store }: QuickOrderFormProps) {
     const { language } = useLanguage();
     const { toast } = useToast();
 
@@ -48,26 +49,7 @@ export function QuickOrderForm({ isOpen, onClose, product, quantity, variants, s
         }).format(price);
     };
 
-    // Calculate Prices
-    const calculateTotal = () => {
-        let itemsTotal = 0;
-        for (let i = 0; i < quantity; i++) {
-            let itemPrice = product.price;
-            const itemSelections = selections[i] || {};
 
-            variants.forEach(v => {
-                const selectedOptionId = itemSelections[v.id];
-                const selectedOption = v.options.find((o: any) => o.id === selectedOptionId);
-                if (selectedOption?.price_modifier) {
-                    itemPrice += selectedOption.price_modifier;
-                }
-            });
-            itemsTotal += itemPrice;
-        }
-        return itemsTotal;
-    };
-
-    const subtotal = calculateTotal();
 
     // Shipping Logic
     const shippingSettings = store.settings?.shipping || { type: 'fixed', fixed_price: 0 };
