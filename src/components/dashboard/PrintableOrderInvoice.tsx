@@ -119,6 +119,11 @@ export function PrintableOrderInvoice({ order, language }: PrintableOrderInvoice
                                             <div>
                                                 <p className="font-semibold">{name}</p>
                                                 {product.sku && <p className="text-xs text-muted-foreground">SKU: {product.sku}</p>}
+                                                {product.variants?.map((v: any, vi: number) => (
+                                                    <p key={vi} className="text-xs text-muted-foreground mt-0.5">
+                                                        {v.variantName || v.name}: <span className="font-medium text-slate-700">{v.optionLabel || v.value}</span>
+                                                    </p>
+                                                ))}
                                             </div>
                                         </div>
                                     </td>
