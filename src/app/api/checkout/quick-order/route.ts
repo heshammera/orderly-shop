@@ -84,9 +84,9 @@ export async function POST(request: NextRequest) {
                 }
                 return {
                     variantId: v.id,
-                    variantName: v.name,
+                    variantName: typeof v.name === 'string' ? v.name : (v.name?.ar || v.name?.en || ''),
                     optionId: selectedOpt?.id,
-                    optionLabel: selectedOpt?.label,
+                    optionLabel: typeof selectedOpt?.label === 'string' ? selectedOpt?.label : (selectedOpt?.label?.ar || selectedOpt?.label?.en || ''),
                     priceModifier: selectedOpt?.price_modifier || 0
                 };
             });

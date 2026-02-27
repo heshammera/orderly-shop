@@ -91,18 +91,30 @@ export function OrderDetailsDialog({
         }
     };
 
+    // Helper to safely extract a localized string from data that may be a string, JSON string, or {ar, en} object
+    const getLocalizedText = (data: any, fallback: string = '') => {
+        if (!data) return fallback;
+        if (typeof data === 'string') {
+            try {
+                const parsed = JSON.parse(data);
+                if (typeof parsed === 'object' && parsed !== null) {
+                    return language === 'ar' ? parsed.ar || parsed.en || fallback : parsed.en || parsed.ar || fallback;
+                }
+                return data;
+            } catch {
+                return data;
+            }
+        }
+        if (typeof data === 'object' && data !== null) {
+            return language === 'ar' ? data.ar || data.en || fallback : data.en || data.ar || fallback;
+        }
+        return String(data);
+    };
+
     // Helper to safely parse product name
     const getProductName = (product: any) => {
         if (!product) return 'Unknown Product';
-        if (typeof product.name === 'string') {
-            try {
-                const parsed = JSON.parse(product.name);
-                return language === 'ar' ? parsed.ar || parsed.en : parsed.en || parsed.ar;
-            } catch (e) {
-                return product.name;
-            }
-        }
-        return language === 'ar' ? product.name?.ar || product.name?.en : product.name?.en || product.name?.ar;
+        return getLocalizedText(product.name, 'Unknown Product');
     };
 
     // Address Helper
@@ -232,7 +244,7 @@ export function OrderDetailsDialog({
                                                         {product.sku && <p className="text-xs text-muted-foreground">SKU: {product.sku}</p>}
                                                         {product.variants?.map((v: any, vi: number) => (
                                                             <p key={vi} className="text-xs text-muted-foreground mt-0.5">
-                                                                {v.variantName || v.name}: <span className="font-medium text-slate-700">{v.optionLabel || v.value}</span>
+                                                                {getLocalizedText(v.variantName || v.name, 'Variant')}: <span className="font-medium text-slate-700">{getLocalizedText(v.optionLabel || v.value, 'Option')}</span>
                                                             </p>
                                                         ))}
                                                     </div>
