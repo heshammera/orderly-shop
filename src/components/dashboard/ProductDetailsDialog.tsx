@@ -25,6 +25,7 @@ interface ProductDetailsDialogProps {
 export function ProductDetailsDialog({ open, onOpenChange, product, language }: ProductDetailsDialogProps) {
     const supabase = createClient();
     const [variants, setVariants] = useState<any[]>([]);
+    const [upsells, setUpsells] = useState<any[]>([]);
     const [loadingVariants, setLoadingVariants] = useState(false);
     const [mainImage, setMainImage] = useState<string | null>(null);
 
@@ -37,20 +38,20 @@ export function ProductDetailsDialog({ open, onOpenChange, product, language }: 
             }
         } else {
             setVariants([]);
+            setUpsells([]);
             setMainImage(null);
         }
     }, [open, product?.id]);
 
     const fetchVariants = async () => {
         setLoadingVariants(true);
-        const { data, error } = await supabase
-            .from('product_variants')
-            .select('*, variant_options(*)')
-            .eq('product_id', product.id)
-            .order('sort_order');
+        const [variantsRes, upsellsRes] = await Promise.all([
+            supabase.from('product_variants').select('*, variant_options(*)').eq('product_id', product.id).order('sort_order'),
+            supabase.from('upsell_offers').select('*').eq('product_id', product.id).order('sort_order')
+        ]);
 
-        if (!error && data) {
-            const mapped = data.map((v: any) => ({
+        if (!variantsRes.error && variantsRes.data) {
+            const mapped = variantsRes.data.map((v: any) => ({
                 ...v,
                 name: typeof v.name === 'string' ? JSON.parse(v.name) : v.name,
                 options: (v.variant_options || [])
@@ -62,6 +63,16 @@ export function ProductDetailsDialog({ open, onOpenChange, product, language }: 
             }));
             setVariants(mapped);
         }
+
+        if (!upsellsRes.error && upsellsRes.data) {
+            const mappedUpsells = upsellsRes.data.map((u: any) => ({
+                ...u,
+                label: typeof u.label === 'string' ? JSON.parse(u.label) : u.label,
+                badge: typeof u.badge === 'string' ? JSON.parse(u.badge) : u.badge,
+            }));
+            setUpsells(mappedUpsells);
+        }
+
         setLoadingVariants(false);
     };
 
@@ -103,8 +114,8 @@ export function ProductDetailsDialog({ open, onOpenChange, product, language }: 
                         {getName(product)}
                     </DialogDescription>
                 </DialogHeader>
-                <ScrollArea className="flex-1">
-                    <div className="p-6 grid gap-8 md:grid-cols-2">
+                <div className="flex-1 overflow-y-auto p-6 pt-4">
+                    <div className="grid gap-8 md:grid-cols-2">
                         {/* Left Column: Images */}
                         <div className="space-y-4">
                             <div className="aspect-square bg-muted rounded-xl overflow-hidden relative border shadow-sm">
@@ -278,6 +289,43 @@ export function ProductDetailsDialog({ open, onOpenChange, product, language }: 
                                 ))}
                             </div>
 
+                            {/* Upsell Offers Section */}
+                            {upsells.length > 0 && (
+                                <div className="space-y-4 pt-6 border-t">
+                                    <h3 className="text-lg font-semibold">{language === 'ar' ? 'عروض الشراء (Upsells)' : 'Upsell Offers'}</h3>
+                                    <div className="grid gap-3">
+                                        {upsells.map((upsell) => (
+                                            <div key={upsell.id} className={cn("flex flex-col p-4 rounded-xl border bg-muted/20 relative overflow-hidden", !upsell.is_active && "opacity-60")}>
+                                                {!upsell.is_active && (
+                                                    <div className="absolute top-0 right-0 bg-destructive text-destructive-foreground text-[10px] px-2 py-0.5 rounded-bl-lg font-bold">
+                                                        {language === 'ar' ? 'غير نشط' : 'Inactive'}
+                                                    </div>
+                                                )}
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <div>
+                                                        <h4 className="font-semibold text-sm">{upsell.label[language] || upsell.label.ar || (language === 'ar' ? 'عرض بيع إضافي' : 'Upsell Offer')}</h4>
+                                                        {upsell.badge && (upsell.badge[language] || upsell.badge.ar) && (
+                                                            <Badge variant="secondary" className="mt-1 text-[10px] px-1.5 py-0">{upsell.badge[language] || upsell.badge.ar}</Badge>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-end shrink-0 ms-2">
+                                                        <p className="text-xs text-muted-foreground">{language === 'ar' ? 'الحد الأدنى:' : 'Min Qty:'} <span className="font-bold">{upsell.min_quantity}</span></p>
+                                                    </div>
+                                                </div>
+                                                <div className="mt-1 text-sm bg-background p-2 rounded-md border flex items-center justify-between">
+                                                    <span className="text-muted-foreground text-xs">{language === 'ar' ? 'الخصم:' : 'Discount:'} </span>
+                                                    <span className="font-bold text-green-600">
+                                                        {upsell.discount_type === 'percentage'
+                                                            ? `${upsell.discount_value}%`
+                                                            : `${upsell.discount_value} ${product.currency} ${language === 'ar' ? 'لكل قطعة' : 'per item'}`}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Description */}
                             <div className="space-y-3 pt-6 border-t">
                                 <h3 className="text-lg font-semibold">{language === 'ar' ? 'الوصف' : 'Description'}</h3>
@@ -287,7 +335,7 @@ export function ProductDetailsDialog({ open, onOpenChange, product, language }: 
                             </div>
                         </div>
                     </div>
-                </ScrollArea>
+                </div>
             </DialogContent>
         </Dialog>
     );
