@@ -190,7 +190,8 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                             value: o.value || (o.label.ar || o.label.en),
                             price_modifier: o.price_modifier || 0,
                             is_default: o.is_default,
-                            sort_order: j
+                            sort_order: j,
+                            in_stock: o.in_stock !== false
                         }));
 
                         const { error: oError } = await supabase
