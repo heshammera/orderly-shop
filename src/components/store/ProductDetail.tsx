@@ -147,13 +147,14 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
             total += itemPrice;
         }
 
-        // Apply offer discount
+        // Apply offer discount (per item)
         const offer = getApplicableOffer();
         if (offer) {
             if (offer.discount_type === 'percentage') {
                 total = total * (1 - offer.discount_value / 100);
             } else {
-                total = Math.max(0, total - offer.discount_value);
+                // Fixed discount is per item, so multiply by quantity
+                total = Math.max(0, total - (offer.discount_value * quantity));
             }
         }
 
@@ -432,13 +433,14 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                     const label = offer.label[language] || offer.label.ar;
 
 
-                                    // Calculate prices for display
+                                    // Calculate prices for display (fixed discount is per item)
                                     const originalTotal = product.price * offer.min_quantity;
                                     let discountedTotal = originalTotal;
                                     if (offer.discount_type === 'percentage') {
                                         discountedTotal = originalTotal * (1 - offer.discount_value / 100);
                                     } else {
-                                        discountedTotal = Math.max(0, originalTotal - offer.discount_value);
+                                        // Fixed discount × quantity
+                                        discountedTotal = Math.max(0, originalTotal - (offer.discount_value * offer.min_quantity));
                                     }
                                     const savedAmount = originalTotal - discountedTotal;
                                     const perItem = discountedTotal / offer.min_quantity;

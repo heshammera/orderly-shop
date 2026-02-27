@@ -84,7 +84,8 @@ export function UpsellManager({ offers, onChange, currency, basePrice }: UpsellM
         if (offer.discountType === 'percentage') {
             finalPrice = originalTotal * (1 - discount / 100);
         } else {
-            finalPrice = originalTotal - discount;
+            // Fixed discount is per item, multiply by quantity
+            finalPrice = originalTotal - (discount * qty);
         }
 
         const savings = originalTotal - finalPrice;
@@ -133,7 +134,7 @@ export function UpsellManager({ offers, onChange, currency, basePrice }: UpsellM
                                         </span>
                                         {savings && (
                                             <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
-                                                {language === 'ar' ? 'توفير' : 'Save'} {savings} {getCurrencyLabel()}
+                                                {language === 'ar' ? 'إجمالي التوفير' : 'Total Savings'} {savings} {getCurrencyLabel()}
                                             </span>
                                         )}
                                     </div>
@@ -189,7 +190,7 @@ export function UpsellManager({ offers, onChange, currency, basePrice }: UpsellM
                                     <div className="space-y-2">
                                         <Label>
                                             {language === 'ar' ? 'قيمة الخصم' : 'Discount Value'}
-                                            {offer.discountType === 'percentage' ? ' (%)' : ` (${getCurrencyLabel()})`}
+                                            {offer.discountType === 'percentage' ? ' (%)' : ` (${getCurrencyLabel()} / ${language === 'ar' ? 'لكل قطعة' : 'per item'})`}
                                         </Label>
                                         <Input
                                             type="number"
