@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { Plus, Trash2, GripVertical, Palette, Type, Image as ImageIcon, ChevronDown, ChevronUp, Upload, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 interface VariantOption {
     id?: string;
