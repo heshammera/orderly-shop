@@ -54,6 +54,7 @@ export function QuickOrderForm({ isOpen, onClose, product, quantity, subtotal, v
     // Shipping Logic
     const shippingSettings = store.settings?.shipping || { type: 'fixed', fixed_price: 0 };
     const shippingCost = (() => {
+        if (product.free_shipping) return 0;
         if (shippingSettings.type === 'fixed') {
             return Number(shippingSettings.fixed_price) || 0;
         } else if (shippingSettings.type === 'dynamic') {

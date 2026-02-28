@@ -822,14 +822,14 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                 size="lg"
                                 variant={product.skip_cart ? "default" : "outline"}
                                 className={cn(
-                                    "flex-1 h-14 md:h-11 rounded-xl md:rounded-md text-base md:text-sm font-semibold md:font-medium shadow-sm md:shadow-none",
-                                    !product.skip_cart && "border-primary text-primary hover:bg-primary/10 bg-background"
+                                    "w-full rounded-xl md:rounded-md text-base md:text-sm font-bold shadow-md md:shadow-none transition-all duration-200 active:scale-95",
+                                    product.skip_cart ? "h-16 md:h-14 text-lg md:text-base bg-emerald-600 hover:bg-emerald-700 text-white" : "h-14 md:h-11 border-primary text-primary hover:bg-primary/10 bg-background"
                                 )}
                                 onClick={handleQuickOrder}
                                 disabled={!product.ignore_stock && product.stock_quantity === 0}
                             >
-                                <Zap className="w-5 h-5 md:w-4 md:h-4 me-2" />
-                                {language === 'ar' ? 'طلب سريع (شراء الآن)' : 'Quick Order (Buy Now)'}
+                                <Zap className={cn("me-2", product.skip_cart ? "w-6 h-6" : "w-5 h-5 md:w-4 md:h-4")} />
+                                {language === 'ar' ? 'اطلب الآن (شراء مباشر)' : 'Order Now (Buy Now)'}
                             </Button>
                         </div>
 
