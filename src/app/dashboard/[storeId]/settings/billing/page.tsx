@@ -83,13 +83,21 @@ export default function BillingPage({ params }: { params: { storeId: string } })
                         <div className="space-y-2">
                             <div className="flex items-center justify-between text-sm">
                                 <span>{language === 'ar' ? 'المنتجات' : 'Products'}</span>
-                                <span>{productsUsed} / {productsLimit === -1 ? '∞' : productsLimit}</span>
+                                <span>
+                                    {productsLimit === -1
+                                        ? (language === 'ar' ? 'غير محدود' : 'Unlimited')
+                                        : `${productsUsed} / ${productsLimit}`}
+                                </span>
                             </div>
-                            <Progress value={productsPercentage} className="h-2" />
-                            {productsPercentage >= 100 && (
-                                <p className="text-xs text-red-500 font-medium mt-1">
-                                    {language === 'ar' ? 'تم الوصول للحد الأقصى!' : 'Limit Reached!'}
-                                </p>
+                            {productsLimit !== -1 && (
+                                <>
+                                    <Progress value={productsPercentage} className="h-2" />
+                                    {productsPercentage >= 100 && (
+                                        <p className="text-xs text-red-500 font-medium mt-1">
+                                            {language === 'ar' ? 'تم الوصول للحد الأقصى!' : 'Limit Reached!'}
+                                        </p>
+                                    )}
+                                </>
                             )}
                         </div>
 
@@ -97,9 +105,15 @@ export default function BillingPage({ params }: { params: { storeId: string } })
                         <div className="space-y-2">
                             <div className="flex items-center justify-between text-sm">
                                 <span>{language === 'ar' ? 'الطلبات الشهرية' : 'Monthly Orders'}</span>
-                                <span>{ordersUsed} / {ordersLimit === -1 ? '∞' : ordersLimit}</span>
+                                <span>
+                                    {ordersLimit === -1
+                                        ? (language === 'ar' ? 'غير محدود' : 'Unlimited')
+                                        : `${ordersUsed} / ${ordersLimit}`}
+                                </span>
                             </div>
-                            <Progress value={ordersPercentage} className="h-2" />
+                            {ordersLimit !== -1 && (
+                                <Progress value={ordersPercentage} className="h-2" />
+                            )}
                         </div>
                     </CardContent>
                     <CardFooter>

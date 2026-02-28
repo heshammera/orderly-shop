@@ -37,6 +37,24 @@ export async function POST(req: Request) {
             }
         }
 
+        // 1.5 Check Subscription Product Limit
+        const { data: planData } = await supabase.rpc('get_store_effective_plan', { p_store_id: storeId });
+        if (planData && planData.has_plan) {
+            const productsLimit = planData.plan?.features?.products_limit;
+            if (productsLimit !== undefined && productsLimit !== -1) {
+                const { count: productsCount } = await supabase
+                    .from('products')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('store_id', storeId);
+
+                if (productsCount !== null && productsCount >= productsLimit) {
+                    return NextResponse.json({
+                        error: 'لقد وصلت للحد الأقصى للمنتجات في باقتك الحالية.'
+                    }, { status: 403 });
+                }
+            }
+        }
+
         // 2. Fetch original product
         const { data: originalProduct, error: productError } = await supabase
             .from('products')

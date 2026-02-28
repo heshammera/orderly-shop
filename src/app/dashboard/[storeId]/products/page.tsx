@@ -126,8 +126,10 @@ export default function ProductsPage({ params }: { params: { storeId: string } }
                         {language === 'ar' ? 'المنتجات' : 'Products'}
                     </h1>
                     <p className="text-muted-foreground">
-                        {productsCount} / {limits.products === -1 ? '∞' : limits.products}
-                        {language === 'ar' ? ' منتج مستخدم' : ' products used'}
+                        {limits.products === -1
+                            ? (language === 'ar' ? 'عدد منتجات غير محدود' : 'Unlimited products')
+                            : `${productsCount} / ${limits.products} ${language === 'ar' ? ' منتج مستخدم' : ' products used'}`
+                        }
                     </p>
                 </div>
 
@@ -252,7 +254,7 @@ export default function ProductsPage({ params }: { params: { storeId: string } }
                                             </DropdownMenuItem>
                                             <DropdownMenuItem
                                                 onClick={() => handleDuplicate(product.id)}
-                                                disabled={isDuplicating === product.id}
+                                                disabled={isDuplicating === product.id || isLimitReached}
                                             >
                                                 {isDuplicating === product.id ? (
                                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

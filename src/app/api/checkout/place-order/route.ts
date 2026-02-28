@@ -30,6 +30,29 @@ export async function POST(request: NextRequest) {
 
         const supabase = createAdminClient();
 
+        // 0. Check Subscription Order Limit
+        const { data: planData } = await supabase.rpc('get_store_effective_plan', { p_store_id: store_id });
+        if (planData && planData.has_plan) {
+            const ordersLimit = planData.plan?.features?.orders_limit;
+            if (ordersLimit !== undefined && ordersLimit !== -1) {
+                const startOfMonth = new Date();
+                startOfMonth.setDate(1);
+                startOfMonth.setHours(0, 0, 0, 0);
+
+                const { count: ordersCount } = await supabase
+                    .from('orders')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('store_id', store_id)
+                    .gte('created_at', startOfMonth.toISOString());
+
+                if (ordersCount !== null && ordersCount >= ordersLimit) {
+                    return NextResponse.json({
+                        error: language === 'ar' ? 'عذراً، وصل المتجر للحد الأقصى للطلبات في هذه الباقة.' : 'Store has reached its monthly order limit.'
+                    }, { status: 403 });
+                }
+            }
+        }
+
         // 1. Find or Create Customer
         let customerId = crypto.randomUUID();
         const { data: existingCustomer } = await supabase

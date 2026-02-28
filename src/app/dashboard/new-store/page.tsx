@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Store, Loader2, ArrowRight, AlertCircle } from 'lucide-react';
+import { Store, Loader2, ArrowRight, AlertCircle, Lock } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from '@/hooks/use-toast';
@@ -21,6 +21,41 @@ export default function CreateStorePage() {
     const [slug, setSlug] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [canCreateStore, setCanCreateStore] = useState(true);
+    const [verifyingLimit, setVerifyingLimit] = useState(true);
+    const [storesLimit, setStoresLimit] = useState<number | null>(null);
+
+    useEffect(() => {
+        const checkLimit = async () => {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return;
+
+                const { count: activeStoresCount } = await supabase
+                    .from('stores')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('owner_id', user.id)
+                    .eq('status', 'active');
+
+                const { data: planData } = await supabase.rpc('get_owner_effective_plan', { p_owner_id: user.id });
+
+                let maxStores = 1;
+                if (planData && planData.has_plan) {
+                    maxStores = planData.plan.features?.stores_limit ?? 1;
+                }
+                setStoresLimit(maxStores);
+
+                if (maxStores !== -1 && (activeStoresCount || 0) >= maxStores && (activeStoresCount || 0) > 0) {
+                    setCanCreateStore(false);
+                }
+            } catch (err) {
+                console.error("Limit check error", err);
+            } finally {
+                setVerifyingLimit(false);
+            }
+        };
+        checkLimit();
+    }, [supabase]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -92,6 +127,18 @@ export default function CreateStorePage() {
                             </Alert>
                         )}
 
+                        {!canCreateStore && !verifyingLimit && (
+                            <Alert className="bg-yellow-50 border-yellow-200 mb-4">
+                                <Lock className="h-4 w-4 text-yellow-600" />
+                                <AlertTitle>{language === 'ar' ? 'تم الوصول للحد الأقصى' : 'Limit Reached'}</AlertTitle>
+                                <AlertDescription>
+                                    {language === 'ar'
+                                        ? `لقد وصلت إلى الحد الأقصى المسموح به من المتاجر (${storesLimit}). يرجى ترقية باقتك لإنشاء المزيد المشترك.`
+                                        : `You have reached the maximum allowed stores (${storesLimit}). Please upgrade your plan to create more.`}
+                                </AlertDescription>
+                            </Alert>
+                        )}
+
                         <div className="space-y-2">
                             <Label htmlFor="name">
                                 {language === 'ar' ? 'اسم المتجر' : 'Store Name'}
@@ -130,8 +177,8 @@ export default function CreateStorePage() {
                         </div>
                     </CardContent>
                     <CardFooter className="flex flex-col gap-3 pt-6">
-                        <Button type="submit" className="w-full" disabled={loading}>
-                            {loading ? (
+                        <Button type="submit" className="w-full" disabled={loading || verifyingLimit || !canCreateStore}>
+                            {loading || verifyingLimit ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
                                 <>
