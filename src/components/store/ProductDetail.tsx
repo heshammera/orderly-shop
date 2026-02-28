@@ -22,6 +22,7 @@ interface Product {
     name: { ar: string; en: string };
     description: { ar: string; en: string };
     price: number;
+    sale_price: number | null;
     compare_at_price: number | null;
     images: string[];
     stock_quantity: number;
@@ -248,7 +249,7 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
         let total = 0;
 
         for (let i = 0; i < quantity; i++) {
-            let itemPrice = product.price;
+            let itemPrice = (product.sale_price && product.sale_price > 0) ? product.sale_price : product.price;
             const itemSelections = selections[i] || {};
 
             Object.entries(itemSelections).forEach(([variantId, optionId]) => {
@@ -489,9 +490,16 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
 
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-3xl font-bold text-primary">
-                                    {formatPrice(calculateTotalPrice())}
-                                </p>
+                                <div className="flex items-baseline gap-2">
+                                    <p className="text-3xl font-bold text-primary">
+                                        {formatPrice(calculateTotalPrice())}
+                                    </p>
+                                    {(product.sale_price && product.sale_price > 0) && (
+                                        <p className="text-lg text-muted-foreground line-through opacity-70">
+                                            {formatPrice(product.price * quantity)}
+                                        </p>
+                                    )}
+                                </div>
                                 <p className="text-sm text-muted-foreground mt-1">
                                     {(() => {
                                         if (product.free_shipping) return language === 'ar' ? '+ شحن مجاني' : '+ Free Shipping';

@@ -77,6 +77,7 @@ export async function POST(req: Request) {
             fake_visitors_min: originalProduct.fake_visitors_min,
             fake_visitors_max: originalProduct.fake_visitors_max,
             ignore_stock: originalProduct.ignore_stock,
+            sale_price: originalProduct.sale_price,
         };
 
         const { data: newProduct, error: insertProductError } = await supabase

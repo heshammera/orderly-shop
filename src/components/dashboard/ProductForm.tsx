@@ -138,6 +138,7 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
         fake_visitors_min: initialData?.fake_visitors_min || 10,
         fake_visitors_max: initialData?.fake_visitors_max || 50,
         ignore_stock: initialData?.ignore_stock || false,
+        sale_price: initialData?.sale_price?.toString() || '',
     });
 
     const handleAIGenerated = (data: any) => {
@@ -182,6 +183,7 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                 fake_visitors_min: parseInt(formData.fake_visitors_min.toString()),
                 fake_visitors_max: parseInt(formData.fake_visitors_max.toString()),
                 ignore_stock: formData.ignore_stock,
+                sale_price: formData.sale_price ? parseFloat(formData.sale_price) : null,
             };
 
             let savedProductId = initialData?.id;
@@ -542,7 +544,7 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                         </TabsContent>
                     </Tabs>
 
-                    <div className="grid gap-4 md:grid-cols-2">
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         <div className="space-y-2">
                             <Label htmlFor="price">{language === 'ar' ? `السعر (${storeCurrency}) *` : `Price (${storeCurrency}) *`}</Label>
                             <Input
@@ -553,6 +555,18 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                                 value={formData.price}
                                 onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                                 placeholder="99.99"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="sale_price">{language === 'ar' ? 'السعر بعد الخصم (اختياري)' : 'Sale Price (Optional)'}</Label>
+                            <Input
+                                id="sale_price"
+                                type="number"
+                                step="0.01"
+                                value={formData.sale_price}
+                                onChange={(e) => setFormData({ ...formData, sale_price: e.target.value })}
+                                placeholder="79.99"
+                                className="border-emerald-200 dark:border-emerald-900 focus-visible:ring-emerald-500"
                             />
                         </div>
                         <div className="space-y-2">
