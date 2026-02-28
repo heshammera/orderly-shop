@@ -588,7 +588,7 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                             {language === 'ar' ? 'قطعة واحدة' : '1 Item'}
                                         </Label>
                                     </div>
-                                    <span className="font-bold text-sm">{formatPrice(product.price)}</span>
+                                    <span className="font-bold text-sm">{formatPrice((product.sale_price && product.sale_price > 0) ? product.sale_price : product.price)}</span>
                                 </div>
 
                                 {/* Offers */}
@@ -599,7 +599,8 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
 
 
                                     // Calculate prices for display (fixed discount is per item)
-                                    const originalTotal = product.price * offer.min_quantity;
+                                    const effectivePrice = (product.sale_price && product.sale_price > 0) ? product.sale_price : product.price;
+                                    const originalTotal = effectivePrice * offer.min_quantity;
                                     let discountedTotal = originalTotal;
                                     if (offer.discount_type === 'percentage') {
                                         discountedTotal = originalTotal * (1 - offer.discount_value / 100);
