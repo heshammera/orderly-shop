@@ -2,7 +2,24 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
-    const { searchParams, origin, protocol, host } = new URL(request.url)
+    const requestUrl = new URL(request.url);
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    const origin = siteUrl || request.headers.get('origin') || requestUrl.origin;
+
+    // Parse protocol and host from siteUrl if available, else fallback to requestUrl
+    let protocol = requestUrl.protocol;
+    let host = requestUrl.host;
+    if (siteUrl) {
+        try {
+            const parsedSiteUrl = new URL(siteUrl);
+            protocol = parsedSiteUrl.protocol;
+            host = parsedSiteUrl.host;
+        } catch (e) {
+            console.error('Invalid NEXT_PUBLIC_SITE_URL', e);
+        }
+    }
+
+    const { searchParams } = requestUrl;
     const code = searchParams.get('code')
     const next = searchParams.get('next') ?? '/'
 

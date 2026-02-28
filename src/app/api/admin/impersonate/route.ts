@@ -46,7 +46,8 @@ export async function GET(request: NextRequest) {
         }
 
         // 5. Generate a Magic Link for the owner
-        const origin = request.headers.get('origin') || new URL(request.url).origin;
+        // Prioritize NEXT_PUBLIC_SITE_URL for proper production redirects, fallback to request origin
+        const origin = process.env.NEXT_PUBLIC_SITE_URL || request.headers.get('origin') || new URL(request.url).origin;
         const redirectUrl = `${origin}/auth/callback?next=/dashboard/${storeId}&impersonate=true`;
 
         const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
