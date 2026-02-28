@@ -40,9 +40,10 @@ interface StoreLayoutProps {
         snapchat_pixels?: string[];
         google_analytics_ids?: string[];
     };
+    headerCategories?: { id: string; name: { ar: string; en: string } | any }[];
 }
 
-function StoreHeader({ store }: { store: StoreData }) {
+function StoreHeader({ store, headerCategories = [] }: { store: StoreData, headerCategories?: { id: string; name: any }[] }) {
     const { language, setLanguage } = useLanguage();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const { cartCount, openCart } = useCart();
@@ -74,6 +75,11 @@ function StoreHeader({ store }: { store: StoreData }) {
                         <Link href={`/s/${store.slug}`} className="text-sm font-medium hover:text-primary transition-colors">
                             {language === 'ar' ? 'الرئيسية' : 'Home'}
                         </Link>
+                        {headerCategories.map(category => (
+                            <Link key={category.id} href={`/s/${store.slug}/products?category=${category.id}`} className="text-sm font-medium hover:text-primary transition-colors">
+                                {category.name[language] || category.name.ar || category.name.en}
+                            </Link>
+                        ))}
                         <Link href={`/s/${store.slug}/products`} className="text-sm font-medium hover:text-primary transition-colors">
                             {language === 'ar' ? 'المنتجات' : 'Products'}
                         </Link>
@@ -117,6 +123,16 @@ function StoreHeader({ store }: { store: StoreData }) {
                                     >
                                         {language === 'ar' ? 'الرئيسية' : 'Home'}
                                     </Link>
+                                    {headerCategories.map(category => (
+                                        <Link
+                                            key={category.id}
+                                            href={`/s/${store.slug}/products?category=${category.id}`}
+                                            onClick={() => setMobileMenuOpen(false)}
+                                            className="text-lg font-medium hover:text-primary transition-colors"
+                                        >
+                                            {category.name[language] || category.name.ar || category.name.en}
+                                        </Link>
+                                    ))}
                                     <Link
                                         href={`/s/${store.slug}/products`}
                                         onClick={() => setMobileMenuOpen(false)}
@@ -144,14 +160,14 @@ function StoreHeader({ store }: { store: StoreData }) {
 
 
 
-export function StoreClientLayout({ children, store, integrations = {} }: StoreLayoutProps) {
+export function StoreClientLayout({ children, store, integrations = {}, headerCategories = [] }: StoreLayoutProps) {
     const { dir } = useLanguage();
 
     return (
         <div className="min-h-screen bg-background" dir={dir}>
             <CartProvider storeId={store.id}>
                 <TrackingPixels integrations={integrations} />
-                <StoreHeader store={store} />
+                <StoreHeader store={store} headerCategories={headerCategories} />
                 <CartDrawer store={{ id: store.id, currency: store.currency, slug: store.slug }} />
                 <main>
                     {children}

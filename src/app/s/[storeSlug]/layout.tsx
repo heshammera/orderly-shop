@@ -62,6 +62,15 @@ export default async function Layout({
         return notFound();
     }
 
+    // Fetch categories with show_in_header = true
+    const { data: headerCategories } = await supabaseAdmin
+        .from('categories')
+        .select('id, name')
+        .eq('store_id', store.id)
+        .eq('status', 'active')
+        .eq('show_in_header', true)
+        .order('sort_order');
+
     // Parse JSON fields safely
     const parsedStore = {
         ...store,
@@ -78,7 +87,7 @@ export default async function Layout({
     }
 
     return (
-        <StoreClientLayout store={parsedStore} integrations={integrations}>
+        <StoreClientLayout store={parsedStore} integrations={integrations} headerCategories={headerCategories || []}>
             <AffiliateTracker storeId={store.id} />
             <VisitLogger storeId={store.id} />
             {children}

@@ -95,6 +95,7 @@ export type Database = {
                     status: string
                     store_id: string
                     updated_at: string
+                    show_in_header: boolean | null
                 }
                 Insert: {
                     created_at?: string
@@ -107,6 +108,7 @@ export type Database = {
                     status?: string
                     store_id: string
                     updated_at?: string
+                    show_in_header?: boolean | null
                 }
                 Update: {
                     created_at?: string
@@ -119,6 +121,7 @@ export type Database = {
                     status?: string
                     store_id?: string
                     updated_at?: string
+                    show_in_header?: boolean | null
                 }
                 Relationships: [
                     {
