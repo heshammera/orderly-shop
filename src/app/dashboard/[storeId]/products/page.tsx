@@ -5,7 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { createClient } from '@/lib/supabase/client';
 import { useSubscription } from '@/hooks/useSubscription';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2, Lock, MoreHorizontal, Eye, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Loader2, Lock, MoreHorizontal, Eye, Pencil, Trash2, Copy } from 'lucide-react';
 import {
     Table,
     TableBody,
@@ -40,6 +40,7 @@ export default function ProductsPage({ params }: { params: { storeId: string } }
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+    const [isDuplicating, setIsDuplicating] = useState<string | null>(null);
 
     // Usage Limit Check
     const { canAddProduct, limits, usage, isLoading: limitLoading, subscription } = useSubscription(storeId);
@@ -74,6 +75,39 @@ export default function ProductsPage({ params }: { params: { storeId: string } }
         } catch (error) {
             console.error('Error deleting product:', error);
             toast.error('Failed to delete product');
+        }
+    };
+
+    const handleDuplicate = async (productId: string) => {
+        try {
+            setIsDuplicating(productId);
+            toast.loading(language === 'ar' ? 'جاري استنساخ المنتج...' : 'Duplicating product...', { id: 'duplicate' });
+
+            const res = await fetch('/api/dashboard/products/duplicate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ storeId, productId }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) throw new Error(data.error || 'Failed to duplicate product');
+
+            toast.success(language === 'ar' ? 'تم استنساخ المنتج بنجاح!' : 'Product duplicated successfully!', { id: 'duplicate' });
+
+            await fetchProducts();
+
+            // Auto open edit dialog for the new product
+            if (data.product) {
+                setSelectedProduct(data.product);
+                setIsEditOpen(true);
+            }
+
+        } catch (error: any) {
+            console.error('Error duplicating product:', error);
+            toast.error(error.message || (language === 'ar' ? 'خطأ في استنساخ المنتج' : 'Failed to duplicate product'), { id: 'duplicate' });
+        } finally {
+            setIsDuplicating(null);
         }
     };
 
@@ -215,6 +249,17 @@ export default function ProductsPage({ params }: { params: { storeId: string } }
                                             >
                                                 <Pencil className="mr-2 h-4 w-4" />
                                                 Edit
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem
+                                                onClick={() => handleDuplicate(product.id)}
+                                                disabled={isDuplicating === product.id}
+                                            >
+                                                {isDuplicating === product.id ? (
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                ) : (
+                                                    <Copy className="mr-2 h-4 w-4" />
+                                                )}
+                                                {language === 'ar' ? 'استنساخ' : 'Duplicate'}
                                             </DropdownMenuItem>
                                             <DropdownMenuSeparator />
                                             <DropdownMenuItem
