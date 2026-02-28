@@ -71,6 +71,11 @@ export default async function Layout({
         .eq('show_in_header', true)
         .order('sort_order');
 
+    const parsedHeaderCategories = headerCategories?.map(c => ({
+        ...c,
+        name: typeof c.name === 'string' ? JSON.parse(c.name) : c.name,
+    })) || [];
+
     // Parse JSON fields safely
     const parsedStore = {
         ...store,
@@ -87,7 +92,7 @@ export default async function Layout({
     }
 
     return (
-        <StoreClientLayout store={parsedStore} integrations={integrations} headerCategories={headerCategories || []}>
+        <StoreClientLayout store={parsedStore} integrations={integrations} headerCategories={parsedHeaderCategories}>
             <AffiliateTracker storeId={store.id} />
             <VisitLogger storeId={store.id} />
             {children}

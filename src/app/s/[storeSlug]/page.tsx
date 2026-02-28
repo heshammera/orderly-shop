@@ -141,9 +141,14 @@ export default async function StorePage({ params }: { params: { storeSlug: strin
         .eq('show_in_header', true)
         .order('sort_order');
 
+    const parsedHeaderCategories = headerCategories?.map(c => ({
+        ...c,
+        name: typeof c.name === 'string' ? JSON.parse(c.name) : c.name,
+    })) || [];
+
     const storeWithCategories = {
         ...store,
-        headerCategories: headerCategories || [],
+        headerCategories: parsedHeaderCategories,
     };
 
     // Fetch Home Page Layout for Active Stores

@@ -75,14 +75,14 @@ function StoreHeader({ store, headerCategories = [] }: { store: StoreData, heade
                         <Link href={`/s/${store.slug}`} className="text-sm font-medium hover:text-primary transition-colors">
                             {language === 'ar' ? 'الرئيسية' : 'Home'}
                         </Link>
+                        <Link href={`/s/${store.slug}/products`} className="text-sm font-medium hover:text-primary transition-colors">
+                            {language === 'ar' ? 'المنتجات' : 'Products'}
+                        </Link>
                         {headerCategories.map(category => (
                             <Link key={category.id} href={`/s/${store.slug}/products?category=${category.id}`} className="text-sm font-medium hover:text-primary transition-colors">
                                 {category.name[language] || category.name.ar || category.name.en}
                             </Link>
                         ))}
-                        <Link href={`/s/${store.slug}/products`} className="text-sm font-medium hover:text-primary transition-colors">
-                            {language === 'ar' ? 'المنتجات' : 'Products'}
-                        </Link>
                         <Link href={`/s/${store.slug}/track`} className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-1">
                             <Truck className="w-4 h-4" />
                             {language === 'ar' ? 'تتبع طلبك' : 'Track Order'}
@@ -123,6 +123,13 @@ function StoreHeader({ store, headerCategories = [] }: { store: StoreData, heade
                                     >
                                         {language === 'ar' ? 'الرئيسية' : 'Home'}
                                     </Link>
+                                    <Link
+                                        href={`/s/${store.slug}/products`}
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className="text-lg font-medium hover:text-primary transition-colors"
+                                    >
+                                        {language === 'ar' ? 'المنتجات' : 'Products'}
+                                    </Link>
                                     {headerCategories.map(category => (
                                         <Link
                                             key={category.id}
@@ -133,13 +140,6 @@ function StoreHeader({ store, headerCategories = [] }: { store: StoreData, heade
                                             {category.name[language] || category.name.ar || category.name.en}
                                         </Link>
                                     ))}
-                                    <Link
-                                        href={`/s/${store.slug}/products`}
-                                        onClick={() => setMobileMenuOpen(false)}
-                                        className="text-lg font-medium hover:text-primary transition-colors"
-                                    >
-                                        {language === 'ar' ? 'المنتجات' : 'Products'}
-                                    </Link>
                                     <Link
                                         href={`/s/${store.slug}/track`}
                                         onClick={() => setMobileMenuOpen(false)}
