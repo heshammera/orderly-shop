@@ -41,7 +41,6 @@ export function CategoriesTable({ storeId }: CategoriesTableProps) {
     const [formData, setFormData] = useState({
         name_ar: '',
         name_en: '',
-        slug: '',
         show_in_header: false,
     });
 
@@ -73,7 +72,6 @@ export function CategoriesTable({ storeId }: CategoriesTableProps) {
             const categoryData = {
                 store_id: storeId,
                 name: JSON.stringify({ ar: formData.name_ar, en: formData.name_en }),
-                slug: formData.slug,
                 show_in_header: formData.show_in_header,
             };
 
@@ -95,7 +93,7 @@ export function CategoriesTable({ storeId }: CategoriesTableProps) {
             }
 
             setDialogOpen(false);
-            setFormData({ name_ar: '', name_en: '', slug: '', show_in_header: false });
+            setFormData({ name_ar: '', name_en: '', show_in_header: false });
             setEditingCategory(null);
             fetchCategories();
         } catch (error: any) {
@@ -108,7 +106,6 @@ export function CategoriesTable({ storeId }: CategoriesTableProps) {
         setFormData({
             name_ar: name.ar || '',
             name_en: name.en || '',
-            slug: category.slug || '',
             show_in_header: category.show_in_header || false,
         });
         setEditingCategory(category);
@@ -148,7 +145,7 @@ export function CategoriesTable({ storeId }: CategoriesTableProps) {
                     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                         <DialogTrigger asChild>
                             <Button size="sm" onClick={() => {
-                                setFormData({ name_ar: '', name_en: '', slug: '', show_in_header: false });
+                                setFormData({ name_ar: '', name_en: '', show_in_header: false });
                                 setEditingCategory(null);
                             }}>
                                 <Plus className="w-4 h-4 mr-2" />
@@ -181,15 +178,6 @@ export function CategoriesTable({ storeId }: CategoriesTableProps) {
                                         required
                                     />
                                 </div>
-                                <div>
-                                    <Label>{language === 'ar' ? 'الرابط (Slug)' : 'Slug'}</Label>
-                                    <Input
-                                        value={formData.slug}
-                                        onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
-                                        placeholder="electronics"
-                                        required
-                                    />
-                                </div>
                                 <div className="flex items-center space-x-2 space-x-reverse">
                                     <Switch
                                         id="show-in-header"
@@ -214,7 +202,6 @@ export function CategoriesTable({ storeId }: CategoriesTableProps) {
                     <TableHeader>
                         <TableRow>
                             <TableHead>{language === 'ar' ? 'الاسم' : 'Name'}</TableHead>
-                            <TableHead>{language === 'ar' ? 'الرابط' : 'Slug'}</TableHead>
                             <TableHead>{language === 'ar' ? 'في الهيدر' : 'In Header'}</TableHead>
                             <TableHead className="text-right">{language === 'ar' ? 'إجراءات' : 'Actions'}</TableHead>
                         </TableRow>
@@ -234,7 +221,6 @@ export function CategoriesTable({ storeId }: CategoriesTableProps) {
                                         <TableCell className="font-medium">
                                             {language === 'ar' ? name.ar : name.en}
                                         </TableCell>
-                                        <TableCell className="text-muted-foreground">{category.slug}</TableCell>
                                         <TableCell>
                                             {category.show_in_header ? (
                                                 <Badge variant="default" className="bg-green-500/10 text-green-500 hover:bg-green-500/20">{language === 'ar' ? 'نعم' : 'Yes'}</Badge>
