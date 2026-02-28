@@ -77,248 +77,206 @@ export function PlanForm({ defaultValues, onSubmit, isSubmitting, featuresList }
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                        control={form.control}
-                        name="slug"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Slug (Unique ID)</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="basic, pro..." {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="is_active"
-                        render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm mt-auto">
-                                <div className="space-y-0.5">
-                                    <FormLabel>Active Status</FormLabel>
-                                </div>
-                                <FormControl>
-                                    <Switch
-                                        checked={field.value}
-                                        onCheckedChange={field.onChange}
-                                    />
-                                </FormControl>
-                            </FormItem>
-                        )}
-                    />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                        control={form.control}
-                        name="name_en"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Name (English)</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="Basic Plan" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="name_ar"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Name (Arabic)</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="الباقة الأساسية" className="text-right" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                        control={form.control}
-                        name="price_monthly"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Monthly Price ($)</FormLabel>
-                                <FormControl>
-                                    <Input type="number" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="price_yearly"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Yearly Price ($)</FormLabel>
-                                <FormControl>
-                                    <Input type="number" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                        control={form.control}
-                        name="products_limit"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Products Limit (-1 for unlimited)</FormLabel>
-                                <FormControl>
-                                    <Input type="number" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="orders_limit"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Monthly Orders Limit (-1 for unlimited)</FormLabel>
-                                <FormControl>
-                                    <Input type="number" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                        control={form.control}
-                        name="stores_limit"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Stores Limit</FormLabel>
-                                <FormControl>
-                                    <Input type="number" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                        control={form.control}
-                        name="description_en"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Description (English)</FormLabel>
-                                <FormControl>
-                                    <Textarea placeholder="Short description..." {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="description_ar"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Description (Arabic)</FormLabel>
-                                <FormControl>
-                                    <Textarea placeholder="وصف قصير..." className="text-right" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                        control={form.control}
-                        name="display_features_en"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Display Features (English, comma separated)</FormLabel>
-                                <FormControl>
-                                    <Textarea placeholder="Unlimited products, 24/7 support..." {...field} />
-                                </FormControl>
-                                <FormDescription>Separate multiple features with a comma.</FormDescription>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="display_features_ar"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Display Features (Arabic, comma separated)</FormLabel>
-                                <FormControl>
-                                    <Textarea placeholder="منتجات غير محدودة، دعم فني..." className="text-right" {...field} />
-                                </FormControl>
-                                <FormDescription className="text-right">افصل بين المميزات بفاصلة (,).</FormDescription>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
-
-                {featuresList && featuresList.length > 0 && (
-                    <div className="space-y-4 pt-6 border-t mt-6">
-                        <h3 className="font-semibold text-lg">{language === 'ar' ? 'مميزات الباقة (ديناميكي)' : 'Plan Features (Dynamic)'}</h3>
-                        {Object.entries(
-                            featuresList.reduce((acc, feat) => {
-                                if (!acc[feat.group]) acc[feat.group] = [];
-                                acc[feat.group].push(feat);
-                                return acc;
-                            }, {} as Record<string, typeof featuresList[0][]>)
-                        ).map(([group, feats]) => (
-                            <div key={group} className="space-y-4">
-                                <h4 className="font-medium text-sm text-muted-foreground capitalize">{group}</h4>
-                                <div className="grid grid-cols-2 gap-4">
-                                    {feats.map(feat => (
-                                        <FormField
-                                            key={feat.id}
-                                            control={form.control}
-                                            name={`features.${feat.id}` as any}
-                                            render={({ field }) => (
-                                                <FormItem className={feat.type === 'boolean' ? "flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm mt-auto" : ""}>
-                                                    <div className="space-y-0.5">
-                                                        <FormLabel>{language === 'ar' ? feat.name_ar : feat.name_en}</FormLabel>
-                                                    </div>
-                                                    <FormControl>
-                                                        {feat.type === 'boolean' ? (
-                                                            <Switch
-                                                                checked={field.value === 'true'}
-                                                                onCheckedChange={(checked) => field.onChange(checked ? 'true' : 'false')}
-                                                            />
-                                                        ) : feat.type === 'integer' ? (
-                                                            <Input type="number" {...field} value={field.value || ''} onChange={(e) => field.onChange(e.target.value)} />
-                                                        ) : (
-                                                            <Input {...field} value={field.value || ''} />
-                                                        )}
-                                                    </FormControl>
-                                                </FormItem>
-                                            )}
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <div className="max-h-[60vh] overflow-y-auto px-1 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                            control={form.control}
+                            name="slug"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Slug (Unique ID)</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="basic, pro..." {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="is_active"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm mt-auto">
+                                    <div className="space-y-0.5">
+                                        <FormLabel>Active Status</FormLabel>
+                                    </div>
+                                    <FormControl>
+                                        <Switch
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
                                         />
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
                     </div>
-                )}
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                            control={form.control}
+                            name="name_en"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Name (English)</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="Basic Plan" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="name_ar"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Name (Arabic)</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="الباقة الأساسية" className="text-right" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                            control={form.control}
+                            name="price_monthly"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Monthly Price ($)</FormLabel>
+                                    <FormControl>
+                                        <Input type="number" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="price_yearly"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Yearly Price ($)</FormLabel>
+                                    <FormControl>
+                                        <Input type="number" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+
+
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                            control={form.control}
+                            name="description_en"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Description (English)</FormLabel>
+                                    <FormControl>
+                                        <Textarea placeholder="Short description..." {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="description_ar"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Description (Arabic)</FormLabel>
+                                    <FormControl>
+                                        <Textarea placeholder="وصف قصير..." className="text-right" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                            control={form.control}
+                            name="display_features_en"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Display Features (English, comma separated)</FormLabel>
+                                    <FormControl>
+                                        <Textarea placeholder="Unlimited products, 24/7 support..." {...field} />
+                                    </FormControl>
+                                    <FormDescription>Separate multiple features with a comma.</FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="display_features_ar"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Display Features (Arabic, comma separated)</FormLabel>
+                                    <FormControl>
+                                        <Textarea placeholder="منتجات غير محدودة، دعم فني..." className="text-right" {...field} />
+                                    </FormControl>
+                                    <FormDescription className="text-right">افصل بين المميزات بفاصلة (,).</FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+
+                    {featuresList && featuresList.length > 0 && (
+                        <div className="space-y-4 pt-6 border-t mt-6">
+                            <h3 className="font-semibold text-lg">{language === 'ar' ? 'مميزات الباقة (ديناميكي)' : 'Plan Features (Dynamic)'}</h3>
+                            {Object.entries(
+                                featuresList.reduce((acc, feat) => {
+                                    if (!acc[feat.group]) acc[feat.group] = [];
+                                    acc[feat.group].push(feat);
+                                    return acc;
+                                }, {} as Record<string, typeof featuresList[0][]>)
+                            ).map(([group, feats]) => (
+                                <div key={group} className="space-y-4">
+                                    <h4 className="font-medium text-sm text-muted-foreground capitalize">{group}</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {feats.map(feat => (
+                                            <FormField
+                                                key={feat.id}
+                                                control={form.control}
+                                                name={`features.${feat.id}` as any}
+                                                render={({ field }) => (
+                                                    <FormItem className={feat.type === 'boolean' ? "flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm mt-auto" : ""}>
+                                                        <div className="space-y-0.5">
+                                                            <FormLabel>{language === 'ar' ? feat.name_ar : feat.name_en}</FormLabel>
+                                                        </div>
+                                                        <FormControl>
+                                                            {feat.type === 'boolean' ? (
+                                                                <Switch
+                                                                    checked={field.value === 'true'}
+                                                                    onCheckedChange={(checked) => field.onChange(checked ? 'true' : 'false')}
+                                                                />
+                                                            ) : feat.type === 'integer' ? (
+                                                                <Input type="number" {...field} value={field.value || ''} onChange={(e) => field.onChange(e.target.value)} />
+                                                            ) : (
+                                                                <Input {...field} value={field.value || ''} />
+                                                            )}
+                                                        </FormControl>
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
 
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
