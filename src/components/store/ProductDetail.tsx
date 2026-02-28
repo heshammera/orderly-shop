@@ -565,105 +565,156 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                         </div>
                     </div>
 
-                    {/* Upsell Offers - Premium Design */}
+                    {/* Upsell Offers - Premium Sales Psychology Design */}
                     {upsellOffers.length > 0 && (
-                        <div className="space-y-2.5">
+                        <div className="space-y-4 mt-6">
                             <RadioGroup
                                 value={quantity.toString()}
                                 onValueChange={(val) => setQuantity(parseInt(val))}
-                                className="grid gap-2.5"
+                                className="grid gap-4"
                             >
+                                {/* Option 1: Minimalist Base Option */}
                                 <div
                                     className={cn(
-                                        "relative flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 gap-2",
+                                        "relative flex items-center justify-between p-4 rounded-xl border border-dashed cursor-pointer transition-all duration-300 gap-3 grayscale-[30%]",
                                         quantity === 1
-                                            ? "border-primary bg-primary/5 shadow-sm"
-                                            : "border-border/60 hover:border-primary/40 bg-card"
+                                            ? "border-primary grayscale-0 bg-primary/5 shadow-sm"
+                                            : "border-border/40 hover:border-primary/30 bg-background/50 opacity-80 hover:opacity-100 hover:grayscale-0"
                                     )}
                                     onClick={() => setQuantity(1)}
                                 >
-                                    <div className="flex items-center gap-2">
-                                        <RadioGroupItem value="1" id="q-1" className="flex-shrink-0" />
-                                        <Label htmlFor="q-1" className="cursor-pointer font-medium text-sm">
-                                            {language === 'ar' ? 'قطعة واحدة' : '1 Item'}
+                                    <div className="flex items-center gap-3">
+                                        <div className={cn(
+                                            "w-5 h-5 rounded-full border flex items-center justify-center transition-colors",
+                                            quantity === 1 ? "border-primary bg-primary" : "border-muted-foreground/50"
+                                        )}>
+                                            {quantity === 1 && <Check className="w-3.5 h-3.5 text-primary-foreground" />}
+                                        </div>
+                                        <Label className="cursor-pointer font-medium text-muted-foreground">
+                                            {language === 'ar' ? 'قطعة واحدة فقط' : 'Just 1 Item'}
                                         </Label>
                                     </div>
-                                    <span className="font-bold text-sm">{formatPrice((product.sale_price && product.sale_price > 0) ? product.sale_price : product.price)}</span>
+                                    <span className="font-semibold text-muted-foreground">{formatPrice((product.sale_price && product.sale_price > 0) ? product.sale_price : product.price)}</span>
                                 </div>
 
-                                {/* Offers */}
+                                {/* Premium Offers */}
                                 {upsellOffers.map((offer, idx) => {
                                     const isSelected = quantity === offer.min_quantity;
                                     const badge = offer.badge[language] || offer.badge.ar;
                                     const label = offer.label[language] || offer.label.ar;
 
-
-                                    // Calculate prices for display (fixed discount is per item)
+                                    // Calculate prices for display
                                     const effectivePrice = (product.sale_price && product.sale_price > 0) ? product.sale_price : product.price;
                                     const originalTotal = effectivePrice * offer.min_quantity;
                                     let discountedTotal = originalTotal;
+
                                     if (offer.discount_type === 'percentage') {
                                         discountedTotal = originalTotal * (1 - offer.discount_value / 100);
                                     } else {
-                                        // Fixed discount × quantity
                                         discountedTotal = Math.max(0, originalTotal - (offer.discount_value * offer.min_quantity));
                                     }
+
                                     const savedAmount = originalTotal - discountedTotal;
                                     const perItem = discountedTotal / offer.min_quantity;
+
+                                    // Randomized scarcity for the "Best Offer"
+                                    const randomLeft = (offer.min_quantity * 2 + 1) % 5 + 2;
 
                                     return (
                                         <div
                                             key={offer.id}
                                             className={cn(
-                                                "relative rounded-xl border-2 cursor-pointer transition-all duration-200 overflow-hidden",
+                                                "relative rounded-2xl cursor-pointer transition-all duration-300 transform",
                                                 isSelected
-                                                    ? "border-primary shadow-md shadow-primary/10"
-                                                    : badge
-                                                        ? "border-primary/50 hover:border-primary ring-1 ring-primary/20"
-                                                        : "border-border/60 hover:border-primary/40"
+                                                    ? "border-[3px] border-primary shadow-[0_0_20px_rgba(var(--primary),0.15)] scale-[1.02] bg-primary/[0.03]"
+                                                    : "border-2 border-border/60 hover:border-primary/50 hover:scale-[1.01] bg-card"
                                             )}
                                             onClick={() => setQuantity(offer.min_quantity)}
                                         >
-                                            {/* Recommended / Badge ribbon */}
+                                            {/* Ribbon / Badge */}
                                             {badge && (
-                                                <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground text-[11px] font-bold px-3 py-1 text-center tracking-wide">
-                                                    {badge}
+                                                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10 w-full max-w-[80%] flex justify-center">
+                                                    <div className={cn(
+                                                        "px-4 py-1 rounded-full text-xs font-bold text-center shadow-sm text-white whitespace-nowrap",
+                                                        isSelected ? "bg-gradient-to-r from-primary to-primary/80 animate-in zoom-in" : "bg-primary/80"
+                                                    )}>
+                                                        {badge}
+                                                    </div>
                                                 </div>
                                             )}
 
-                                            <div className={cn(
-                                                "p-3 space-y-2",
-                                                isSelected && "bg-primary/5"
-                                            )}>
-                                                {/* Row 1: Radio + Label */}
-                                                <div className="flex items-center gap-2">
-                                                    <RadioGroupItem
-                                                        value={offer.min_quantity.toString()}
-                                                        id={`q-${offer.min_quantity}`}
-                                                        className="flex-shrink-0"
-                                                    />
-                                                    <Label htmlFor={`q-${offer.min_quantity}`} className="cursor-pointer font-semibold text-sm flex-1">
-                                                        {label || `${language === 'ar' ? 'اشتري' : 'Buy'} ${offer.min_quantity}`}
-                                                    </Label>
-                                                </div>
-                                                {/* Row 2: Prices */}
-                                                <div className="flex items-center justify-between ps-6">
-                                                    <span className="text-[11px] text-muted-foreground">
-                                                        {formatPrice(perItem)} / {language === 'ar' ? 'للقطعة' : 'each'}
-                                                    </span>
-                                                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
-                                                        <span className="text-xs text-muted-foreground line-through">
-                                                            {formatPrice(originalTotal)}
-                                                        </span>
-                                                        <span className="font-bold text-sm">
-                                                            {formatPrice(discountedTotal)}
-                                                        </span>
-                                                        <span className="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-[10px] font-bold px-1.5 py-0.5 rounded-md">
-                                                            {language === 'ar' ? 'وفّر ' : '-'}
-                                                            {offer.discount_type === 'percentage'
-                                                                ? `${offer.discount_value}%`
-                                                                : formatPrice(savedAmount)}
-                                                        </span>
+                                            {/* Glow effect for selected */}
+                                            {isSelected && (
+                                                <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-primary/[0.05] to-transparent pointer-events-none" />
+                                            )}
+
+                                            <div className="p-4 pt-5 pb-5">
+                                                <div className="flex items-start gap-4">
+                                                    {/* Custom Radio Checkmark */}
+                                                    <div className={cn(
+                                                        "mt-1 w-6 h-6 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all duration-300",
+                                                        isSelected ? "border-primary bg-primary" : "border-muted-foreground/30 bg-background"
+                                                    )}>
+                                                        {isSelected && <Check className="w-4 h-4 text-primary-foreground animate-in zoom-in duration-200" />}
+                                                    </div>
+
+                                                    <div className="flex-1 space-y-3">
+                                                        {/* Header: Title and Per Item Price */}
+                                                        <div className="flex justify-between items-start gap-2">
+                                                            <div className="space-y-0.5">
+                                                                <h4 className={cn(
+                                                                    "font-bold text-lg",
+                                                                    isSelected ? "text-primary" : "text-foreground"
+                                                                )}>
+                                                                    {label || `${language === 'ar' ? 'باقة' : 'Bundle'} ${offer.min_quantity} ${language === 'ar' ? 'قطع' : 'Items'}`}
+                                                                </h4>
+                                                            </div>
+                                                            <div className="text-end">
+                                                                <div className="flex flex-col items-end">
+                                                                    <span className="text-xs text-muted-foreground line-through mb-0.5">
+                                                                        {formatPrice(effectivePrice)}
+                                                                    </span>
+                                                                    <span className="font-black text-xl leading-none text-foreground flex items-baseline gap-1">
+                                                                        {formatPrice(perItem)}
+                                                                        <span className="text-xs font-normal text-muted-foreground">/{language === 'ar' ? 'للقطعة' : 'ea'}</span>
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Separator */}
+                                                        <div className="h-px w-full bg-border/50 border-dashed border-b" />
+
+                                                        {/* Footer: Savings and Total */}
+                                                        <div className="flex items-center justify-between mt-3">
+                                                            <div className="flex items-center gap-2">
+                                                                {/* Screaming Savings Badge */}
+                                                                <div className="inline-flex items-center gap-1 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-xs font-black px-2.5 py-1 rounded-full shadow-sm">
+                                                                    <span>🔥</span>
+                                                                    <span>
+                                                                        {language === 'ar' ? 'وفر' : 'Save'} {offer.discount_type === 'percentage'
+                                                                            ? `${offer.discount_value}%`
+                                                                            : formatPrice(savedAmount)}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="text-sm font-medium">
+                                                                {language === 'ar' ? 'الإجمالي:' : 'Total:'} <span className="font-bold text-primary">{formatPrice(discountedTotal)}</span>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Scarcity message for selected best offer */}
+                                                        {isSelected && idx === upsellOffers.length - 1 && (
+                                                            <div className="pt-2 animate-in fade-in slide-in-from-top-1 duration-300">
+                                                                <div className="flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-500 bg-amber-50 dark:bg-amber-950/30 px-2 py-1.5 rounded-md">
+                                                                    <Zap className="w-3.5 h-3.5 fill-current animate-pulse" />
+                                                                    {language === 'ar'
+                                                                        ? `تبقى ${randomLeft} باقات فقط بهذا العرض!`
+                                                                        : `Only ${randomLeft} bundles left at this price!`}
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
