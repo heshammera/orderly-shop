@@ -20,6 +20,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { ImageUpload } from '@/components/dashboard/ImageUpload';
 import { VariantEditor } from '@/components/dashboard/VariantEditor';
 import { UpsellManager, UpsellFormData } from '@/components/dashboard/UpsellManager';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface ProductFormProps {
     storeId: string;
@@ -36,6 +37,8 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
     const [variants, setVariants] = useState<any[]>([]);
     const [upsellOffers, setUpsellOffers] = useState<UpsellFormData[]>([]);
     const [storeCurrency, setStoreCurrency] = useState('SAR');
+    const [categories, setCategories] = useState<any[]>([]);
+    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
     // Load initial Upsells
     useEffect(() => {
@@ -61,6 +64,17 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                 }
             };
             fetchUpsells();
+
+            const fetchProductCategories = async () => {
+                const { data } = await supabase
+                    .from('product_categories')
+                    .select('category_id')
+                    .eq('product_id', initialData.id);
+                if (data) {
+                    setSelectedCategories(data.map((pc: any) => pc.category_id));
+                }
+            };
+            fetchProductCategories();
         }
 
         // Fetch store currency
@@ -72,6 +86,19 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
             }
         };
         fetchStoreCurrency();
+
+        const fetchAvailableCategories = async () => {
+            if (!storeId) return;
+            const { data } = await supabase
+                .from('categories')
+                .select('*')
+                .eq('store_id', storeId)
+                .order('sort_order');
+            if (data) {
+                setCategories(data);
+            }
+        };
+        fetchAvailableCategories();
     }, [initialData?.id, storeId]);
 
     // Helper to parse JSON fields safely
@@ -200,6 +227,48 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
 
                         if (oError) throw oError;
                     }
+                }
+            }
+
+            // Save Categories
+            if (savedProductId) {
+                // Delete existing category relations
+                if (initialData) {
+                    await supabase.from('product_categories').delete().eq('product_id', savedProductId);
+                }
+
+                if (selectedCategories.length > 0) {
+                    const categoryPayloads = selectedCategories.map(categoryId => ({
+                        product_id: savedProductId,
+                        category_id: categoryId
+                    }));
+
+                    const { error: catError } = await supabase
+                        .from('product_categories')
+                        .insert(categoryPayloads);
+
+                    if (catError) throw catError;
+                }
+            }
+
+            // Save Categories
+            if (savedProductId) {
+                // Delete existing category relations
+                if (initialData) {
+                    await supabase.from('product_categories').delete().eq('product_id', savedProductId);
+                }
+
+                if (selectedCategories.length > 0) {
+                    const categoryPayloads = selectedCategories.map(categoryId => ({
+                        product_id: savedProductId,
+                        category_id: categoryId
+                    }));
+
+                    const { error: catError } = await supabase
+                        .from('product_categories')
+                        .insert(categoryPayloads);
+
+                    if (catError) throw catError;
                 }
             }
 
@@ -373,6 +442,47 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                             onChange={(urls) => setFormData({ ...formData, images: urls as any })}
                             onRemove={(url) => setFormData({ ...formData, images: (formData.images as string[]).filter((current) => current !== url) as any })}
                         />
+                    </div>
+
+                    <div className="space-y-4">
+                        <Label>{language === 'ar' ? 'التصنيفات' : 'Categories'}</Label>
+                        <Card className="p-4">
+                            {categories.length === 0 ? (
+                                <p className="text-sm text-muted-foreground">
+                                    {language === 'ar' ? 'لا توجد تصنيفات متاحة. يرجى إضافة تصنيفات من صفحة التصنيفات أولاً.' : 'No categories available. Please add categories from the Categories page first.'}
+                                </p>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {categories.map((category) => {
+                                        const name = typeof category.name === 'string' ? JSON.parse(category.name) : category.name;
+                                        const categoryName = name?.[language] || name?.ar || name?.en || 'Unnamed Category';
+                                        const isChecked = selectedCategories.includes(category.id);
+
+                                        return (
+                                            <div key={category.id} className="flex items-center space-x-2 space-x-reverse h-8">
+                                                <Checkbox
+                                                    id={`category-${category.id}`}
+                                                    checked={isChecked}
+                                                    onCheckedChange={(checked) => {
+                                                        if (checked) {
+                                                            setSelectedCategories([...selectedCategories, category.id]);
+                                                        } else {
+                                                            setSelectedCategories(selectedCategories.filter(id => id !== category.id));
+                                                        }
+                                                    }}
+                                                />
+                                                <Label
+                                                    htmlFor={`category-${category.id}`}
+                                                    className="text-sm font-medium leading-none cursor-pointer"
+                                                >
+                                                    {categoryName}
+                                                </Label>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </Card>
                     </div>
 
                     <div className="border-t pt-6">
