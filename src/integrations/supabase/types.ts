@@ -414,6 +414,14 @@ export type Database = {
                     stock: number
                     store_id: string
                     updated_at: string
+                    skip_cart: boolean | null
+                    free_shipping: boolean | null
+                    fake_countdown_enabled: boolean | null
+                    fake_countdown_minutes: number | null
+                    fake_visitors_enabled: boolean | null
+                    fake_visitors_min: number | null
+                    fake_visitors_max: number | null
+                    ignore_stock: boolean | null
                 }
                 Insert: {
                     cost_price?: number
@@ -429,6 +437,14 @@ export type Database = {
                     stock?: number
                     store_id: string
                     updated_at?: string
+                    skip_cart?: boolean | null
+                    free_shipping?: boolean | null
+                    fake_countdown_enabled?: boolean | null
+                    fake_countdown_minutes?: number | null
+                    fake_visitors_enabled?: boolean | null
+                    fake_visitors_min?: number | null
+                    fake_visitors_max?: number | null
+                    ignore_stock?: boolean | null
                 }
                 Update: {
                     cost_price?: number
@@ -444,6 +460,14 @@ export type Database = {
                     stock?: number
                     store_id?: string
                     updated_at?: string
+                    skip_cart?: boolean | null
+                    free_shipping?: boolean | null
+                    fake_countdown_enabled?: boolean | null
+                    fake_countdown_minutes?: number | null
+                    fake_visitors_enabled?: boolean | null
+                    fake_visitors_min?: number | null
+                    fake_visitors_max?: number | null
+                    ignore_stock?: boolean | null
                 }
                 Relationships: [
                     {
@@ -663,28 +687,37 @@ export type Database = {
             }
             variant_options: {
                 Row: {
-                    created_at: string
-                    id: string
-                    option_name: string
-                    option_value: string
                     variant_id: string
                     in_stock: boolean
+                    stock: number | null
+                    manage_stock: boolean | null
+                    price: number | null
+                    label: Json | null
+                    value: string | null
+                    is_default: boolean | null
+                    sort_order: number | null
                 }
                 Insert: {
-                    created_at?: string
-                    id?: string
-                    option_name: string
-                    option_value: string
                     variant_id: string
                     in_stock?: boolean
+                    stock?: number | null
+                    manage_stock?: boolean | null
+                    price?: number | null
+                    label?: Json | null
+                    value?: string | null
+                    is_default?: boolean | null
+                    sort_order?: number | null
                 }
                 Update: {
-                    created_at?: string
-                    id?: string
-                    option_name?: string
-                    option_value?: string
                     variant_id?: string
                     in_stock?: boolean
+                    stock?: number | null
+                    manage_stock?: boolean | null
+                    price?: number | null
+                    label?: Json | null
+                    value?: string | null
+                    is_default?: boolean | null
+                    sort_order?: number | null
                 }
                 Relationships: [
                     {
