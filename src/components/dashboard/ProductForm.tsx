@@ -137,6 +137,7 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
         fake_visitors_enabled: initialData?.fake_visitors_enabled || false,
         fake_visitors_min: initialData?.fake_visitors_min || 10,
         fake_visitors_max: initialData?.fake_visitors_max || 50,
+        ignore_stock: initialData?.ignore_stock || false,
     });
 
     const handleAIGenerated = (data: any) => {
@@ -180,6 +181,7 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                 fake_visitors_enabled: formData.fake_visitors_enabled,
                 fake_visitors_min: parseInt(formData.fake_visitors_min.toString()),
                 fake_visitors_max: parseInt(formData.fake_visitors_max.toString()),
+                ignore_stock: formData.ignore_stock,
             };
 
             let savedProductId = initialData?.id;
@@ -341,7 +343,7 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <Tabs defaultValue={language === 'ar' ? "ar" : "en"} className="w-full">
-                        <TabsList className="grid w-full grid-cols-2">
+                        <TabsList className="grid w-full grid-cols-3">
                             <TabsTrigger value="ar">العربية</TabsTrigger>
                             <TabsTrigger value="en">English</TabsTrigger>
                             <TabsTrigger value="advanced" className="flex items-center gap-2">
@@ -449,6 +451,17 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                                                 id="free_shipping"
                                                 checked={formData.free_shipping}
                                                 onCheckedChange={(v) => setFormData({ ...formData, free_shipping: v })}
+                                            />
+                                        </div>
+                                        <div className="flex items-center justify-between p-2 border rounded-lg hover:bg-accent/50 transition-colors bg-primary/5">
+                                            <div className="space-y-0.5">
+                                                <Label className="text-sm cursor-pointer font-bold" htmlFor="ignore_stock">{language === 'ar' ? 'تخطي المخزون للمنتج' : 'Ignore Product Stock'}</Label>
+                                                <p className="text-[10px] text-muted-foreground">{language === 'ar' ? 'السماح بالطلب حتى لو نفذ المخزون للمنتج وجميع متغيراته' : 'Allow orders even if stock is 0 for product and variants'}</p>
+                                            </div>
+                                            <Switch
+                                                id="ignore_stock"
+                                                checked={formData.ignore_stock}
+                                                onCheckedChange={(v) => setFormData({ ...formData, ignore_stock: v })}
                                             />
                                         </div>
                                     </CardContent>
@@ -664,6 +677,8 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                             standalone={false}
                             storeId={storeId}
                             basePrice={formData.price}
+                            baseStock={formData.stock_quantity}
+                            globalIgnoreStock={formData.ignore_stock}
                         />
                     </div>
 

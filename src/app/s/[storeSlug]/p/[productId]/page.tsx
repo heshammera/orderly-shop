@@ -102,6 +102,7 @@ export default async function ProductPage({ params }: { params: { storeSlug: str
         name: typeof productRes.data.name === 'string' ? JSON.parse(productRes.data.name) : productRes.data.name,
         description: typeof productRes.data.description === 'string' ? JSON.parse(productRes.data.description) : productRes.data.description || { ar: '', en: '' },
         images: parsedImages,
+        ignore_stock: productRes.data.ignore_stock || false,
     };
 
     const variants = variantsRes.data?.map((v: any) => ({

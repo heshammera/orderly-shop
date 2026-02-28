@@ -33,6 +33,7 @@ interface Product {
     fake_visitors_enabled?: boolean;
     fake_visitors_min?: number;
     fake_visitors_max?: number;
+    ignore_stock?: boolean;
 }
 
 interface Variant {
@@ -720,12 +721,12 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                                             return (
                                                                 <button
                                                                     key={option.id}
-                                                                    onClick={() => option.in_stock !== false && handleOptionSelect(itemIndex, variant.id, option.id)}
-                                                                    disabled={option.in_stock === false}
+                                                                    onClick={() => (product.ignore_stock || option.in_stock !== false) && handleOptionSelect(itemIndex, variant.id, option.id)}
+                                                                    disabled={!product.ignore_stock && option.in_stock === false}
                                                                     className={cn(
-                                                                        "w-16 h-16 rounded-md border-2 overflow-hidden relative transition-all disabled:cursor-not-allowed",
-                                                                        isSelected ? "border-primary ring-2 ring-primary/20" : "border-transparent ring-1 ring-border opacity-80 hover:opacity-100",
-                                                                        option.in_stock === false && "opacity-40 grayscale"
+                                                                        "p-0.5 rounded-full border-2 transition-all",
+                                                                        isSelected ? "border-primary ring-1 ring-primary/30" : "border-transparent",
+                                                                        (!product.ignore_stock && option.in_stock === false) && "opacity-50 grayscale cursor-not-allowed"
                                                                     )}
                                                                     title={option.label[language] || option.label.ar}
                                                                 >
@@ -739,7 +740,7 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                                                             <Check className="w-6 h-6 text-white" />
                                                                         </div>
                                                                     )}
-                                                                    {option.in_stock === false && (
+                                                                    {(!product.ignore_stock && option.in_stock === false) && (
                                                                         <div className="absolute inset-0 flex items-center justify-center bg-white/30 backdrop-blur-[1px]">
                                                                             <span className="text-[10px] font-bold text-destructive bg-white/90 px-1 py-0.5 rounded shadow-sm border border-destructive/20 whitespace-nowrap">
                                                                                 {language === 'ar' ? 'نفد' : 'Out'}
@@ -753,8 +754,8 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                                         return (
                                                             <button
                                                                 key={option.id}
-                                                                onClick={() => option.in_stock !== false && handleOptionSelect(itemIndex, variant.id, option.id)}
-                                                                disabled={option.in_stock === false}
+                                                                onClick={() => (product.ignore_stock || option.in_stock !== false) && handleOptionSelect(itemIndex, variant.id, option.id)}
+                                                                disabled={!product.ignore_stock && option.in_stock === false}
                                                                 className={cn(
                                                                     "px-4 py-2 rounded-md border text-sm transition-all min-w-[3rem] disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-muted/50 disabled:line-through",
                                                                     isSelected
@@ -763,7 +764,7 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                                                 )}
                                                             >
                                                                 {option.label[language] || option.label.ar}
-                                                                {option.in_stock === false && (
+                                                                {(!product.ignore_stock && option.in_stock === false) && (
                                                                     <span className="ms-1 text-xs opacity-70">
                                                                         ({language === 'ar' ? 'نفد' : 'Out'})
                                                                     </span>
@@ -801,14 +802,14 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                     size="lg"
                                     className="flex-1 h-14 md:h-11 rounded-xl md:rounded-md text-base md:text-sm font-semibold md:font-medium shadow-md md:shadow-none"
                                     onClick={handleAddToCart}
-                                    disabled={addingToCart || product.stock_quantity === 0}
+                                    disabled={addingToCart || (!product.ignore_stock && product.stock_quantity === 0)}
                                 >
                                     {addingToCart ? (
                                         <Loader2 className="w-5 h-5 md:w-4 md:h-4 animate-spin" />
                                     ) : (
                                         <ShoppingCart className="w-5 h-5 md:w-4 md:h-4 me-2" />
                                     )}
-                                    {product.stock_quantity === 0
+                                    {(!product.ignore_stock && product.stock_quantity === 0)
                                         ? (language === 'ar' ? 'نفذت الكمية' : 'Out of Stock')
                                         : (language === 'ar' ? 'إضافة للسلة' : 'Add to Cart')
                                     }
@@ -823,7 +824,7 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                     !product.skip_cart && "border-primary text-primary hover:bg-primary/10 bg-background"
                                 )}
                                 onClick={handleQuickOrder}
-                                disabled={product.stock_quantity === 0}
+                                disabled={!product.ignore_stock && product.stock_quantity === 0}
                             >
                                 <Zap className="w-5 h-5 md:w-4 md:h-4 me-2" />
                                 {language === 'ar' ? 'طلب سريع (شراء الآن)' : 'Quick Order (Buy Now)'}

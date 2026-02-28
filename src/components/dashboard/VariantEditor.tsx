@@ -48,9 +48,11 @@ interface VariantEditorProps {
     standalone?: boolean;
     storeId?: string;
     basePrice?: string | number;
+    baseStock?: string | number;
+    globalIgnoreStock?: boolean;
 }
 
-export function VariantEditor({ productId, value, onChange, standalone = true, storeId, basePrice }: VariantEditorProps) {
+export function VariantEditor({ productId, value, onChange, standalone = true, storeId, basePrice, baseStock, globalIgnoreStock }: VariantEditorProps) {
     const { language } = useLanguage();
     const supabase = createClient();
     const [localVariants, setLocalVariants] = useState<Variant[]>([]);
@@ -105,8 +107,8 @@ export function VariantEditor({ productId, value, onChange, standalone = true, s
                     label: typeof o.label === 'string' ? JSON.parse(o.label) : o.label,
                     value: o.value,
                     price: o.price !== null ? o.price : (basePrice ? parseFloat(basePrice.toString()) : 0),
-                    stock: o.stock || 0,
-                    manage_stock: o.manage_stock !== false,
+                    stock: o.stock !== null ? o.stock : (baseStock ? parseInt(baseStock.toString()) : 0),
+                    manage_stock: globalIgnoreStock ? false : (o.manage_stock !== false),
                     is_default: o.is_default,
                     sort_order: o.sort_order,
                     in_stock: o.in_stock !== false
@@ -146,8 +148,8 @@ export function VariantEditor({ productId, value, onChange, standalone = true, s
                     label: { ar: '', en: '' },
                     value: '',
                     price: basePrice ? parseFloat(basePrice.toString()) : 0,
-                    stock: 0,
-                    manage_stock: true,
+                    stock: baseStock ? parseInt(baseStock.toString()) : 0,
+                    manage_stock: globalIgnoreStock ? false : true,
                     is_default: v.options.length === 0,
                     sort_order: v.options.length,
                     in_stock: true
@@ -479,21 +481,24 @@ export function VariantEditor({ productId, value, onChange, standalone = true, s
                                             <div className="flex items-center gap-1">
                                                 <Input
                                                     type="number"
-                                                    required
-                                                    disabled={!option.manage_stock}
-                                                    value={option.manage_stock ? (option.stock !== undefined ? option.stock : '') : '∞'}
+                                                    required={!globalIgnoreStock && option.manage_stock}
+                                                    disabled={globalIgnoreStock || !option.manage_stock}
+                                                    value={globalIgnoreStock || !option.manage_stock ? '∞' : (option.stock !== undefined ? option.stock : '')}
                                                     onChange={(e) => updateOption(vIndex, oIndex, 'stock', parseInt(e.target.value) || 0)}
                                                     placeholder={language === 'ar' ? 'الكمية' : 'Qty'}
-                                                    className="h-8 text-xs w-16"
+                                                    className={cn("h-8 text-xs w-16", (globalIgnoreStock || !option.manage_stock) && "font-bold text-blue-600")}
                                                 />
                                                 <div className="flex flex-col items-center gap-0.5" title={language === 'ar' ? 'تخطي المخزون' : 'Ignore Stock'}>
                                                     <Switch
-                                                        checked={!option.manage_stock}
+                                                        checked={globalIgnoreStock || !option.manage_stock}
+                                                        disabled={globalIgnoreStock}
                                                         onCheckedChange={(v) => updateOption(vIndex, oIndex, 'manage_stock', !v)}
                                                         className="scale-75 data-[state=checked]:bg-blue-500"
                                                     />
-                                                    <span className="text-[8px] text-muted-foreground whitespace-nowrap leading-none">
-                                                        {language === 'ar' ? 'تخطي' : 'Ignore'}
+                                                    <span className="text-[8px] text-muted-foreground whitespace-nowrap leading-none font-medium">
+                                                        {globalIgnoreStock
+                                                            ? (language === 'ar' ? 'عام' : 'Global')
+                                                            : (language === 'ar' ? 'تخطي' : 'Ignore')}
                                                     </span>
                                                 </div>
                                             </div>
