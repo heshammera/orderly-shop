@@ -697,18 +697,18 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                                             return (
                                                                 <button
                                                                     key={option.id}
-                                                                    onClick={() => option.in_stock !== false && handleOptionSelect(itemIndex, variant.id, option.id)}
-                                                                    disabled={option.in_stock === false}
+                                                                    onClick={() => (product.ignore_stock || option.in_stock !== false) && handleOptionSelect(itemIndex, variant.id, option.id)}
+                                                                    disabled={!product.ignore_stock && option.in_stock === false}
                                                                     className={cn(
-                                                                        "w-10 h-10 rounded-full border-2 transition-all relative flex items-center justify-center disabled:cursor-not-allowed",
+                                                                        "w-12 h-12 rounded-full border-2 transition-all relative flex items-center justify-center disabled:cursor-not-allowed",
                                                                         isSelected ? "border-primary ring-2 ring-primary/20 scale-110" : "border-transparent ring-1 ring-border hover:scale-105",
-                                                                        option.in_stock === false && "opacity-40 grayscale"
+                                                                        (!product.ignore_stock && option.in_stock === false) && "opacity-40 grayscale"
                                                                     )}
                                                                     style={{ backgroundColor: option.value }}
                                                                     title={option.label[language] || option.label.ar}
                                                                 >
-                                                                    {isSelected && <Check className="w-4 h-4 text-white drop-shadow-md" />}
-                                                                    {option.in_stock === false && (
+                                                                    {isSelected && <Check className="w-5 h-5 text-white drop-shadow-md" />}
+                                                                    {(!product.ignore_stock && option.in_stock === false) && (
                                                                         <div className="absolute inset-0 flex items-center justify-center">
                                                                             <div className="w-full h-[2px] bg-red-500/80 rotate-45 transform" />
                                                                         </div>
@@ -724,16 +724,18 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                                                     onClick={() => (product.ignore_stock || option.in_stock !== false) && handleOptionSelect(itemIndex, variant.id, option.id)}
                                                                     disabled={!product.ignore_stock && option.in_stock === false}
                                                                     className={cn(
-                                                                        "p-0.5 rounded-full border-2 transition-all",
-                                                                        isSelected ? "border-primary ring-1 ring-primary/30" : "border-transparent",
-                                                                        (!product.ignore_stock && option.in_stock === false) && "opacity-50 grayscale cursor-not-allowed"
+                                                                        "w-16 h-16 rounded-md border-2 overflow-hidden relative transition-all disabled:cursor-not-allowed",
+                                                                        isSelected ? "border-primary ring-2 ring-primary/20" : "border-transparent ring-1 ring-border opacity-80 hover:opacity-100",
+                                                                        (!product.ignore_stock && option.in_stock === false) && "opacity-40 grayscale"
                                                                     )}
                                                                     title={option.label[language] || option.label.ar}
                                                                 >
                                                                     {option.value ? (
                                                                         <img src={option.value} alt="" className="w-full h-full object-cover" />
                                                                     ) : (
-                                                                        <span className="text-xs text-muted-foreground p-1">{option.label[language]}</span>
+                                                                        <div className="w-full h-full flex items-center justify-center bg-muted">
+                                                                            <span className="text-[10px] text-muted-foreground p-1 text-center">{option.label[language] || option.label.ar}</span>
+                                                                        </div>
                                                                     )}
                                                                     {isSelected && (
                                                                         <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
