@@ -494,6 +494,7 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                 </p>
                                 <p className="text-sm text-muted-foreground mt-1">
                                     {(() => {
+                                        if (product.free_shipping) return language === 'ar' ? '+ شحن مجاني' : '+ Free Shipping';
                                         const shipping = store.settings?.shipping;
                                         if (shipping?.type === 'fixed') {
                                             const cost = Number(shipping.fixed_price) || 0;
