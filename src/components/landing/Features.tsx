@@ -1,15 +1,15 @@
 "use client";
 
-import { Package, ClipboardList, Store, BarChart3, Wallet, Languages } from 'lucide-react';
+import { Package, ClipboardList, Store, BarChart3, Wallet, Megaphone } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-const iconMap = [Package, ClipboardList, Store, BarChart3, Wallet, Languages];
+const iconMap = [Package, ClipboardList, Store, BarChart3, Wallet, Megaphone];
 
 export function Features() {
   const { t } = useLanguage();
 
   return (
-    <section id="features" className="py-24 bg-muted/30">
+    <section id="features" className="py-24 bg-white border-b border-slate-100">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-16 animate-fade-in">
@@ -26,14 +26,14 @@ export function Features() {
             return (
               <div
                 key={index}
-                className="group bg-card rounded-2xl p-6 border border-border hover:border-primary/30 hover:shadow-glow transition-all duration-300 animate-fade-in-up"
+                className="group bg-white rounded-2xl p-8 border border-slate-100 hover:border-teal-100 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 animate-fade-in-up"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                  <Icon className="h-7 w-7 text-primary" />
+                <div className="w-16 h-16 rounded-2xl bg-teal-50 flex items-center justify-center mb-6 group-hover:bg-teal-100 transition-colors">
+                  <Icon className="h-8 w-8 text-teal-600" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
+                <h3 className="text-xl font-bold mb-3 text-slate-800">{feature.title}</h3>
+                <p className="text-slate-500 leading-relaxed">{feature.description}</p>
               </div>
             );
           })}

@@ -69,6 +69,11 @@ export function AdminSidebar() {
             href: '/admin/plans',
         },
         {
+            icon: Settings,
+            label: language === 'ar' ? 'مميزات الباقات' : 'Plan Features',
+            href: '/admin/plan-features',
+        },
+        {
             icon: FileText,
             label: language === 'ar' ? 'طلبات الاشتراك' : 'Subscription Requests',
             href: '/admin/subscription-requests',

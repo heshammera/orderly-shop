@@ -47,6 +47,7 @@ interface Plan {
         ar: string[];
         en: string[];
     };
+    feature_values?: Record<string, string>;
 }
 
 export default function PlansPage() {
@@ -55,19 +56,36 @@ export default function PlansPage() {
     const [loading, setLoading] = useState(true);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
+    const [featuresList, setFeaturesList] = useState<any[]>([]);
     const supabase = createClient();
 
     const fetchPlans = async () => {
         setLoading(true);
-        const { data, error } = await supabase
+        // Fetch plans
+        const { data: plansData, error: plansError } = await supabase
             .from('plans')
             .select('*')
             .order('price_monthly', { ascending: true });
 
-        if (error) {
-            toast.error(error.message);
+        // Fetch feature dictionary
+        const { data: dictData } = await supabase.from('plan_features').select('*').order('group').order('id');
+        setFeaturesList(dictData || []);
+
+        // Fetch feature values
+        const { data: valuesData } = await supabase.from('plan_feature_values').select('*');
+
+        if (plansError) {
+            toast.error(plansError.message);
         } else {
-            setPlans(data || []);
+            const formattedPlans = plansData?.map(plan => {
+                const planValues = valuesData?.filter(v => v.plan_id === plan.id) || [];
+                const feature_values = planValues.reduce((acc, curr) => {
+                    acc[curr.feature_id] = curr.value;
+                    return acc;
+                }, {} as Record<string, string>);
+                return { ...plan, feature_values } as Plan;
+            }) || [];
+            setPlans(formattedPlans);
         }
         setLoading(false);
     };
@@ -96,21 +114,38 @@ export default function PlansPage() {
             }
         };
 
+        let targetPlanId = editingPlan?.id;
+
         if (editingPlan) {
-            const { error } = await supabase
+            const { error, data } = await supabase
                 .from('plans')
                 .update(payload)
-                .eq('id', editingPlan.id);
+                .eq('id', editingPlan.id)
+                .select()
+                .single();
 
             if (error) throw error;
             toast.success('Plan updated successfully');
         } else {
-            const { error } = await supabase
+            const { error, data } = await supabase
                 .from('plans')
-                .insert([payload]);
+                .insert([payload])
+                .select()
+                .single();
 
             if (error) throw error;
+            targetPlanId = data.id;
             toast.success('Plan created successfully');
+        }
+
+        if (targetPlanId && values.features && Object.keys(values.features).length > 0) {
+            const featureUpserts = Object.entries(values.features).map(([feature_id, value]) => ({
+                plan_id: targetPlanId,
+                feature_id,
+                value: String(value)
+            }));
+            const { error: fvError } = await supabase.from('plan_feature_values').upsert(featureUpserts);
+            if (fvError) console.error("Error saving feature values", fvError);
         }
 
         setIsDialogOpen(false);
@@ -192,6 +227,7 @@ export default function PlansPage() {
                                 toast.error(e.message);
                             }
                         }}
+                        featuresList={featuresList}
                         defaultValues={editingPlan ? {
                             slug: editingPlan.slug,
                             name_ar: editingPlan.name_ar || editingPlan.name?.ar,
@@ -205,7 +241,8 @@ export default function PlansPage() {
                             stores_limit: editingPlan.limits?.stores_limit || 1,
                             is_active: editingPlan.is_active,
                             display_features_ar: editingPlan.display_features?.ar?.join(', ') || '',
-                            display_features_en: editingPlan.display_features?.en?.join(', ') || ''
+                            display_features_en: editingPlan.display_features?.en?.join(', ') || '',
+                            features: editingPlan.feature_values || {}
                         } : undefined}
                     />
                 </DialogContent>

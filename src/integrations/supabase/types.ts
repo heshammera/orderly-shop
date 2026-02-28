@@ -9,6 +9,81 @@ export type Json =
 export type Database = {
     public: {
         Tables: {
+            plan_features: {
+                Row: {
+                    created_at: string
+                    description_ar: string | null
+                    description_en: string | null
+                    group: string
+                    id: string
+                    name_ar: string
+                    name_en: string
+                    type: string
+                    updated_at: string
+                }
+                Insert: {
+                    created_at?: string
+                    description_ar?: string | null
+                    description_en?: string | null
+                    group: string
+                    id: string
+                    name_ar: string
+                    name_en: string
+                    type: string
+                    updated_at?: string
+                }
+                Update: {
+                    created_at?: string
+                    description_ar?: string | null
+                    description_en?: string | null
+                    group?: string
+                    id?: string
+                    name_ar?: string
+                    name_en?: string
+                    type?: string
+                    updated_at?: string
+                }
+                Relationships: []
+            }
+            plan_feature_values: {
+                Row: {
+                    created_at: string
+                    feature_id: string
+                    plan_id: string
+                    updated_at: string
+                    value: string
+                }
+                Insert: {
+                    created_at?: string
+                    feature_id: string
+                    plan_id: string
+                    updated_at?: string
+                    value: string
+                }
+                Update: {
+                    created_at?: string
+                    feature_id?: string
+                    plan_id?: string
+                    updated_at?: string
+                    value?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "plan_feature_values_feature_id_fkey"
+                        columns: ["feature_id"]
+                        isOneToOne: false
+                        referencedRelation: "plan_features"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "plan_feature_values_plan_id_fkey"
+                        columns: ["plan_id"]
+                        isOneToOne: false
+                        referencedRelation: "plans"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
             cart_items: {
                 Row: {
                     cart_id: string

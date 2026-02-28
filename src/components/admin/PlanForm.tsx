@@ -34,6 +34,7 @@ const planSchema = z.object({
     is_active: z.boolean().default(true),
     display_features_ar: z.string().optional(),
     display_features_en: z.string().optional(),
+    features: z.record(z.string()).optional(),
 });
 
 type PlanFormValues = z.infer<typeof planSchema>;
@@ -42,9 +43,16 @@ interface PlanFormProps {
     defaultValues?: PlanFormValues;
     onSubmit: (data: PlanFormValues) => Promise<void>;
     isSubmitting?: boolean;
+    featuresList?: {
+        id: string;
+        name_ar: string;
+        name_en: string;
+        type: 'boolean' | 'integer' | 'string';
+        group: string;
+    }[];
 }
 
-export function PlanForm({ defaultValues, onSubmit, isSubmitting }: PlanFormProps) {
+export function PlanForm({ defaultValues, onSubmit, isSubmitting, featuresList }: PlanFormProps) {
     const { language } = useLanguage();
 
     const form = useForm<PlanFormValues>({
@@ -63,6 +71,7 @@ export function PlanForm({ defaultValues, onSubmit, isSubmitting }: PlanFormProp
             is_active: true,
             display_features_ar: '',
             display_features_en: '',
+            features: {},
         },
     });
 
@@ -265,6 +274,51 @@ export function PlanForm({ defaultValues, onSubmit, isSubmitting }: PlanFormProp
                         )}
                     />
                 </div>
+
+                {featuresList && featuresList.length > 0 && (
+                    <div className="space-y-4 pt-6 border-t mt-6">
+                        <h3 className="font-semibold text-lg">{language === 'ar' ? 'مميزات الباقة (ديناميكي)' : 'Plan Features (Dynamic)'}</h3>
+                        {Object.entries(
+                            featuresList.reduce((acc, feat) => {
+                                if (!acc[feat.group]) acc[feat.group] = [];
+                                acc[feat.group].push(feat);
+                                return acc;
+                            }, {} as Record<string, typeof featuresList[0][]>)
+                        ).map(([group, feats]) => (
+                            <div key={group} className="space-y-4">
+                                <h4 className="font-medium text-sm text-muted-foreground capitalize">{group}</h4>
+                                <div className="grid grid-cols-2 gap-4">
+                                    {feats.map(feat => (
+                                        <FormField
+                                            key={feat.id}
+                                            control={form.control}
+                                            name={`features.${feat.id}` as any}
+                                            render={({ field }) => (
+                                                <FormItem className={feat.type === 'boolean' ? "flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm mt-auto" : ""}>
+                                                    <div className="space-y-0.5">
+                                                        <FormLabel>{language === 'ar' ? feat.name_ar : feat.name_en}</FormLabel>
+                                                    </div>
+                                                    <FormControl>
+                                                        {feat.type === 'boolean' ? (
+                                                            <Switch
+                                                                checked={field.value === 'true'}
+                                                                onCheckedChange={(checked) => field.onChange(checked ? 'true' : 'false')}
+                                                            />
+                                                        ) : feat.type === 'integer' ? (
+                                                            <Input type="number" {...field} value={field.value || ''} onChange={(e) => field.onChange(e.target.value)} />
+                                                        ) : (
+                                                            <Input {...field} value={field.value || ''} />
+                                                        )}
+                                                    </FormControl>
+                                                </FormItem>
+                                            )}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
 
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

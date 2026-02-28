@@ -14,10 +14,10 @@ export const translations = {
     },
     // Hero Section
     hero: {
-      title: 'أنشئ متجرك الإلكتروني في دقائق',
-      subtitle: 'منصة متكاملة لإدارة متجرك ومنتجاتك وطلباتك بكل سهولة. ابدأ البيع اليوم!',
+      title: 'افتح، صمم، ارفع',
+      subtitle: 'افتح متجرك، صممه، ارفع منتجاتك ومتدفعش ولا جنيه الا لما العميل يشتري (جرب اوردرلي دلوقتي مستني ايه؟!)',
       cta: 'ابدأ مجاناً',
-      secondaryCta: 'شاهد كيف يعمل',
+      secondaryCta: 'اكتشف المنصة',
       trustedBy: 'موثوق من قبل',
       merchants: 'تاجر',
     },
@@ -47,8 +47,8 @@ export const translations = {
           description: 'دعم كامل للدفع عند الاستلام - الأكثر شيوعاً في منطقتنا.',
         },
         {
-          title: 'دعم RTL',
-          description: 'واجهة عربية أصلية مصممة من اليمين لليسار.',
+          title: 'أدوات تسويق مدمجة',
+          description: 'ضاعف مبيعاتك مع أدواتنا التسويقية المدمجة مثل الكوبونات وعروض الـ Upsell الذكية.',
         },
       ],
     },
@@ -296,10 +296,10 @@ export const translations = {
     },
     // Hero Section
     hero: {
-      title: 'Create Your Online Store in Minutes',
-      subtitle: 'A complete platform to manage your store, products, and orders with ease. Start selling today!',
+      title: 'Open, Design, Upload',
+      subtitle: 'Open your store, design it, upload your products and don\'t pay a penny until a customer buys (Try Orderly now, what are you waiting for?!)',
       cta: 'Start Free',
-      secondaryCta: 'See How It Works',
+      secondaryCta: 'Explore the Platform',
       trustedBy: 'Trusted by',
       merchants: 'merchants',
     },
@@ -329,8 +329,8 @@ export const translations = {
           description: 'Full COD support - the most popular payment method in our region.',
         },
         {
-          title: 'RTL Support',
-          description: 'Native Arabic interface designed right-to-left.',
+          title: 'Integrated Marketing Tools',
+          description: 'Multiply your sales with our built-in marketing tools like coupons and smart upsell offers.',
         },
       ],
     },

@@ -45,11 +45,12 @@ export function Hero() {
 
   return (
     <>
-      <section className="relative min-h-screen flex items-center justify-center pt-16 overflow-hidden">
+      <section className="relative min-h-screen flex items-center justify-center pt-16 overflow-hidden bg-slate-50">
         {/* Background decoration */}
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute top-1/4 start-1/4 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-1/4 end-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
+        <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]">
+          <div className="absolute top-0 w-full h-full bg-slate-50 [mask-image:radial-gradient(ellipse_80%_80%_at_50%_0%,transparent_20%,#f8fafc_100%)]" />
+          <div className="absolute top-1/4 start-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[100px]" />
+          <div className="absolute bottom-1/4 end-1/4 w-[30rem] h-[30rem] bg-teal-500/5 rounded-full blur-[100px]" />
         </div>
 
         <div className="container mx-auto px-4 py-20">
@@ -112,44 +113,60 @@ export function Hero() {
             <div className="relative animate-fade-in hidden lg:block">
               <div className="relative z-10">
                 {/* Main card */}
-                <div className="bg-card rounded-2xl shadow-soft border border-border p-6 animate-float">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center">
-                      <Store className="h-6 w-6 text-primary-foreground" />
+                <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 p-6 animate-float relative z-20">
+                  <div className="flex items-center gap-3 mb-6 border-b border-slate-50 pb-4">
+                    <div className="w-12 h-12 rounded-xl bg-teal-50 flex items-center justify-center">
+                      <Store className="h-6 w-6 text-teal-600" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-lg">متجر أحمد</h3>
-                      <p className="text-sm text-muted-foreground">نشط الآن</p>
+                      <h3 className="font-bold text-lg text-slate-800">متجر أوردرلي</h3>
+                      <p className="text-sm text-teal-600 font-medium">نشط وموثق</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="bg-muted rounded-lg p-3 text-center">
-                      <p className="text-2xl font-bold text-primary">156</p>
-                      <p className="text-xs text-muted-foreground">منتج</p>
+                  <div className="grid grid-cols-3 gap-4 mb-6">
+                    <div className="bg-slate-50 rounded-xl p-4 text-center border border-slate-100/50">
+                      <p className="text-2xl font-bold text-slate-800">156</p>
+                      <p className="text-xs text-slate-500 mt-1">منتج</p>
                     </div>
-                    <div className="bg-muted rounded-lg p-3 text-center">
-                      <p className="text-2xl font-bold text-success">89</p>
-                      <p className="text-xs text-muted-foreground">طلب</p>
+                    <div className="bg-slate-50 rounded-xl p-4 text-center border border-slate-100/50">
+                      <p className="text-2xl font-bold text-slate-800">89</p>
+                      <p className="text-xs text-slate-500 mt-1">طلب</p>
                     </div>
-                    <div className="bg-muted rounded-lg p-3 text-center">
-                      <p className="text-2xl font-bold text-accent">12K</p>
-                      <p className="text-xs text-muted-foreground">ر.س</p>
+                    <div className="bg-teal-50 rounded-xl p-4 text-center border border-teal-100/50">
+                      <p className="text-2xl font-bold text-teal-700">12K</p>
+                      <p className="text-xs text-teal-600/80 mt-1">مبيعات</p>
                     </div>
+                  </div>
+
+                  {/* Faux Chart */}
+                  <div className="h-24 w-full flex items-end gap-2 justify-between pt-4 border-t border-slate-50">
+                    {[40, 30, 60, 50, 80, 70, 100].map((h, i) => (
+                      <div key={i} className="w-full bg-teal-100 rounded-t-sm relative group cursor-pointer transition-all duration-300 hover:bg-teal-200" style={{ height: `${h}%` }}>
+                        {i === 6 && <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-teal-500 ring-4 ring-teal-50" />}
+                      </div>
+                    ))}
                   </div>
                 </div>
 
                 {/* Floating cards */}
-                <div className="absolute -top-8 -start-8 bg-card rounded-xl shadow-soft border border-border p-4 animate-float" style={{ animationDelay: '0.5s' }}>
-                  <div className="flex items-center gap-2">
-                    <ShoppingBag className="h-5 w-5 text-success" />
-                    <span className="text-sm font-medium">طلب جديد!</span>
+                <div className="absolute -top-8 -start-8 bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-100 p-4 animate-float z-30" style={{ animationDelay: '0.5s' }}>
+                  <div className="flex items-center gap-3">
+                    <div className="bg-green-50 p-2 rounded-lg text-green-600">
+                      <ShoppingBag className="h-5 w-5" />
+                    </div>
+                    <span className="text-sm font-bold text-slate-700">طلب جديد! <span className="text-green-600 font-medium">#1024</span></span>
                   </div>
                 </div>
 
-                <div className="absolute -bottom-4 -end-4 bg-card rounded-xl shadow-soft border border-border p-4 animate-float" style={{ animationDelay: '1s' }}>
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5 text-primary" />
-                    <span className="text-sm font-medium">+24% هذا الأسبوع</span>
+                <div className="absolute -bottom-4 -end-4 bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-100 p-4 animate-float z-30" style={{ animationDelay: '1s' }}>
+                  <div className="flex items-center gap-3">
+                    <div className="bg-teal-50 p-2 rounded-lg text-teal-600">
+                      <TrendingUp className="h-5 w-5" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-slate-500">النمو الأسبوعي</span>
+                      <span className="text-sm font-bold text-slate-800">+24.5%</span>
+                    </div>
                   </div>
                 </div>
               </div>

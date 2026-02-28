@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
-import { Check, Loader2, Sparkles } from 'lucide-react';
+import { Check, Loader2, Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
@@ -21,6 +21,7 @@ import { useRouter } from 'next/navigation';
 export function Pricing() {
   const { t, language } = useLanguage() as any;
   const [plans, setPlans] = useState<any[]>([]);
+  const [featuresDict, setFeaturesDict] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showJoinDialog, setShowJoinDialog] = useState(false);
   const supabase = createClient();
@@ -29,14 +30,29 @@ export function Pricing() {
   useEffect(() => {
     async function fetchPlans() {
       try {
-        const { data, error } = await supabase
+        const { data: plansData, error: plansError } = await supabase
           .from('plans')
           .select('*')
           .eq('is_active', true)
           .order('price_monthly', { ascending: true });
 
-        if (error) throw error;
-        setPlans(data || []);
+        if (plansError) throw plansError;
+
+        const { data: dictData } = await supabase.from('plan_features').select('*').order('group').order('id');
+        setFeaturesDict(dictData || []);
+
+        const { data: valuesData } = await supabase.from('plan_feature_values').select('*');
+
+        const formattedPlans = plansData?.map(plan => {
+          const planValues = valuesData?.filter(v => v.plan_id === plan.id) || [];
+          const feature_values = planValues.reduce((acc, curr) => {
+            acc[curr.feature_id] = curr.value;
+            return acc;
+          }, {} as Record<string, string>);
+          return { ...plan, feature_values };
+        }) || [];
+
+        setPlans(formattedPlans);
       } catch (e) {
         console.error('Error fetching plans:', e);
       } finally {
@@ -65,8 +81,8 @@ export function Pricing() {
   return (
     <section id="pricing" className="py-24 relative overflow-hidden">
       {/* Background decorations */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none bg-slate-50/50">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-teal-500/5 rounded-full blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[120px]" />
       </div>
 
@@ -90,17 +106,17 @@ export function Pricing() {
               <div
                 key={plan.id}
                 className={cn(
-                  'relative bg-card rounded-2xl p-8 border transition-all duration-300 animate-fade-in-up flex flex-col',
+                  'relative bg-white rounded-2xl p-8 border transition-all duration-300 animate-fade-in-up flex flex-col',
                   isPopular
-                    ? 'border-primary shadow-2xl scale-105 z-10'
-                    : 'border-border hover:border-primary/30'
+                    ? 'border-teal-500 shadow-[0_8px_30px_rgb(0,0,0,0.08)] scale-105 z-10'
+                    : 'border-slate-200 hover:border-teal-200'
                 )}
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 {/* Popular badge */}
                 {isPopular && (
                   <div className="absolute -top-4 start-1/2 -translate-x-1/2 rtl:translate-x-1/2">
-                    <span className="bg-primary text-primary-foreground text-xs font-bold px-4 py-1 rounded-full flex items-center gap-1 uppercase tracking-wider">
+                    <span className="bg-teal-600 text-white text-xs font-bold px-4 py-1 rounded-full flex items-center gap-1 uppercase tracking-wider">
                       <Sparkles className="h-3 w-3" />
                       {t.pricing.popular}
                     </span>
@@ -115,11 +131,11 @@ export function Pricing() {
                   </p>
                   <div className="flex items-baseline justify-center gap-1">
                     {plan.price_monthly === 0 ? (
-                      <span className="text-4xl font-extrabold">{t.pricing.free}</span>
+                      <span className="text-4xl font-extrabold text-slate-900">{t.pricing.free}</span>
                     ) : (
                       <>
-                        <span className="text-4xl font-extrabold">${plan.price_monthly}</span>
-                        <span className="text-muted-foreground">/{t.pricing.monthly}</span>
+                        <span className="text-4xl font-extrabold text-slate-900">${plan.price_monthly}</span>
+                        <span className="text-slate-500">/{t.pricing.monthly}</span>
                       </>
                     )}
                   </div>
@@ -127,35 +143,33 @@ export function Pricing() {
 
                 {/* Features */}
                 <ul className="space-y-4 mb-8 flex-1">
-                  {displayFeatures.map((feature: string, featureIndex: number) => (
-                    <li key={featureIndex} className="flex items-start gap-3">
-                      <div className="mt-1 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <Check className="h-3 w-3 text-primary" />
-                      </div>
-                      <span className="text-sm leading-tight text-foreground/80">{feature}</span>
-                    </li>
-                  ))}
-                  {/* Basic Limits (if not explicitly in display features) */}
-                  {!displayFeatures.length && (
-                    <>
-                      <li className="flex items-start gap-3">
-                        <div className="mt-1 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Check className="h-3 w-3 text-primary" />
+                  {featuresDict.map((feature: any) => {
+                    const value = plan.feature_values?.[feature.id];
+                    let isAvailable = false;
+                    let displayValue = '';
+
+                    if (feature.type === 'boolean') {
+                      isAvailable = value === 'true';
+                    } else if (feature.type === 'integer') {
+                      isAvailable = value && parseInt(value) > 0 || value === '-1';
+                      if (value === '-1') displayValue = language === 'ar' ? 'غير محدود' : 'Unlimited';
+                      else displayValue = value || '0';
+                    } else {
+                      isAvailable = !!value && value !== 'none' && value !== '';
+                      displayValue = value;
+                    }
+
+                    return (
+                      <li key={feature.id} className="flex items-start gap-3">
+                        <div className={`mt-1 w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${isAvailable ? 'bg-teal-50' : 'bg-slate-50'}`}>
+                          {isAvailable ? <Check className="h-3 w-3 text-teal-600" /> : <X className="h-3 w-3 text-slate-300" />}
                         </div>
-                        <span className="text-sm leading-tight text-foreground/80">
-                          {plan.limits?.products === -1 ? t.pricing.unlimitedProducts : `${plan.limits?.products} ${t.pricing.products}`}
+                        <span className={`text-sm leading-tight pt-1 ${isAvailable ? 'text-slate-700' : 'text-slate-400 line-through'}`}>
+                          {language === 'ar' ? feature.name_ar : feature.name_en} {displayValue && isAvailable && <span className="font-bold text-teal-700">({displayValue})</span>}
                         </span>
                       </li>
-                      <li className="flex items-start gap-3">
-                        <div className="mt-1 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Check className="h-3 w-3 text-primary" />
-                        </div>
-                        <span className="text-sm leading-tight text-foreground/80">
-                          {plan.limits?.stores_limit || 1} {t.pricing.stores}
-                        </span>
-                      </li>
-                    </>
-                  )}
+                    );
+                  })}
                 </ul>
 
                 {/* CTA */}
@@ -164,8 +178,8 @@ export function Pricing() {
                   className={cn(
                     'w-full py-6 text-base font-bold transition-all',
                     isPopular
-                      ? 'gradient-primary hover:opacity-90 shadow-lg'
-                      : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                      ? 'bg-teal-600 text-white hover:bg-teal-700 shadow-lg hover:shadow-xl'
+                      : 'bg-slate-100 text-slate-800 hover:bg-slate-200'
                   )}
                 >
                   {t.pricing.cta}
