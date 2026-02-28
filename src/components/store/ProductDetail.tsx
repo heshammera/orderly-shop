@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
-import { ShoppingCart, ChevronLeft, ChevronRight, Zap, Check, Loader2 } from 'lucide-react';
+import { ShoppingCart, ChevronLeft, ChevronRight, Zap, Check, Loader2, Truck } from 'lucide-react';
 import { QuickOrderForm } from '@/components/store/QuickOrderForm';
 import { cn } from '@/lib/utils';
 import { useCart } from '@/contexts/CartContext';
