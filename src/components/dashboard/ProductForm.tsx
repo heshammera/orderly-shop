@@ -231,17 +231,23 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
 
                     // Insert options
                     if (v.options && v.options.length > 0) {
-                        const optionPayloads = v.options.map((o: any, j: number) => ({
-                            variant_id: insertedVariant.id,
-                            label: o.label,
-                            value: o.value || (o.label.ar || o.label.en),
-                            price: o.price !== undefined ? parseFloat(o.price.toString()) : parseFloat(formData.price),
-                            stock: parseInt(o.stock?.toString() || '0'),
-                            manage_stock: o.manage_stock !== false,
-                            is_default: o.is_default,
-                            sort_order: j,
-                            in_stock: o.in_stock !== false
-                        }));
+                        const optionPayloads = v.options.map((o: any, j: number) => {
+                            const basePrice = (formData.sale_price && parseFloat(formData.sale_price) > 0)
+                                ? parseFloat(formData.sale_price)
+                                : parseFloat(formData.price);
+
+                            return {
+                                variant_id: insertedVariant.id,
+                                label: o.label,
+                                value: o.value || (o.label.ar || o.label.en),
+                                price: o.price !== undefined ? parseFloat(o.price.toString()) : basePrice,
+                                stock: parseInt(o.stock?.toString() || '0'),
+                                manage_stock: o.manage_stock !== false,
+                                is_default: o.is_default,
+                                sort_order: j,
+                                in_stock: o.in_stock !== false
+                            };
+                        });
 
                         const { error: oError } = await supabase
                             .from('variant_options')

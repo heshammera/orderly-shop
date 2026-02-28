@@ -257,7 +257,13 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                 const option = variant?.options.find(o => o.id === optionId);
 
                 if (option?.price !== undefined && option.price !== null) {
-                    itemPrice = option.price;
+                    // If option price is exactly the same as product original price, and we have a sale price,
+                    // it means it was likely a default value and should be the sale price.
+                    if (product.sale_price && product.sale_price > 0 && option.price === product.price) {
+                        itemPrice = product.sale_price;
+                    } else {
+                        itemPrice = option.price;
+                    }
                 } else if (option?.price_modifier) {
                     itemPrice += option.price_modifier;
                 }
