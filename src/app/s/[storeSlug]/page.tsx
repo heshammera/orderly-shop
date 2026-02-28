@@ -132,6 +132,20 @@ export default async function StorePage({ params }: { params: { storeSlug: strin
         );
     }
 
+    // Fetch categories with show_in_header = true
+    const { data: headerCategories } = await supabaseAdmin
+        .from('categories')
+        .select('id, name')
+        .eq('store_id', store.id)
+        .eq('status', 'active')
+        .eq('show_in_header', true)
+        .order('sort_order');
+
+    const storeWithCategories = {
+        ...store,
+        headerCategories: headerCategories || [],
+    };
+
     // Fetch Home Page Layout for Active Stores
     // console.log('[StorePage] Fetching home page for store_id:', store.id);
     const { data: page, error: pageError } = await supabase
@@ -159,7 +173,7 @@ export default async function StorePage({ params }: { params: { storeSlug: strin
                 storeId={store.id}
                 storeCurrency={store.currency || 'SAR'}
                 storeSlug={params.storeSlug}
-                store={store}
+                store={storeWithCategories}
             />
         </main>
     );

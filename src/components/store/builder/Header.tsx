@@ -4,7 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { ShoppingCart, Menu, Search, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export function Header({ data, isEditable = false, onUpdate }: { data: ComponentSchema, isEditable?: boolean, onUpdate?: (id: string, content: any) => void }) {
+export function Header({ data, isEditable = false, onUpdate, store, storeSlug }: { data: ComponentSchema, isEditable?: boolean, onUpdate?: (id: string, content: any) => void, store?: any, storeSlug?: string }) {
     const { settings, content, id } = data;
     const { language } = useLanguage();
 
@@ -87,6 +87,15 @@ export function Header({ data, isEditable = false, onUpdate }: { data: Component
                             {getText(link.label)}
                         </span>
                     ))}
+                    {!isEditable && store?.headerCategories?.map((category: any) => (
+                        <Link
+                            key={category.id}
+                            href={`/s/${storeSlug}/products?category=${category.id}`}
+                            className={`text-sm font-semibold text-white/90 hover:text-white transition-colors drop-shadow-md cursor-pointer`}
+                        >
+                            {getText(category.name)}
+                        </Link>
+                    ))}
                     {settings.layout === 'center' && content.links?.map((link: any, index: number) => (
                         <span
                             key={index}
@@ -97,6 +106,15 @@ export function Header({ data, isEditable = false, onUpdate }: { data: Component
                         >
                             {getText(link.label)}
                         </span>
+                    ))}
+                    {settings.layout === 'center' && !isEditable && store?.headerCategories?.map((category: any) => (
+                        <Link
+                            key={category.id}
+                            href={`/s/${storeSlug}/products?category=${category.id}`}
+                            className={`text-sm font-semibold text-white/90 hover:text-white transition-colors drop-shadow-md cursor-pointer`}
+                        >
+                            {getText(category.name)}
+                        </Link>
                     ))}
                 </nav>
 
