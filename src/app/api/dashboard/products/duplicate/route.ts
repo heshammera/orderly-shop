@@ -69,6 +69,13 @@ export async function POST(req: Request) {
             images: originalProduct.images,
             status: 'active', // Set as active
             metadata: originalProduct.metadata,
+            skip_cart: originalProduct.skip_cart,
+            free_shipping: originalProduct.free_shipping,
+            fake_countdown_enabled: originalProduct.fake_countdown_enabled,
+            fake_countdown_minutes: originalProduct.fake_countdown_minutes,
+            fake_visitors_enabled: originalProduct.fake_visitors_enabled,
+            fake_visitors_min: originalProduct.fake_visitors_min,
+            fake_visitors_max: originalProduct.fake_visitors_max,
         };
 
         const { data: newProduct, error: insertProductError } = await supabase
@@ -118,7 +125,9 @@ export async function POST(req: Request) {
                             variant_id: newVariant.id,
                             label: opt.label,
                             value: opt.value,
-                            price_modifier: opt.price_modifier,
+                            price: opt.price,
+                            stock: opt.stock,
+                            manage_stock: opt.manage_stock,
                             is_default: opt.is_default,
                             sort_order: opt.sort_order,
                             in_stock: opt.in_stock,

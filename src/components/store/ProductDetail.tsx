@@ -26,6 +26,13 @@ interface Product {
     images: string[];
     stock_quantity: number;
     track_inventory: boolean;
+    skip_cart?: boolean;
+    free_shipping?: boolean;
+    fake_countdown_enabled?: boolean;
+    fake_countdown_minutes?: number;
+    fake_visitors_enabled?: boolean;
+    fake_visitors_min?: number;
+    fake_visitors_max?: number;
 }
 
 interface Variant {
@@ -42,6 +49,9 @@ interface VariantOption {
     label: { ar: string; en: string };
     value: string;
     price_modifier: number | null;
+    price?: number | null;
+    stock?: number | null;
+    manage_stock?: boolean;
     is_default: boolean;
     in_stock?: boolean;
 }
@@ -67,6 +77,108 @@ interface ProductDetailProps {
     variants: Variant[];
     upsellOffers: UpsellOffer[];
     store: StoreData;
+}
+
+function FakeCountdown({ minutes, language }: { minutes: number; language: string }) {
+    const [timeLeft, setTimeLeft] = useState<{ h: number; m: number; s: number } | null>(null);
+
+    useEffect(() => {
+        const storageKey = `countdown_end_product`; // Could be specific to productId if needed
+        let endTimeStr = localStorage.getItem(storageKey);
+        let endTime: number;
+
+        if (!endTimeStr) {
+            endTime = Date.now() + minutes * 60 * 1000;
+            localStorage.setItem(storageKey, endTime.toString());
+        } else {
+            endTime = parseInt(endTimeStr);
+            // If already expired, reset it to make it look active (for fake effect)
+            if (endTime < Date.now()) {
+                endTime = Date.now() + minutes * 60 * 1000;
+                localStorage.setItem(storageKey, endTime.toString());
+            }
+        }
+
+        const interval = setInterval(() => {
+            const now = Date.now();
+            const diff = endTime - now;
+
+            if (diff <= 0) {
+                // Keep it at 0:0:1 or reset
+                setTimeLeft({ h: 0, m: 0, s: 1 });
+                return;
+            }
+
+            const h = Math.floor(diff / (1000 * 60 * 60));
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((diff % (1000 * 60)) / 1000);
+            setTimeLeft({ h, m, s });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [minutes]);
+
+    if (!timeLeft) return null;
+
+    return (
+        <div className="flex flex-col items-center gap-2 p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-xl my-4">
+            <div className="flex items-center gap-2 text-red-600 dark:text-red-400 font-bold text-sm">
+                <Zap className="w-4 h-4 animate-pulse" />
+                <span>{language === 'ar' ? 'ينتهي العرض قريباً!' : 'Offer ends soon!'}</span>
+            </div>
+            <div className="flex gap-4">
+                {[
+                    { label: language === 'ar' ? 'ثانية' : 'Sec', val: timeLeft.s },
+                    { label: language === 'ar' ? 'دقيقة' : 'Min', val: timeLeft.m },
+                    { label: language === 'ar' ? 'ساعة' : 'Hrs', val: timeLeft.h },
+                ].map((item, i) => (
+                    <div key={i} className="flex flex-col items-center">
+                        <div className="w-10 h-10 bg-red-600 text-white rounded-lg flex items-center justify-center font-bold text-lg shadow-inner">
+                            {item.val.toString().padStart(2, '0')}
+                        </div>
+                        <span className="text-[10px] text-red-800 dark:text-red-300 mt-1 uppercase font-semibold">{item.label}</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function FakeVisitors({ min, max, language }: { min: number; max: number; language: string }) {
+    const [visitors, setVisitors] = useState(0);
+
+    useEffect(() => {
+        // Random starting number
+        const start = Math.floor(Math.random() * (max - min) + min);
+        setVisitors(start);
+
+        // Fluctuate slightly every 5-10 seconds
+        const interval = setInterval(() => {
+            setVisitors(prev => {
+                const change = Math.floor(Math.random() * 5) - 2; // -2 to +2
+                const newVal = prev + change;
+                if (newVal < min) return min;
+                if (newVal > max) return max;
+                return newVal;
+            });
+        }, 8000);
+
+        return () => clearInterval(interval);
+    }, [min, max]);
+
+    return (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground my-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+            </div>
+            <span>
+                {language === 'ar'
+                    ? `يوجد الآن ${visitors} أشخاص يشاهدون هذا المنتج`
+                    : `There are ${visitors} people viewing this product right now`}
+            </span>
+        </div>
+    );
 }
 
 export function ProductDetail({ product, variants, upsellOffers, store }: ProductDetailProps) {
@@ -141,7 +253,10 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
             Object.entries(itemSelections).forEach(([variantId, optionId]) => {
                 const variant = variants.find(v => v.id === variantId);
                 const option = variant?.options.find(o => o.id === optionId);
-                if (option?.price_modifier) {
+
+                if (option?.price !== undefined && option.price !== null) {
+                    itemPrice = option.price;
+                } else if (option?.price_modifier) {
                     itemPrice += option.price_modifier;
                 }
             });
@@ -235,6 +350,9 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                         optionId,
                         optionLabel: variant?.options.find(o => o.id === optionId)?.label,
                         priceModifier: option?.price_modifier || 0,
+                        price: option?.price || null,
+                        stock: option?.stock || null,
+                        manage_stock: option?.manage_stock || false,
                     };
                 });
 
@@ -350,10 +468,24 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                     )}
                 </div>
 
-                {/* Product Info */}
                 <div className="space-y-8 min-w-0">
                     <div className="min-w-0">
+                        {product.free_shipping && (
+                            <div className="flex items-center gap-1 text-green-600 dark:text-green-400 font-bold text-xs uppercase mb-1 tracking-wider">
+                                <Truck className="w-4 h-4" />
+                                {language === 'ar' ? 'شحن مجاني' : 'Free Shipping'}
+                            </div>
+                        )}
                         <h1 className="text-2xl md:text-3xl font-bold mb-2 break-words">{productName}</h1>
+
+                        {product.fake_visitors_enabled && (
+                            <FakeVisitors
+                                min={product.fake_visitors_min || 10}
+                                max={product.fake_visitors_max || 50}
+                                language={language}
+                            />
+                        )}
+
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-3xl font-bold text-primary">
@@ -380,6 +512,13 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                 </span>
                             )}
                         </div>
+
+                        {product.fake_countdown_enabled && (
+                            <FakeCountdown
+                                minutes={product.fake_countdown_minutes || 60}
+                                language={language}
+                            />
+                        )}
                     </div>
 
                     {/* Quantity Selector - Always Visible Above Offers */}
@@ -657,7 +796,7 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
 
                         {/* Action Buttons */}
                         <div className="flex flex-col gap-3">
-                            <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur border-t shadow-[0_-10px_30px_rgba(0,0,0,0.1)] md:static md:p-0 md:bg-transparent md:border-t-0 md:shadow-none z-50 flex gap-3 md:gap-4">
+                            {!product.skip_cart && (
                                 <Button
                                     size="lg"
                                     className="flex-1 h-14 md:h-11 rounded-xl md:rounded-md text-base md:text-sm font-semibold md:font-medium shadow-md md:shadow-none"
@@ -674,22 +813,28 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                         : (language === 'ar' ? 'إضافة للسلة' : 'Add to Cart')
                                     }
                                 </Button>
+                            )}
 
-                                <Button
-                                    size="lg"
-                                    variant="outline"
-                                    className="flex-1 h-14 md:h-11 rounded-xl md:rounded-md text-base md:text-sm font-semibold md:font-medium border-primary text-primary hover:bg-primary/10 bg-background shadow-sm md:shadow-none"
-                                    onClick={handleQuickOrder}
-                                    disabled={product.stock_quantity === 0}
-                                >
-                                    <Zap className="w-5 h-5 md:w-4 md:h-4 me-2" />
-                                    {language === 'ar' ? 'طلب سريع' : 'Quick Order'}
-                                </Button>
-                            </div>
+                            <Button
+                                size="lg"
+                                variant={product.skip_cart ? "default" : "outline"}
+                                className={cn(
+                                    "flex-1 h-14 md:h-11 rounded-xl md:rounded-md text-base md:text-sm font-semibold md:font-medium shadow-sm md:shadow-none",
+                                    !product.skip_cart && "border-primary text-primary hover:bg-primary/10 bg-background"
+                                )}
+                                onClick={handleQuickOrder}
+                                disabled={product.stock_quantity === 0}
+                            >
+                                <Zap className="w-5 h-5 md:w-4 md:h-4 me-2" />
+                                {language === 'ar' ? 'طلب سريع (شراء الآن)' : 'Quick Order (Buy Now)'}
+                            </Button>
+                        </div>
 
-                            {/* Shipping Info Bottom */}
-                            <div className="bg-muted/30 p-3 rounded-lg text-center text-sm text-muted-foreground">
-                                {(() => {
+                        {/* Shipping Info Bottom */}
+                        <div className="bg-muted/30 p-3 rounded-lg text-center text-sm text-muted-foreground">
+                            {product.free_shipping
+                                ? (language === 'ar' ? '✨ شحن مجاني لهذا المنتج' : '✨ Free Shipping for this product')
+                                : (() => {
                                     const shipping = store.settings?.shipping;
                                     if (shipping?.type === 'fixed') {
                                         const cost = Number(shipping.fixed_price) || 0;
@@ -701,20 +846,19 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                                     }
                                     return null;
                                 })()}
-                            </div>
                         </div>
-                        {/* Quick Order Dialog */}
-                        <QuickOrderForm
-                            isOpen={quickOrderOpen}
-                            onClose={() => setQuickOrderOpen(false)}
-                            product={product}
-                            quantity={quantity}
-                            subtotal={totalPrice}
-                            variants={variants}
-                            selections={selections}
-                            store={store}
-                        />
                     </div>
+                    {/* Quick Order Dialog */}
+                    <QuickOrderForm
+                        isOpen={quickOrderOpen}
+                        onClose={() => setQuickOrderOpen(false)}
+                        product={product}
+                        quantity={quantity}
+                        subtotal={totalPrice}
+                        variants={variants}
+                        selections={selections}
+                        store={store}
+                    />
                 </div>
             </div>
         </div>

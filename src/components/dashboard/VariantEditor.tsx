@@ -22,7 +22,9 @@ interface VariantOption {
     id?: string;
     label: { ar: string; en: string };
     value: string;
-    price_modifier: number;
+    price: number;
+    stock: number;
+    manage_stock: boolean;
     is_default: boolean;
     sort_order: number;
     in_stock: boolean;
@@ -45,9 +47,10 @@ interface VariantEditorProps {
     onChange?: (variants: Variant[]) => void;
     standalone?: boolean;
     storeId?: string;
+    basePrice?: string | number;
 }
 
-export function VariantEditor({ productId, value, onChange, standalone = true, storeId }: VariantEditorProps) {
+export function VariantEditor({ productId, value, onChange, standalone = true, storeId, basePrice }: VariantEditorProps) {
     const { language } = useLanguage();
     const supabase = createClient();
     const [localVariants, setLocalVariants] = useState<Variant[]>([]);
@@ -101,7 +104,9 @@ export function VariantEditor({ productId, value, onChange, standalone = true, s
                     id: o.id,
                     label: typeof o.label === 'string' ? JSON.parse(o.label) : o.label,
                     value: o.value,
-                    price_modifier: o.price_modifier || 0,
+                    price: o.price !== null ? o.price : (basePrice ? parseFloat(basePrice.toString()) : 0),
+                    stock: o.stock || 0,
+                    manage_stock: o.manage_stock !== false,
                     is_default: o.is_default,
                     sort_order: o.sort_order,
                     in_stock: o.in_stock !== false
@@ -140,7 +145,9 @@ export function VariantEditor({ productId, value, onChange, standalone = true, s
                 options: [...v.options, {
                     label: { ar: '', en: '' },
                     value: '',
-                    price_modifier: 0,
+                    price: basePrice ? parseFloat(basePrice.toString()) : 0,
+                    stock: 0,
+                    manage_stock: true,
                     is_default: v.options.length === 0,
                     sort_order: v.options.length,
                     in_stock: true
@@ -229,7 +236,9 @@ export function VariantEditor({ productId, value, onChange, standalone = true, s
                         variant_id: insertedVariant.id,
                         label: o.label,
                         value: o.value || (o.label.ar || o.label.en),
-                        price_modifier: o.price_modifier || 0,
+                        price: parseFloat(o.price.toString()),
+                        stock: parseInt(o.stock.toString()),
+                        manage_stock: o.manage_stock,
                         is_default: o.is_default,
                         sort_order: j,
                         in_stock: o.in_stock !== false
@@ -461,19 +470,40 @@ export function VariantEditor({ productId, value, onChange, standalone = true, s
                                             )}
                                             <Input
                                                 type="number"
-                                                value={option.price_modifier || ''}
-                                                onChange={(e) => updateOption(vIndex, oIndex, 'price_modifier', parseFloat(e.target.value) || 0)}
-                                                placeholder="±0"
-                                                className="h-8 text-xs w-16"
-                                                title={language === 'ar' ? 'تعديل السعر' : 'Price modifier'}
+                                                required
+                                                value={option.price !== undefined ? option.price : ''}
+                                                onChange={(e) => updateOption(vIndex, oIndex, 'price', parseFloat(e.target.value) || 0)}
+                                                placeholder={language === 'ar' ? 'السعر' : 'Price'}
+                                                className="h-8 text-xs w-20"
                                             />
-                                            <div className="flex items-center gap-1 mx-2" title={language === 'ar' ? 'متوفر بالمخزون' : 'In Stock'}>
+                                            <div className="flex items-center gap-1">
+                                                <Input
+                                                    type="number"
+                                                    required
+                                                    disabled={!option.manage_stock}
+                                                    value={option.manage_stock ? (option.stock !== undefined ? option.stock : '') : '∞'}
+                                                    onChange={(e) => updateOption(vIndex, oIndex, 'stock', parseInt(e.target.value) || 0)}
+                                                    placeholder={language === 'ar' ? 'الكمية' : 'Qty'}
+                                                    className="h-8 text-xs w-16"
+                                                />
+                                                <div className="flex flex-col items-center gap-0.5" title={language === 'ar' ? 'تخطي المخزون' : 'Ignore Stock'}>
+                                                    <Switch
+                                                        checked={!option.manage_stock}
+                                                        onCheckedChange={(v) => updateOption(vIndex, oIndex, 'manage_stock', !v)}
+                                                        className="scale-75 data-[state=checked]:bg-blue-500"
+                                                    />
+                                                    <span className="text-[8px] text-muted-foreground whitespace-nowrap leading-none">
+                                                        {language === 'ar' ? 'تخطي' : 'Ignore'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col items-center gap-0.5" title={language === 'ar' ? 'متوفر بالمخزون' : 'In Stock'}>
                                                 <Switch
                                                     checked={option.in_stock !== false}
                                                     onCheckedChange={(v) => updateOption(vIndex, oIndex, 'in_stock', v)}
                                                     className="scale-75 data-[state=unchecked]:bg-destructive"
                                                 />
-                                                <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                                                <span className="text-[10px] text-muted-foreground whitespace-nowrap leading-none">
                                                     {option.in_stock !== false ? (language === 'ar' ? 'متوفر' : 'In Stock') : (language === 'ar' ? 'نفد' : 'Out')}
                                                 </span>
                                             </div>

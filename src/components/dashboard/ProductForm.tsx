@@ -21,6 +21,8 @@ import { ImageUpload } from '@/components/dashboard/ImageUpload';
 import { VariantEditor } from '@/components/dashboard/VariantEditor';
 import { UpsellManager, UpsellFormData } from '@/components/dashboard/UpsellManager';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
+import { Settings2, Zap, Truck, Timer, Users } from 'lucide-react';
 
 interface ProductFormProps {
     storeId: string;
@@ -128,6 +130,13 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
         seo_keywords: initialData?.metadata?.seo?.keywords || '',
         meta_title: initialData?.metadata?.seo?.title || '',
         meta_description: initialData?.metadata?.seo?.description || '',
+        skip_cart: initialData?.skip_cart || false,
+        free_shipping: initialData?.free_shipping || false,
+        fake_countdown_enabled: initialData?.fake_countdown_enabled || false,
+        fake_countdown_minutes: initialData?.fake_countdown_minutes || 60,
+        fake_visitors_enabled: initialData?.fake_visitors_enabled || false,
+        fake_visitors_min: initialData?.fake_visitors_min || 10,
+        fake_visitors_max: initialData?.fake_visitors_max || 50,
     });
 
     const handleAIGenerated = (data: any) => {
@@ -163,7 +172,14 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                 stock_quantity: parseInt(formData.stock_quantity),
                 sku: formData.sku,
                 images: formData.images && formData.images.length > 0 ? JSON.stringify(formData.images) : null,
-                status: 'active'
+                status: 'active',
+                skip_cart: formData.skip_cart,
+                free_shipping: formData.free_shipping,
+                fake_countdown_enabled: formData.fake_countdown_enabled,
+                fake_countdown_minutes: parseInt(formData.fake_countdown_minutes.toString()),
+                fake_visitors_enabled: formData.fake_visitors_enabled,
+                fake_visitors_min: parseInt(formData.fake_visitors_min.toString()),
+                fake_visitors_max: parseInt(formData.fake_visitors_max.toString()),
             };
 
             let savedProductId = initialData?.id;
@@ -215,7 +231,9 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                             variant_id: insertedVariant.id,
                             label: o.label,
                             value: o.value || (o.label.ar || o.label.en),
-                            price_modifier: o.price_modifier || 0,
+                            price: o.price !== undefined ? parseFloat(o.price.toString()) : parseFloat(formData.price),
+                            stock: parseInt(o.stock?.toString() || '0'),
+                            manage_stock: o.manage_stock !== false,
                             is_default: o.is_default,
                             sort_order: j,
                             in_stock: o.in_stock !== false
@@ -326,6 +344,10 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                         <TabsList className="grid w-full grid-cols-2">
                             <TabsTrigger value="ar">العربية</TabsTrigger>
                             <TabsTrigger value="en">English</TabsTrigger>
+                            <TabsTrigger value="advanced" className="flex items-center gap-2">
+                                <Settings2 className="w-4 h-4" />
+                                {language === 'ar' ? 'إعدادات متقدمة' : 'Advanced'}
+                            </TabsTrigger>
                         </TabsList>
                         <TabsContent value="ar" className="space-y-4">
                             <div className="space-y-2">
@@ -395,6 +417,114 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                                     placeholder={language === 'ar' ? 'وصف المنتج التفصيلي بالإنجليزية' : 'Detailed product description in English'}
                                     rows={6}
                                 />
+                            </div>
+                        </TabsContent>
+                        <TabsContent value="advanced" className="space-y-6 pt-4">
+                            <div className="grid gap-6 md:grid-cols-2">
+                                <Card className="border-primary/20">
+                                    <CardHeader className="pb-3">
+                                        <div className="flex items-center gap-2">
+                                            <Zap className="w-4 h-4 text-primary" />
+                                            <CardTitle className="text-sm font-bold">{language === 'ar' ? 'تحسين التحويل' : 'Conversion Optimization'}</CardTitle>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="flex items-center justify-between p-2 border rounded-lg hover:bg-accent/50 transition-colors">
+                                            <div className="space-y-0.5">
+                                                <Label className="text-sm cursor-pointer" htmlFor="skip_cart">{language === 'ar' ? 'تخطي السلة' : 'Skip Cart'}</Label>
+                                                <p className="text-[10px] text-muted-foreground">{language === 'ar' ? 'التوجه مباشرة لصفحة الدفع عند الشراء' : 'Go directly to checkout'}</p>
+                                            </div>
+                                            <Switch
+                                                id="skip_cart"
+                                                checked={formData.skip_cart}
+                                                onCheckedChange={(v) => setFormData({ ...formData, skip_cart: v })}
+                                            />
+                                        </div>
+                                        <div className="flex items-center justify-between p-2 border rounded-lg hover:bg-accent/50 transition-colors">
+                                            <div className="space-y-0.5">
+                                                <Label className="text-sm cursor-pointer" htmlFor="free_shipping">{language === 'ar' ? 'تفعيل الشحن المجاني' : 'Free Shipping'}</Label>
+                                                <p className="text-[10px] text-muted-foreground">{language === 'ar' ? 'إظهار شارة شحن مجاني للمنتج' : 'Show free shipping badge'}</p>
+                                            </div>
+                                            <Switch
+                                                id="free_shipping"
+                                                checked={formData.free_shipping}
+                                                onCheckedChange={(v) => setFormData({ ...formData, free_shipping: v })}
+                                            />
+                                        </div>
+                                    </CardContent>
+                                </Card>
+
+                                <Card className="border-primary/20">
+                                    <CardHeader className="pb-3">
+                                        <div className="flex items-center gap-2">
+                                            <Timer className="w-4 h-4 text-primary" />
+                                            <CardTitle className="text-sm font-bold">{language === 'ar' ? 'عداد الوقت الوهمي' : 'Fake Countdown'}</CardTitle>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <Label className="text-sm">{language === 'ar' ? 'تفعيل العداد' : 'Enable Countdown'}</Label>
+                                            <Switch
+                                                checked={formData.fake_countdown_enabled}
+                                                onCheckedChange={(v) => setFormData({ ...formData, fake_countdown_enabled: v })}
+                                            />
+                                        </div>
+                                        {formData.fake_countdown_enabled && (
+                                            <div className="space-y-2 pt-2 border-t">
+                                                <Label className="text-xs">{language === 'ar' ? 'المدة (بالدقائق)' : 'Duration (Minutes)'}</Label>
+                                                <Input
+                                                    type="number"
+                                                    value={formData.fake_countdown_minutes}
+                                                    onChange={(e) => setFormData({ ...formData, fake_countdown_minutes: parseInt(e.target.value) || 0 })}
+                                                    placeholder="60"
+                                                    className="h-8 text-xs"
+                                                />
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+
+                                <Card className="border-primary/20 md:col-span-2">
+                                    <CardHeader className="pb-3">
+                                        <div className="flex items-center gap-2">
+                                            <Users className="w-4 h-4 text-primary" />
+                                            <CardTitle className="text-sm font-bold">{language === 'ar' ? 'عداد الزوار الوهمي' : 'Fake Visitors'}</CardTitle>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <Label className="text-sm">{language === 'ar' ? 'تفعيل عداد الزوار' : 'Enable Visitors Counter'}</Label>
+                                            <Switch
+                                                checked={formData.fake_visitors_enabled}
+                                                onCheckedChange={(v) => setFormData({ ...formData, fake_visitors_enabled: v })}
+                                            />
+                                        </div>
+                                        {formData.fake_visitors_enabled && (
+                                            <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+                                                <div className="space-y-1">
+                                                    <Label className="text-xs">{language === 'ar' ? 'من' : 'From'}</Label>
+                                                    <Input
+                                                        type="number"
+                                                        value={formData.fake_visitors_min}
+                                                        onChange={(e) => setFormData({ ...formData, fake_visitors_min: parseInt(e.target.value) || 0 })}
+                                                        placeholder="10"
+                                                        className="h-8 text-xs"
+                                                    />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <Label className="text-xs">{language === 'ar' ? 'إلى' : 'To'}</Label>
+                                                    <Input
+                                                        type="number"
+                                                        value={formData.fake_visitors_max}
+                                                        onChange={(e) => setFormData({ ...formData, fake_visitors_max: parseInt(e.target.value) || 0 })}
+                                                        placeholder="50"
+                                                        className="h-8 text-xs"
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
                             </div>
                         </TabsContent>
                     </Tabs>
@@ -533,6 +663,7 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                             onChange={setVariants}
                             standalone={false}
                             storeId={storeId}
+                            basePrice={formData.price}
                         />
                     </div>
 
