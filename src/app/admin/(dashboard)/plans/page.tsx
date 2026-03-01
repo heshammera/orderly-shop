@@ -106,7 +106,11 @@ export default function PlansPage() {
             price_monthly: values.price_monthly,
             price_yearly: values.price_yearly,
             price: values.price_monthly, // Compatibility with some pages using 'price'
-            limits: { products: values.products_limit, orders_monthly: values.orders_limit, stores_limit: values.stores_limit },
+            limits: {
+                products: values.features?.products_limit !== undefined ? Number(values.features.products_limit) : values.products_limit,
+                orders_monthly: values.features?.orders_limit !== undefined ? Number(values.features.orders_limit) : values.orders_limit,
+                stores_limit: values.features?.stores_limit !== undefined ? Number(values.features.stores_limit) : values.stores_limit
+            },
             is_active: values.is_active,
             display_features: {
                 ar: values.display_features_ar?.split(',').map((s: string) => s.trim()).filter(Boolean) || [],
@@ -114,39 +118,20 @@ export default function PlansPage() {
             }
         };
 
-        let targetPlanId = editingPlan?.id;
+        const res = await fetch('/api/admin/plans', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                editingPlanId: editingPlan?.id,
+                payload,
+                features: values.features
+            })
+        });
 
-        if (editingPlan) {
-            const { error, data } = await supabase
-                .from('plans')
-                .update(payload)
-                .eq('id', editingPlan.id)
-                .select()
-                .single();
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to save plan');
 
-            if (error) throw error;
-            toast.success('Plan updated successfully');
-        } else {
-            const { error, data } = await supabase
-                .from('plans')
-                .insert([payload])
-                .select()
-                .single();
-
-            if (error) throw error;
-            targetPlanId = data.id;
-            toast.success('Plan created successfully');
-        }
-
-        if (targetPlanId && values.features && Object.keys(values.features).length > 0) {
-            const featureUpserts = Object.entries(values.features).map(([feature_id, value]) => ({
-                plan_id: targetPlanId,
-                feature_id,
-                value: String(value)
-            }));
-            const { error: fvError } = await supabase.from('plan_feature_values').upsert(featureUpserts);
-            if (fvError) console.error("Error saving feature values", fvError);
-        }
+        toast.success(editingPlan ? 'Plan updated successfully' : 'Plan created successfully');
 
         setIsDialogOpen(false);
         setEditingPlan(null);
@@ -156,27 +141,26 @@ export default function PlansPage() {
     const handleDelete = async (plan: Plan) => {
         if (!confirm('Are you sure you want to delete this plan?')) return;
 
-        const { error } = await supabase.from('plans').delete().eq('id', plan.id);
+        const res = await fetch(`/api/admin/plans?id=${plan.id}`, { method: 'DELETE' });
+        const data = await res.json();
 
-        if (error) {
+        if (!res.ok) {
             // Check for foreign key constraint violation (code 23503)
-            if (error.code === '23503') {
+            if (data.code === '23503') {
                 const deactivate = confirm('This plan cannot be deleted because it has active subscriptions. Do you want to deactivate it instead? (It will no longer be available for new stores)');
                 if (deactivate) {
-                    const { error: updateError } = await supabase
-                        .from('plans')
-                        .update({ is_active: false })
-                        .eq('id', plan.id);
+                    const deactRes = await fetch(`/api/admin/plans?id=${plan.id}&action=deactivate`, { method: 'DELETE' });
+                    const deactData = await deactRes.json();
 
-                    if (updateError) {
-                        toast.error(updateError.message);
+                    if (!deactRes.ok) {
+                        toast.error(deactData.error || 'Failed to deactivate plan');
                     } else {
                         toast.success('Plan deactivated successfully');
                         fetchPlans();
                     }
                 }
             } else {
-                toast.error(error.message);
+                toast.error(data.error || 'Failed to delete plan');
             }
         } else {
             toast.success('Plan deleted');
