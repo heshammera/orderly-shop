@@ -11,7 +11,7 @@ export async function POST(req: Request) {
         const { data: validation, error: valError } = await supabase.rpc('validate_super_admin_session', { p_token: token })
         if (valError || !validation?.valid) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-        const body = await req.json()
+        const body = await req.json() as any
         const { editingPlanId, payload, features } = body
 
         let targetPlanId = editingPlanId;
