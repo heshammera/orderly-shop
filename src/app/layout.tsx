@@ -12,12 +12,20 @@ const tajawal = Tajawal({
 });
 
 export const metadata: Metadata = {
-  title: "Orderly - أوردرلي",
-  description: "Arabic First Social Commerce Platform",
+  title: "أوردرلي - Orderly",
+  description: "أوردرلي: المتطورة لإنشاء المتاجر الإلكترونية بسهولة وبسرعة فائقة",
   manifest: "/manifest.json",
   appleWebApp: {
     statusBarStyle: "default",
     title: "Orderly",
+  },
+  openGraph: {
+    title: "أوردرلي - Orderly | منصة التجارة الإلكترونية العصرية",
+    description: "أنشئ متجرك الإلكتروني في دقائق بدون حاجة لكتابة كود برمجي. بوابات دفع، شبكات شحن وتصاميم عصرية.",
+    url: "https://orderly.com", // Replace appropriately
+    siteName: "Orderly",
+    locale: "ar",
+    type: "website",
   },
   other: {
     "mobile-web-app-capable": "yes",

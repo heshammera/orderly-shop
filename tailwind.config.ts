@@ -71,10 +71,31 @@ const config: Config = {
                     from: { height: "var(--radix-accordion-content-height)" },
                     to: { height: "0" },
                 },
+                "gradient-shift": {
+                    "0%, 100%": { "background-position": "0% 50%" },
+                    "50%": { "background-position": "100% 50%" },
+                },
+                float: {
+                    "0%, 100%": { transform: "translateY(0)" },
+                    "50%": { transform: "translateY(-10px)" },
+                },
+                "glow-pulse": {
+                    "0%, 100%": { opacity: "1" },
+                    "50%": { opacity: "0.5" },
+                },
+                shine: {
+                    from: { "background-position": "200% center" },
+                    to: { "background-position": "-200% center" },
+                },
             },
             animation: {
                 "accordion-down": "accordion-down 0.2s ease-out",
                 "accordion-up": "accordion-up 0.2s ease-out",
+                "gradient-shift": "gradient-shift 15s ease infinite",
+                float: "float 6s ease-in-out infinite",
+                "float-slow": "float 8s ease-in-out infinite",
+                "glow-pulse": "glow-pulse 3s ease-in-out infinite",
+                shine: "shine 8s linear infinite",
             },
         },
     },

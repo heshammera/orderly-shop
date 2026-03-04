@@ -1,9 +1,13 @@
 import { Header } from '@/components/landing/Header';
-import { Hero } from '@/components/landing/Hero';
-import { Features } from '@/components/landing/Features';
-import { HowItWorks } from '@/components/landing/HowItWorks';
-import { Partners } from '@/components/landing/Partners';
-import { Pricing } from '@/components/landing/Pricing';
+import { HeroSection } from '@/components/landing/HeroSection';
+import { SocialProofSection } from '@/components/landing/SocialProofSection';
+import { FeaturesGrid } from '@/components/landing/FeaturesGrid';
+import { PlatformDemo } from '@/components/landing/PlatformDemo';
+import { HowItWorksSection } from '@/components/landing/HowItWorksSection';
+import { AdvancedCapabilities } from '@/components/landing/AdvancedCapabilities';
+import { PricingSection } from '@/components/landing/PricingSection';
+import { FAQSection } from '@/components/landing/FAQSection';
+import { FinalCTA } from '@/components/landing/FinalCTA';
 import { Footer } from '@/components/landing/Footer';
 
 export default function Home() {
@@ -11,11 +15,15 @@ export default function Home() {
     <div className="min-h-screen">
       <Header />
       <main>
-        <Hero />
-        <Features />
-        <HowItWorks />
-        <Partners />
-        <Pricing />
+        <HeroSection />
+        <SocialProofSection />
+        <FeaturesGrid />
+        <PlatformDemo />
+        <HowItWorksSection />
+        <AdvancedCapabilities />
+        <PricingSection />
+        <FAQSection />
+        <FinalCTA />
       </main>
       <Footer />
     </div>
