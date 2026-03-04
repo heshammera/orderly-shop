@@ -201,7 +201,7 @@ export function OrderSummary({ data }: { data: ComponentSchema }) {
                             <Loader2 className="w-6 h-6 animate-spin" />
                         ) : (
                             <div className="flex items-center gap-2">
-                                <span>{language === 'ar' ? 'إتمام الشراء الآن' : 'Complete Purchase'}</span>
+                                <span>{content.buttonText || (language === 'ar' ? 'إتمام الشراء الآن' : 'Complete Purchase')}</span>
                                 <CheckCircle2 className="w-5 h-5" />
                             </div>
                         )}

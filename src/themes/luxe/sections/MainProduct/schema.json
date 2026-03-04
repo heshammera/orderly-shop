@@ -1,0 +1,161 @@
+{
+    "name": "المنتج الرئيسي",
+    "type": "main_product",
+    "settings": [
+        {
+            "type": "boolean",
+            "id": "show_breadcrumbs",
+            "label": "إظهار مسار التنقل (Breadcrumbs)",
+            "default": "true"
+        },
+        {
+            "type": "boolean",
+            "id": "show_sku",
+            "label": "إظهار رقم المنتج (SKU)",
+            "default": "true"
+        },
+        {
+            "type": "boolean",
+            "id": "show_share_buttons",
+            "label": "مشاركة المنتج",
+            "default": "true"
+        },
+        {
+            "type": "text",
+            "id": "add_to_cart_text",
+            "label": "نص زر إضافة للسلة",
+            "default": "إضافة للسلة"
+        }
+    ],
+    "blocks": [
+        {
+            "type": "title",
+            "name": "العنوان",
+            "limit": 1,
+            "settings": [
+                {
+                    "type": "select",
+                    "id": "alignment",
+                    "label": "محاذاة النص",
+                    "default": "start",
+                    "options": [
+                        {
+                            "value": "start",
+                            "label": "يمين"
+                        },
+                        {
+                            "value": "center",
+                            "label": "وسط"
+                        },
+                        {
+                            "value": "end",
+                            "label": "يسار"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "price",
+            "name": "السعر",
+            "limit": 1,
+            "settings": [
+                {
+                    "type": "boolean",
+                    "id": "show_compare_price",
+                    "label": "إظهار السعر قبل الخصم (إن وجد)",
+                    "default": "true"
+                }
+            ]
+        },
+        {
+            "type": "visitors",
+            "name": "عداد الزوار",
+            "limit": 1,
+            "settings": [
+                {
+                    "type": "text",
+                    "id": "visitors_text",
+                    "label": "النص المجاور للرقم",
+                    "default": "يشاهدون هذا المنتج الآن"
+                }
+            ]
+        },
+        {
+            "type": "countdown",
+            "name": "عداد العروض",
+            "limit": 1,
+            "settings": [
+                {
+                    "type": "text",
+                    "id": "countdown_text",
+                    "label": "نص العداد",
+                    "default": "ينتهي العرض خلال:"
+                }
+            ]
+        },
+        {
+            "type": "quantity",
+            "name": "اختيار الكمية",
+            "limit": 1,
+            "settings": []
+        },
+        {
+            "type": "offers",
+            "name": "الباقات (Upsells)",
+            "limit": 1,
+            "settings": [
+                {
+                    "type": "text",
+                    "id": "offers_title",
+                    "label": "عنوان قسم الباقات",
+                    "default": "عروض و باقات"
+                }
+            ]
+        },
+        {
+            "type": "variants",
+            "name": "متغيرات المنتج",
+            "limit": 1,
+            "settings": []
+        },
+        {
+            "type": "buy_buttons",
+            "name": "أزرار الشراء",
+            "limit": 1,
+            "settings": [
+                {
+                    "type": "text",
+                    "id": "add_to_cart_text",
+                    "label": "نص زر إضافة للسلة",
+                    "default": "إضافة للسلة"
+                },
+                {
+                    "type": "boolean",
+                    "id": "show_quick_buy",
+                    "label": "إظهار زر الشراء السريع",
+                    "default": "true"
+                }
+            ]
+        },
+        {
+            "type": "shipping_info",
+            "name": "معلومات الشحن",
+            "limit": 1,
+            "settings": [
+                {
+                    "type": "text",
+                    "id": "shipping_text",
+                    "label": "نص الشحن",
+                    "default": "شحن مجاني للطلبات فوق 200 ريال"
+                }
+            ]
+        },
+        {
+            "type": "description",
+            "name": "الوصف",
+            "limit": 1,
+            "settings": []
+        }
+    ]
+}

@@ -1,0 +1,38 @@
+{
+    "name": "المنتجات المميزة (شبكة)",
+    "type": "featured_grid",
+    "settings": [
+        {
+            "type": "text",
+            "id": "heading",
+            "label": "العنوان الرئيسي",
+            "default": "وصل حديثاً"
+        },
+        {
+            "type": "text",
+            "id": "subheading",
+            "label": "العنوان الفرعي",
+            "default": "تسوق أحدث المنتجات المختارة بعناية"
+        }
+    ],
+    "blocks": [
+        {
+            "type": "product",
+            "name": "المنتج",
+            "settings": [
+                {
+                    "type": "product",
+                    "id": "product_id",
+                    "label": "اختر منتجاً"
+                }
+            ]
+        }
+    ],
+    "max_blocks": 3,
+    "presets": [
+        {
+            "name": "المنتجات المميزة (الموصى بها)",
+            "category": "المنتجات"
+        }
+    ]
+}

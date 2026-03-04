@@ -11,7 +11,6 @@ import { CartProvider, useCart } from '@/contexts/CartContext';
 import { CartDrawer } from '@/components/store/CartDrawer';
 import { TrackingPixels } from '@/components/store/TrackingPixels';
 import { StoreDashboardLink } from '@/components/store/StoreDashboardLink';
-import { Footer } from '@/components/store/builder/Footer';
 import { COMPONENT_DEFAULTS } from '@/lib/store-builder/types';
 
 interface StoreData {
@@ -167,15 +166,10 @@ export function StoreClientLayout({ children, store, integrations = {}, headerCa
         <div className="min-h-screen bg-background" dir={dir}>
             <CartProvider storeId={store.id}>
                 <TrackingPixels integrations={integrations} />
-                <StoreHeader store={store} headerCategories={headerCategories} />
                 <CartDrawer store={{ id: store.id, currency: store.currency, slug: store.slug }} />
                 <main>
                     {children}
                 </main>
-                <Footer
-                    data={COMPONENT_DEFAULTS.Footer as any}
-                    store={store}
-                />
             </CartProvider>
         </div>
     );

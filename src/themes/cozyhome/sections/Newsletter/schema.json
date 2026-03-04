@@ -1,0 +1,36 @@
+{
+    "name": "الاشتراك في النشرة البريدية",
+    "type": "newsletter",
+    "settings": [
+        {
+            "type": "text",
+            "id": "heading",
+            "label": "العنوان الرئيسي",
+            "default": "اشترك في نشرتنا البريدية"
+        },
+        {
+            "type": "text",
+            "id": "subheading",
+            "label": "العنوان الفرعي",
+            "default": "احصل على آخر الأخبار والعروض الحصرية مباشرة في بريدك المكتبي."
+        },
+        {
+            "type": "text",
+            "id": "button_label",
+            "label": "نص الزر",
+            "default": "اشتراك"
+        },
+        {
+            "type": "text",
+            "id": "placeholder",
+            "label": "نص حقل الإدخال",
+            "default": "أدخل بريدك الإلكتروني"
+        }
+    ],
+    "presets": [
+        {
+            "name": "النشرة البريدية الافتراضية",
+            "category": "التسويق"
+        }
+    ]
+}

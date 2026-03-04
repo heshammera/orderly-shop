@@ -123,7 +123,8 @@ export function CheckoutProvider({ store, children, isEditable = false }: Checko
 
     // Effects
     useEffect(() => {
-        if (!isEditable && cartCount === 0 && !success) {
+        const isPreview = typeof window !== 'undefined' && window.location.search.includes('preview=true');
+        if (!isPreview && !isEditable && cartCount === 0 && !success) {
             router.push(`/s/${store.slug}/products`);
         }
     }, [cartCount, success, store.slug, router, isEditable]);
@@ -256,15 +257,7 @@ export function CheckoutProvider({ store, children, isEditable = false }: Checko
                         productName: item.productName,
                         variants: item.variants,
                     })),
-                    formData: {
-                        name: formData.name,
-                        phone: formData.phone,
-                        alt_phone: formData.alt_phone,
-                        email: formData.email,
-                        address: formData.address,
-                        city: formData.city,
-                        notes: formData.notes,
-                    },
+                    formData: { ...formData },
                     selectedGovernorate,
                     cityOrGovName,
                     shippingCost,

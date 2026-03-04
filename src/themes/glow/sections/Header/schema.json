@@ -1,0 +1,49 @@
+{
+    "name": "شريط التنقل (Header)",
+    "type": "header",
+    "settings": [
+        {
+            "type": "image_picker",
+            "id": "logo",
+            "label": "شعار المتجر (Logo)"
+        },
+        {
+            "type": "text",
+            "id": "notice_text",
+            "label": "شريط الإعلانات العلوي",
+            "default": "🔥 شحن مجاني للطلبات فوق 200 ريال!"
+        },
+        {
+            "type": "text",
+            "id": "search_placeholder",
+            "label": "نص البحث",
+            "default": "ابحث عن منتج..."
+        }
+    ],
+    "blocks": [
+        {
+            "type": "link",
+            "name": "رابط قائمة",
+            "settings": [
+                {
+                    "type": "text",
+                    "id": "label",
+                    "label": "اسم الرابط",
+                    "default": "الصفحة الرئيسية"
+                },
+                {
+                    "type": "url",
+                    "id": "url",
+                    "label": "مسار الرابط",
+                    "default": "/"
+                }
+            ]
+        }
+    ],
+    "presets": [
+        {
+            "name": "شريط التنقل الافتراضي",
+            "category": "الترويسة"
+        }
+    ]
+}

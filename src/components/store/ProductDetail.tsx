@@ -79,9 +79,10 @@ interface ProductDetailProps {
     variants: Variant[];
     upsellOffers: UpsellOffer[];
     store: StoreData;
+    themeSettings?: any;
 }
 
-function FakeCountdown({ minutes, language }: { minutes: number; language: string }) {
+function FakeCountdown({ minutes, language, text }: { minutes: number; language: string; text?: string }) {
     const [timeLeft, setTimeLeft] = useState<{ h: number; m: number; s: number } | null>(null);
 
     useEffect(() => {
@@ -126,7 +127,7 @@ function FakeCountdown({ minutes, language }: { minutes: number; language: strin
         <div className="flex flex-col items-center gap-2 p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-xl my-4">
             <div className="flex items-center gap-2 text-red-600 dark:text-red-400 font-bold text-sm">
                 <Zap className="w-4 h-4 animate-pulse" />
-                <span>{language === 'ar' ? 'ينتهي العرض قريباً!' : 'Offer ends soon!'}</span>
+                <span>{text || (language === 'ar' ? 'ينتهي العرض قريباً!' : 'Offer ends soon!')}</span>
             </div>
             <div className="flex gap-4">
                 {[
@@ -146,7 +147,7 @@ function FakeCountdown({ minutes, language }: { minutes: number; language: strin
     );
 }
 
-function FakeVisitors({ min, max, language }: { min: number; max: number; language: string }) {
+function FakeVisitors({ min, max, language, text }: { min: number; max: number; language: string; text?: string }) {
     const [visitors, setVisitors] = useState(0);
 
     useEffect(() => {
@@ -175,18 +176,24 @@ function FakeVisitors({ min, max, language }: { min: number; max: number; langua
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
             </div>
             <span>
-                {language === 'ar'
+                {text ? `${text} ${visitors}` : (language === 'ar'
                     ? `يوجد الآن ${visitors} أشخاص يشاهدون هذا المنتج`
-                    : `There are ${visitors} people viewing this product right now`}
+                    : `There are ${visitors} people viewing this product right now`)}
             </span>
         </div>
     );
 }
 
-export function ProductDetail({ product, variants, upsellOffers, store }: ProductDetailProps) {
+export function ProductDetail({ product, variants, upsellOffers, store, themeSettings }: ProductDetailProps) {
     const { language } = useLanguage();
     const { toast } = useToast();
     const { addToCart } = useCart();
+
+    // Theme Settings Fallbacks
+    const showBreadcrumbs = themeSettings?.show_breadcrumbs !== false;
+    const showSku = themeSettings?.show_sku !== false;
+    const showShareButtons = themeSettings?.show_share_buttons !== false;
+    const addToCartText = themeSettings?.add_to_cart_text || (language === 'ar' ? 'إضافة للسلة' : 'Add to Cart');
 
     // State
     const [quantity, setQuantity] = useState(1);
@@ -415,6 +422,24 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
     const totalPrice = calculateTotalPrice();
     const applicableOffer = getApplicableOffer();
 
+    // Setup blocks for dynamic rendering
+    const defaultBlocks = [
+        { type: 'title', id: 'block_title' },
+        { type: 'price', id: 'block_price' },
+        { type: 'visitors', id: 'block_visitors' },
+        { type: 'countdown', id: 'block_countdown' },
+        { type: 'quantity', id: 'block_quantity' },
+        { type: 'offers', id: 'block_offers' },
+        { type: 'variants', id: 'block_variants' },
+        { type: 'buy_buttons', id: 'block_buy_buttons' },
+        { type: 'shipping_info', id: 'block_shipping' },
+        { type: 'description', id: 'block_description' }
+    ];
+
+    const blocks = themeSettings?.blocks && themeSettings.blocks.length > 0
+        ? themeSettings.blocks
+        : defaultBlocks;
+
     return (
         <div className="w-full max-w-7xl mx-auto px-4 py-6 pb-32 md:py-8 md:pb-8 overflow-hidden">
             <div className="grid md:grid-cols-2 gap-6 md:gap-8 lg:gap-12 w-full min-w-0">
@@ -476,448 +501,446 @@ export function ProductDetail({ product, variants, upsellOffers, store }: Produc
                     )}
                 </div>
 
-                <div className="space-y-8 min-w-0">
-                    <div className="min-w-0">
-                        {product.free_shipping && (
-                            <div className="flex items-center gap-1 text-green-600 dark:text-green-400 font-bold text-xs uppercase mb-1 tracking-wider">
-                                <Truck className="w-4 h-4" />
-                                {language === 'ar' ? 'شحن مجاني' : 'Free Shipping'}
-                            </div>
-                        )}
-                        <h1 className="text-2xl md:text-3xl font-bold mb-2 break-words">{productName}</h1>
-
-                        {product.fake_visitors_enabled && (
-                            <FakeVisitors
-                                min={product.fake_visitors_min || 10}
-                                max={product.fake_visitors_max || 50}
-                                language={language}
-                            />
-                        )}
-
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <div className="flex items-baseline gap-2">
-                                    <p className="text-3xl font-bold text-primary">
-                                        {formatPrice(calculateTotalPrice())}
-                                    </p>
-                                    {(product.sale_price && product.sale_price > 0) && (
-                                        <p className="text-lg text-muted-foreground line-through opacity-70">
-                                            {formatPrice(product.price * quantity)}
-                                        </p>
-                                    )}
-                                </div>
-                                <p className="text-sm text-muted-foreground mt-1">
-                                    {(() => {
-                                        if (product.free_shipping) return language === 'ar' ? '+ شحن مجاني' : '+ Free Shipping';
-                                        const shipping = store.settings?.shipping;
-                                        if (shipping?.type === 'fixed') {
-                                            const cost = Number(shipping.fixed_price) || 0;
-                                            if (cost === 0) return language === 'ar' ? '+ شحن مجاني' : '+ Free Shipping';
-                                            return language === 'ar'
-                                                ? `+ ${formatPrice(cost)} شحن`
-                                                : `+ ${formatPrice(cost)} Shipping`;
-                                        } else {
-                                            return language === 'ar' ? '+ مصاريف الشحن' : '+ Shipping Costs';
-                                        }
-                                    })()}
-                                </p>
-                            </div>
-                            {quantity > 1 && (
-                                <span className="text-sm text-muted-foreground">
-                                    ({formatPrice(totalPrice / quantity)} / {language === 'ar' ? 'للقطعة' : 'per item'})
-                                </span>
-                            )}
-                        </div>
-
-                        {product.fake_countdown_enabled && (
-                            <FakeCountdown
-                                minutes={product.fake_countdown_minutes || 60}
-                                language={language}
-                            />
-                        )}
-                    </div>
-
-                    {/* Quantity Selector - Always Visible Above Offers */}
-                    <div className="space-y-3">
-                        <Label className="text-sm font-medium">
-                            {language === 'ar' ? 'الكمية الإجمالية' : 'Total Quantity'}
-                        </Label>
-                        <div className="flex items-center gap-4">
-                            <div className="flex items-center border-2 border-border/60 rounded-xl overflow-hidden bg-card">
-                                <button
-                                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                    className="w-12 h-12 flex items-center justify-center bg-muted/30 hover:bg-muted transition-colors border-e-2 border-border/60 disabled:opacity-50"
-                                    disabled={quantity <= 1}
-                                >
-                                    -
-                                </button>
-                                <div className="w-16 h-12 flex items-center justify-center font-bold text-lg">
-                                    {quantity}
-                                </div>
-                                <button
-                                    onClick={() => setQuantity(Math.min(product.stock_quantity || 100, quantity + 1))}
-                                    className="w-12 h-12 flex items-center justify-center bg-muted/30 hover:bg-muted transition-colors border-s-2 border-border/60 disabled:opacity-50"
-                                    disabled={quantity >= (product.stock_quantity || 100)}
-                                >
-                                    +
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Upsell Offers - Premium Sales Psychology Design */}
-                    {upsellOffers.length > 0 && (
-                        <div className="space-y-4 mt-6">
-                            <RadioGroup
-                                value={quantity.toString()}
-                                onValueChange={(val) => setQuantity(parseInt(val))}
-                                className="grid gap-4"
-                            >
-                                {/* Option 1: Minimalist Base Option */}
-                                <div
-                                    className={cn(
-                                        "relative flex items-center justify-between p-4 rounded-xl border border-dashed cursor-pointer transition-all duration-300 gap-3 grayscale-[30%]",
-                                        quantity === 1
-                                            ? "border-primary grayscale-0 bg-primary/5 shadow-sm"
-                                            : "border-border/40 hover:border-primary/30 bg-background/50 opacity-80 hover:opacity-100 hover:grayscale-0"
-                                    )}
-                                    onClick={() => setQuantity(1)}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className={cn(
-                                            "w-5 h-5 rounded-full border flex items-center justify-center transition-colors",
-                                            quantity === 1 ? "border-primary bg-primary" : "border-muted-foreground/50"
-                                        )}>
-                                            {quantity === 1 && <Check className="w-3.5 h-3.5 text-primary-foreground" />}
-                                        </div>
-                                        <Label className="cursor-pointer font-medium text-muted-foreground">
-                                            {language === 'ar' ? 'قطعة واحدة فقط' : 'Just 1 Item'}
-                                        </Label>
+                <div className="space-y-6 min-w-0 flex flex-col">
+                    {blocks.map((block: any) => {
+                        switch (block.type) {
+                            case 'title':
+                                const alignClass = block.settings?.alignment === 'center' ? 'text-center' : block.settings?.alignment === 'end' ? 'text-end' : '';
+                                const justifyClass = block.settings?.alignment === 'center' ? 'justify-center' : block.settings?.alignment === 'end' ? 'justify-end' : 'justify-start';
+                                return (
+                                    <div key={block.id} className={cn("min-w-0 mb-2", alignClass)}>
+                                        {showBreadcrumbs && (
+                                            <div className={cn("text-sm text-muted-foreground mb-3 flex items-center gap-2 flex-wrap", justifyClass)}>
+                                                <Link href={`/s/${store.slug}`} className="hover:text-primary transition-colors">
+                                                    {language === 'ar' ? 'الرئيسية' : 'Home'}
+                                                </Link>
+                                                <span>/</span>
+                                                <span className="text-foreground">{productName}</span>
+                                            </div>
+                                        )}
+                                        {product.free_shipping && (
+                                            <div className={cn("flex items-center gap-1 text-green-600 dark:text-green-400 font-bold text-xs uppercase mb-1 tracking-wider", justifyClass)}>
+                                                <Truck className="w-4 h-4" />
+                                                {language === 'ar' ? 'شحن مجاني' : 'Free Shipping'}
+                                            </div>
+                                        )}
+                                        <h1 className="text-2xl md:text-3xl font-bold mb-2 break-words">{productName}</h1>
+                                        {showSku && product.id && (
+                                            <p className={cn("text-sm text-muted-foreground mt-1 tracking-wide", alignClass)}>SKU: <span className="font-mono text-xs">{product.id.slice(0, 8).toUpperCase()}</span></p>
+                                        )}
                                     </div>
-                                    <span className="font-semibold text-muted-foreground">{formatPrice((product.sale_price && product.sale_price > 0) ? product.sale_price : product.price)}</span>
-                                </div>
+                                );
 
-                                {/* Premium Offers */}
-                                {upsellOffers.map((offer, idx) => {
-                                    const isSelected = quantity === offer.min_quantity;
-                                    const badge = offer.badge[language] || offer.badge.ar;
-                                    const label = offer.label[language] || offer.label.ar;
+                            case 'visitors':
+                                if (!product.fake_visitors_enabled) return null;
+                                return (
+                                    <div key={block.id}>
+                                        <FakeVisitors min={product.fake_visitors_min || 10} max={product.fake_visitors_max || 50} language={language} text={block.settings?.visitors_text} />
+                                    </div>
+                                );
 
-                                    // Calculate prices for display
-                                    const effectivePrice = (product.sale_price && product.sale_price > 0) ? product.sale_price : product.price;
-                                    const originalTotal = effectivePrice * offer.min_quantity;
-                                    let discountedTotal = originalTotal;
-
-                                    if (offer.discount_type === 'percentage') {
-                                        discountedTotal = originalTotal * (1 - offer.discount_value / 100);
-                                    } else {
-                                        discountedTotal = Math.max(0, originalTotal - (offer.discount_value * offer.min_quantity));
-                                    }
-
-                                    const savedAmount = originalTotal - discountedTotal;
-                                    const perItem = discountedTotal / offer.min_quantity;
-
-                                    // Randomized scarcity for the "Best Offer"
-                                    const randomLeft = (offer.min_quantity * 2 + 1) % 5 + 2;
-
-                                    return (
-                                        <div
-                                            key={offer.id}
-                                            className={cn(
-                                                "relative rounded-2xl cursor-pointer transition-all duration-300 transform",
-                                                isSelected
-                                                    ? "border-[3px] border-primary shadow-[0_0_20px_rgba(var(--primary),0.15)] scale-[1.02] bg-primary/[0.03]"
-                                                    : "border-2 border-border/60 hover:border-primary/50 hover:scale-[1.01] bg-card"
-                                            )}
-                                            onClick={() => setQuantity(offer.min_quantity)}
-                                        >
-                                            {/* Ribbon / Badge */}
-                                            {badge && (
-                                                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10 w-full max-w-[80%] flex justify-center">
-                                                    <div className={cn(
-                                                        "px-4 py-1 rounded-full text-xs font-bold text-center shadow-sm text-white whitespace-nowrap",
-                                                        isSelected ? "bg-gradient-to-r from-primary to-primary/80 animate-in zoom-in" : "bg-primary/80"
-                                                    )}>
-                                                        {badge}
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* Glow effect for selected */}
-                                            {isSelected && (
-                                                <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-primary/[0.05] to-transparent pointer-events-none" />
-                                            )}
-
-                                            <div className="p-4 pt-5 pb-5">
-                                                <div className="flex items-start gap-4">
-                                                    {/* Custom Radio Checkmark */}
-                                                    <div className={cn(
-                                                        "mt-1 w-6 h-6 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all duration-300",
-                                                        isSelected ? "border-primary bg-primary" : "border-muted-foreground/30 bg-background"
-                                                    )}>
-                                                        {isSelected && <Check className="w-4 h-4 text-primary-foreground animate-in zoom-in duration-200" />}
-                                                    </div>
-
-                                                    <div className="flex-1 space-y-3">
-                                                        {/* Header: Title and Per Item Price */}
-                                                        <div className="flex justify-between items-start gap-2">
-                                                            <div className="space-y-0.5">
-                                                                <h4 className={cn(
-                                                                    "font-bold text-lg",
-                                                                    isSelected ? "text-primary" : "text-foreground"
-                                                                )}>
-                                                                    {label || `${language === 'ar' ? 'باقة' : 'Bundle'} ${offer.min_quantity} ${language === 'ar' ? 'قطع' : 'Items'}`}
-                                                                </h4>
-                                                            </div>
-                                                            <div className="text-end">
-                                                                <div className="flex flex-col items-end">
-                                                                    <span className="text-xs text-muted-foreground line-through mb-0.5">
-                                                                        {formatPrice(effectivePrice)}
-                                                                    </span>
-                                                                    <span className="font-black text-xl leading-none text-foreground flex items-baseline gap-1">
-                                                                        {formatPrice(perItem)}
-                                                                        <span className="text-xs font-normal text-muted-foreground">/{language === 'ar' ? 'للقطعة' : 'ea'}</span>
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Separator */}
-                                                        <div className="h-px w-full bg-border/50 border-dashed border-b" />
-
-                                                        {/* Footer: Savings and Total */}
-                                                        <div className="flex items-center justify-between mt-3">
-                                                            <div className="flex items-center gap-2">
-                                                                {/* Screaming Savings Badge */}
-                                                                <div className="inline-flex items-center gap-1 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-xs font-black px-2.5 py-1 rounded-full shadow-sm">
-                                                                    <span>🔥</span>
-                                                                    <span>
-                                                                        {language === 'ar' ? 'وفر' : 'Save'} {offer.discount_type === 'percentage'
-                                                                            ? `${offer.discount_value}%`
-                                                                            : formatPrice(savedAmount)}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-
-                                                            <div className="text-sm font-medium">
-                                                                {language === 'ar' ? 'الإجمالي:' : 'Total:'} <span className="font-bold text-primary">{formatPrice(discountedTotal)}</span>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Scarcity message for selected best offer */}
-                                                        {isSelected && idx === upsellOffers.length - 1 && (
-                                                            <div className="pt-2 animate-in fade-in slide-in-from-top-1 duration-300">
-                                                                <div className="flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-500 bg-amber-50 dark:bg-amber-950/30 px-2 py-1.5 rounded-md">
-                                                                    <Zap className="w-3.5 h-3.5 fill-current animate-pulse" />
-                                                                    {language === 'ar'
-                                                                        ? `تبقى ${randomLeft} باقات فقط بهذا العرض!`
-                                                                        : `Only ${randomLeft} bundles left at this price!`}
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
+                            case 'price':
+                                return (
+                                    <div key={block.id} className="flex flex-col gap-2">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <div className="flex items-baseline gap-2">
+                                                    <p className="text-3xl font-bold text-primary">
+                                                        {formatPrice(calculateTotalPrice())}
+                                                    </p>
+                                                    {(block.settings?.show_compare_price !== false && block.settings?.show_compare_price !== 'false' && product.sale_price && product.sale_price > 0) && (
+                                                        <p className="text-lg text-muted-foreground line-through opacity-70">
+                                                            {formatPrice(product.price * quantity)}
+                                                        </p>
+                                                    )}
                                                 </div>
                                             </div>
+                                            {quantity > 1 && (
+                                                <span className="text-sm text-muted-foreground">
+                                                    ({formatPrice(totalPrice / quantity)} / {language === 'ar' ? 'للقطعة' : 'per item'})
+                                                </span>
+                                            )}
                                         </div>
-                                    );
-                                })}
+                                    </div>
+                                );
 
-                            </RadioGroup>
-                        </div>
-                    )}
+                            case 'countdown':
+                                if (!product.fake_countdown_enabled) return null;
+                                return (
+                                    <div key={block.id}>
+                                        <FakeCountdown minutes={product.fake_countdown_minutes || 60} language={language} text={block.settings?.countdown_text} />
+                                    </div>
+                                );
 
-                    {/* Variants Selection - Per Item */}
-                    <div className="space-y-6">
-                        {Array.from({ length: quantity }).map((_, itemIndex) => (
-                            <div key={itemIndex} className="p-4 border rounded-lg bg-card/50">
-                                <h3 className="font-medium mb-4 flex items-center gap-2">
-                                    <span className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-xs">
-                                        {itemIndex + 1}
-                                    </span>
-                                    {language === 'ar' ? `القطعة ${itemIndex + 1}` : `Item ${itemIndex + 1}`}
-                                </h3>
-
-                                <div className="space-y-4">
-                                    {variants.map((variant) => {
-                                        const selectedOptionId = selections[itemIndex]?.[variant.id];
-                                        const selectedOption = variant.options.find(o => o.id === selectedOptionId);
-                                        const selectedLabel = selectedOption ? (selectedOption.label[language] || selectedOption.label.ar) : '';
-
-                                        return (
-                                            <div key={variant.id} className="space-y-3">
-                                                <div className="flex items-center justify-between">
-                                                    <label className="text-sm font-medium text-foreground">
-                                                        {variant.name[language] || variant.name.ar}
-                                                        {selectedLabel && (
-                                                            <span className="text-muted-foreground ms-2 font-normal">
-                                                                : {selectedLabel}
-                                                            </span>
-                                                        )}
-                                                    </label>
+                            case 'quantity':
+                                return (
+                                    <div key={block.id} className="space-y-3">
+                                        <Label className="text-sm font-medium">
+                                            {language === 'ar' ? 'الكمية الإجمالية' : 'Total Quantity'}
+                                        </Label>
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex items-center border-2 border-border/60 rounded-xl overflow-hidden bg-card">
+                                                <button
+                                                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                                                    className="w-12 h-12 flex items-center justify-center bg-muted/30 hover:bg-muted transition-colors border-e-2 border-border/60 disabled:opacity-50"
+                                                    disabled={quantity <= 1}
+                                                >
+                                                    -
+                                                </button>
+                                                <div className="w-16 h-12 flex items-center justify-center font-bold text-lg">
+                                                    {quantity}
                                                 </div>
+                                                <button
+                                                    onClick={() => setQuantity(Math.min(product.stock_quantity || 100, quantity + 1))}
+                                                    className="w-12 h-12 flex items-center justify-center bg-muted/30 hover:bg-muted transition-colors border-s-2 border-border/60 disabled:opacity-50"
+                                                    disabled={quantity >= (product.stock_quantity || 100)}
+                                                >
+                                                    +
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
 
-                                                <div className="flex flex-wrap gap-2">
-                                                    {variant.options.map((option) => {
-                                                        const isSelected = selections[itemIndex]?.[variant.id] === option.id;
+                            case 'offers':
+                                if (upsellOffers.length === 0) return null;
+                                return (
+                                    <div key={block.id} className="space-y-4">
+                                        {block.settings?.offers_title && <h3 className="font-bold text-lg">{block.settings.offers_title}</h3>}
+                                        <RadioGroup
+                                            value={quantity.toString()}
+                                            onValueChange={(val) => setQuantity(parseInt(val))}
+                                            className="grid gap-4"
+                                        >
+                                            {/* Option 1: Minimalist Base Option */}
+                                            <div
+                                                className={cn(
+                                                    "relative flex items-center justify-between p-4 rounded-xl border border-dashed cursor-pointer transition-all duration-300 gap-3 grayscale-[30%]",
+                                                    quantity === 1
+                                                        ? "border-primary grayscale-0 bg-primary/5 shadow-sm"
+                                                        : "border-border/40 hover:border-primary/30 bg-background/50 opacity-80 hover:opacity-100 hover:grayscale-0"
+                                                )}
+                                                onClick={() => setQuantity(1)}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className={cn(
+                                                        "w-5 h-5 rounded-full border flex items-center justify-center transition-colors",
+                                                        quantity === 1 ? "border-primary bg-primary" : "border-muted-foreground/50"
+                                                    )}>
+                                                        {quantity === 1 && <Check className="w-3.5 h-3.5 text-primary-foreground" />}
+                                                    </div>
+                                                    <Label className="cursor-pointer font-medium text-muted-foreground">
+                                                        {language === 'ar' ? 'قطعة واحدة فقط' : 'Just 1 Item'}
+                                                    </Label>
+                                                </div>
+                                                <span className="font-semibold text-muted-foreground">{formatPrice((product.sale_price && product.sale_price > 0) ? product.sale_price : product.price)}</span>
+                                            </div>
 
-                                                        if (variant.display_type === 'color' || variant.option_type === 'color') {
-                                                            return (
-                                                                <button
-                                                                    key={option.id}
-                                                                    onClick={() => (product.ignore_stock || option.in_stock !== false) && handleOptionSelect(itemIndex, variant.id, option.id)}
-                                                                    disabled={!product.ignore_stock && option.in_stock === false}
-                                                                    className={cn(
-                                                                        "w-12 h-12 rounded-full border-2 transition-all relative flex items-center justify-center disabled:cursor-not-allowed",
-                                                                        isSelected ? "border-primary ring-2 ring-primary/20 scale-110" : "border-transparent ring-1 ring-border hover:scale-105",
-                                                                        (!product.ignore_stock && option.in_stock === false) && "opacity-40 grayscale"
-                                                                    )}
-                                                                    style={{ backgroundColor: option.value }}
-                                                                    title={option.label[language] || option.label.ar}
-                                                                >
-                                                                    {isSelected && <Check className="w-5 h-5 text-white drop-shadow-md" />}
-                                                                    {(!product.ignore_stock && option.in_stock === false) && (
-                                                                        <div className="absolute inset-0 flex items-center justify-center">
-                                                                            <div className="w-full h-[2px] bg-red-500/80 rotate-45 transform" />
-                                                                        </div>
-                                                                    )}
-                                                                </button>
-                                                            );
-                                                        }
+                                            {/* Premium Offers */}
+                                            {upsellOffers.map((offer, idx) => {
+                                                const isSelected = quantity === offer.min_quantity;
+                                                const badge = offer.badge[language] || offer.badge.ar;
+                                                const label = offer.label[language] || offer.label.ar;
 
-                                                        if (variant.display_type === 'image' || variant.option_type === 'image') {
-                                                            return (
-                                                                <button
-                                                                    key={option.id}
-                                                                    onClick={() => (product.ignore_stock || option.in_stock !== false) && handleOptionSelect(itemIndex, variant.id, option.id)}
-                                                                    disabled={!product.ignore_stock && option.in_stock === false}
-                                                                    className={cn(
-                                                                        "w-16 h-16 rounded-md border-2 overflow-hidden relative transition-all disabled:cursor-not-allowed",
-                                                                        isSelected ? "border-primary ring-2 ring-primary/20" : "border-transparent ring-1 ring-border opacity-80 hover:opacity-100",
-                                                                        (!product.ignore_stock && option.in_stock === false) && "opacity-40 grayscale"
-                                                                    )}
-                                                                    title={option.label[language] || option.label.ar}
-                                                                >
-                                                                    {option.value ? (
-                                                                        <img src={option.value} alt="" className="w-full h-full object-cover" />
-                                                                    ) : (
-                                                                        <div className="w-full h-full flex items-center justify-center bg-muted">
-                                                                            <span className="text-[10px] text-muted-foreground p-1 text-center">{option.label[language] || option.label.ar}</span>
+                                                const effectivePrice = (product.sale_price && product.sale_price > 0) ? product.sale_price : product.price;
+                                                const originalTotal = effectivePrice * offer.min_quantity;
+                                                let discountedTotal = originalTotal;
+
+                                                if (offer.discount_type === 'percentage') {
+                                                    discountedTotal = originalTotal * (1 - offer.discount_value / 100);
+                                                } else {
+                                                    discountedTotal = Math.max(0, originalTotal - (offer.discount_value * offer.min_quantity));
+                                                }
+
+                                                const savedAmount = originalTotal - discountedTotal;
+                                                const perItem = discountedTotal / offer.min_quantity;
+                                                const randomLeft = (offer.min_quantity * 2 + 1) % 5 + 2;
+
+                                                return (
+                                                    <div
+                                                        key={offer.id}
+                                                        className={cn(
+                                                            "relative rounded-2xl cursor-pointer transition-all duration-300 transform",
+                                                            isSelected
+                                                                ? "border-[3px] border-primary shadow-[0_0_20px_rgba(var(--primary),0.15)] scale-[1.02] bg-primary/[0.03]"
+                                                                : "border-2 border-border/60 hover:border-primary/50 hover:scale-[1.01] bg-card"
+                                                        )}
+                                                        onClick={() => setQuantity(offer.min_quantity)}
+                                                    >
+                                                        {badge && (
+                                                            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10 w-full max-w-[80%] flex justify-center">
+                                                                <div className={cn(
+                                                                    "px-4 py-1 rounded-full text-xs font-bold text-center shadow-sm text-white whitespace-nowrap",
+                                                                    isSelected ? "bg-gradient-to-r from-primary to-primary/80 animate-in zoom-in" : "bg-primary/80"
+                                                                )}>
+                                                                    {badge}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                        {isSelected && <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-primary/[0.05] to-transparent pointer-events-none" />}
+
+                                                        <div className="p-4 pt-5 pb-5">
+                                                            <div className="flex items-start gap-4">
+                                                                <div className={cn(
+                                                                    "mt-1 w-6 h-6 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all duration-300",
+                                                                    isSelected ? "border-primary bg-primary" : "border-muted-foreground/30 bg-background"
+                                                                )}>
+                                                                    {isSelected && <Check className="w-4 h-4 text-primary-foreground animate-in zoom-in duration-200" />}
+                                                                </div>
+
+                                                                <div className="flex-1 space-y-3">
+                                                                    <div className="flex justify-between items-start gap-2">
+                                                                        <h4 className={cn("font-bold text-lg", isSelected ? "text-primary" : "text-foreground")}>
+                                                                            {label || `${language === 'ar' ? 'باقة' : 'Bundle'} ${offer.min_quantity} ${language === 'ar' ? 'قطع' : 'Items'}`}
+                                                                        </h4>
+                                                                        <div className="text-end">
+                                                                            <div className="flex flex-col items-end">
+                                                                                <span className="text-xs text-muted-foreground line-through mb-0.5">{formatPrice(effectivePrice)}</span>
+                                                                                <span className="font-black text-xl leading-none text-foreground flex items-baseline gap-1">
+                                                                                    {formatPrice(perItem)}
+                                                                                    <span className="text-xs font-normal text-muted-foreground">/{language === 'ar' ? 'للقطعة' : 'ea'}</span>
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="h-px w-full bg-border/50 border-dashed border-b" />
+                                                                    <div className="flex items-center justify-between mt-3">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <div className="inline-flex items-center gap-1 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-xs font-black px-2.5 py-1 rounded-full shadow-sm">
+                                                                                <span>🔥</span>
+                                                                                <span>{language === 'ar' ? 'وفر' : 'Save'} {offer.discount_type === 'percentage' ? `${offer.discount_value}%` : formatPrice(savedAmount)}</span>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="text-sm font-medium">
+                                                                            {language === 'ar' ? 'الإجمالي:' : 'Total:'} <span className="font-bold text-primary">{formatPrice(discountedTotal)}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    {isSelected && idx === upsellOffers.length - 1 && (
+                                                                        <div className="pt-2 animate-in fade-in slide-in-from-top-1 duration-300">
+                                                                            <div className="flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-500 bg-amber-50 dark:bg-amber-950/30 px-2 py-1.5 rounded-md">
+                                                                                <Zap className="w-3.5 h-3.5 fill-current animate-pulse" />
+                                                                                {language === 'ar' ? `تبقى ${randomLeft} باقات فقط بهذا العرض!` : `Only ${randomLeft} bundles left at this price!`}
+                                                                            </div>
                                                                         </div>
                                                                     )}
-                                                                    {isSelected && (
-                                                                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                                                                            <Check className="w-6 h-6 text-white" />
-                                                                        </div>
-                                                                    )}
-                                                                    {(!product.ignore_stock && option.in_stock === false) && (
-                                                                        <div className="absolute inset-0 flex items-center justify-center bg-white/30 backdrop-blur-[1px]">
-                                                                            <span className="text-[10px] font-bold text-destructive bg-white/90 px-1 py-0.5 rounded shadow-sm border border-destructive/20 whitespace-nowrap">
-                                                                                {language === 'ar' ? 'نفد' : 'Out'}
-                                                                            </span>
-                                                                        </div>
-                                                                    )}
-                                                                </button>
-                                                            );
-                                                        }
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </RadioGroup>
+                                    </div>
+                                );
+
+                            case 'variants':
+                                if (variants.length === 0) return null;
+                                return (
+                                    <div key={block.id} className="space-y-6">
+                                        {Array.from({ length: quantity }).map((_, itemIndex) => (
+                                            <div key={itemIndex} className="p-4 border rounded-lg bg-card/50">
+                                                {quantity > 1 && (
+                                                    <h3 className="font-medium mb-4 flex items-center gap-2">
+                                                        <span className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-xs">
+                                                            {itemIndex + 1}
+                                                        </span>
+                                                        {language === 'ar' ? `القطعة ${itemIndex + 1}` : `Item ${itemIndex + 1}`}
+                                                    </h3>
+                                                )}
+
+                                                <div className="space-y-4">
+                                                    {variants.map((variant) => {
+                                                        const selectedOptionId = selections[itemIndex]?.[variant.id];
+                                                        const selectedOption = variant.options.find(o => o.id === selectedOptionId);
+                                                        const selectedLabel = selectedOption ? (selectedOption.label[language] || selectedOption.label.ar) : '';
 
                                                         return (
-                                                            <button
-                                                                key={option.id}
-                                                                onClick={() => (product.ignore_stock || option.in_stock !== false) && handleOptionSelect(itemIndex, variant.id, option.id)}
-                                                                disabled={!product.ignore_stock && option.in_stock === false}
-                                                                className={cn(
-                                                                    "px-4 py-2 rounded-md border text-sm transition-all min-w-[3rem] disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-muted/50 disabled:line-through",
-                                                                    isSelected
-                                                                        ? "border-primary bg-primary/10 text-primary font-medium"
-                                                                        : "border-border hover:border-primary/50 text-muted-foreground bg-card"
-                                                                )}
-                                                            >
-                                                                {option.label[language] || option.label.ar}
-                                                                {(!product.ignore_stock && option.in_stock === false) && (
-                                                                    <span className="ms-1 text-xs opacity-70">
-                                                                        ({language === 'ar' ? 'نفد' : 'Out'})
-                                                                    </span>
-                                                                )}
-                                                            </button>
+                                                            <div key={variant.id} className="space-y-3">
+                                                                <div className="flex items-center justify-between">
+                                                                    <label className="text-sm font-medium text-foreground">
+                                                                        {variant.name[language] || variant.name.ar}
+                                                                        {selectedLabel && (
+                                                                            <span className="text-muted-foreground ms-2 font-normal">
+                                                                                : {selectedLabel}
+                                                                            </span>
+                                                                        )}
+                                                                    </label>
+                                                                </div>
+
+                                                                <div className="flex flex-wrap gap-2">
+                                                                    {variant.options.map((option) => {
+                                                                        const isSelected = selections[itemIndex]?.[variant.id] === option.id;
+
+                                                                        if (variant.display_type === 'color' || variant.option_type === 'color') {
+                                                                            return (
+                                                                                <button
+                                                                                    key={option.id}
+                                                                                    onClick={() => (product.ignore_stock || option.in_stock !== false) && handleOptionSelect(itemIndex, variant.id, option.id)}
+                                                                                    disabled={!product.ignore_stock && option.in_stock === false}
+                                                                                    className={cn(
+                                                                                        "w-12 h-12 rounded-full border-2 transition-all relative flex items-center justify-center disabled:cursor-not-allowed",
+                                                                                        isSelected ? "border-primary ring-2 ring-primary/20 scale-110" : "border-transparent ring-1 ring-border hover:scale-105",
+                                                                                        (!product.ignore_stock && option.in_stock === false) && "opacity-40 grayscale"
+                                                                                    )}
+                                                                                    style={{ backgroundColor: option.value }}
+                                                                                    title={option.label[language] || option.label.ar}
+                                                                                >
+                                                                                    {isSelected && <Check className="w-5 h-5 text-white drop-shadow-md" />}
+                                                                                    {(!product.ignore_stock && option.in_stock === false) && (
+                                                                                        <div className="absolute inset-0 flex items-center justify-center">
+                                                                                            <div className="w-full h-[2px] bg-red-500/80 rotate-45 transform" />
+                                                                                        </div>
+                                                                                    )}
+                                                                                </button>
+                                                                            );
+                                                                        }
+
+                                                                        if (variant.display_type === 'image' || variant.option_type === 'image') {
+                                                                            return (
+                                                                                <button
+                                                                                    key={option.id}
+                                                                                    onClick={() => (product.ignore_stock || option.in_stock !== false) && handleOptionSelect(itemIndex, variant.id, option.id)}
+                                                                                    disabled={!product.ignore_stock && option.in_stock === false}
+                                                                                    className={cn(
+                                                                                        "w-16 h-16 rounded-md border-2 overflow-hidden relative transition-all disabled:cursor-not-allowed",
+                                                                                        isSelected ? "border-primary ring-2 ring-primary/20" : "border-transparent ring-1 ring-border opacity-80 hover:opacity-100",
+                                                                                        (!product.ignore_stock && option.in_stock === false) && "opacity-40 grayscale"
+                                                                                    )}
+                                                                                    title={option.label[language] || option.label.ar}
+                                                                                >
+                                                                                    {option.value ? (
+                                                                                        <img src={option.value} alt="" className="w-full h-full object-cover" />
+                                                                                    ) : (
+                                                                                        <div className="w-full h-full flex items-center justify-center bg-muted">
+                                                                                            <span className="text-[10px] text-muted-foreground p-1 text-center">{option.label[language] || option.label.ar}</span>
+                                                                                        </div>
+                                                                                    )}
+                                                                                    {isSelected && (
+                                                                                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                                                                                            <Check className="w-6 h-6 text-white" />
+                                                                                        </div>
+                                                                                    )}
+                                                                                    {(!product.ignore_stock && option.in_stock === false) && (
+                                                                                        <div className="absolute inset-0 flex items-center justify-center bg-white/30 backdrop-blur-[1px]">
+                                                                                            <span className="text-[10px] font-bold text-destructive bg-white/90 px-1 py-0.5 rounded shadow-sm border border-destructive/20 whitespace-nowrap">
+                                                                                                {language === 'ar' ? 'نفد' : 'Out'}
+                                                                                            </span>
+                                                                                        </div>
+                                                                                    )}
+                                                                                </button>
+                                                                            );
+                                                                        }
+
+                                                                        return (
+                                                                            <button
+                                                                                key={option.id}
+                                                                                onClick={() => (product.ignore_stock || option.in_stock !== false) && handleOptionSelect(itemIndex, variant.id, option.id)}
+                                                                                disabled={!product.ignore_stock && option.in_stock === false}
+                                                                                className={cn(
+                                                                                    "px-4 py-2 rounded-md border text-sm transition-all min-w-[3rem] disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-muted/50 disabled:line-through",
+                                                                                    isSelected
+                                                                                        ? "border-primary bg-primary/10 text-primary font-medium"
+                                                                                        : "border-border hover:border-primary/50 text-muted-foreground bg-card"
+                                                                                )}
+                                                                            >
+                                                                                {option.label[language] || option.label.ar}
+                                                                                {(!product.ignore_stock && option.in_stock === false) && (
+                                                                                    <span className="ms-1 text-xs opacity-70">
+                                                                                        ({language === 'ar' ? 'نفد' : 'Out'})
+                                                                                    </span>
+                                                                                )}
+                                                                            </button>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            </div>
                                                         );
                                                     })}
                                                 </div>
                                             </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Add to Cart */}
-                    <div className="space-y-4 pt-4 border-t">
-                        <div className="flex items-center justify-between">
-                            <span className="text-lg font-medium">{language === 'ar' ? 'الإجمالي' : 'Total'}</span>
-                            <div className="text-end">
-                                <div className="text-2xl font-bold">{formatPrice(totalPrice)}</div>
-                                {applicableOffer && (
-                                    <div className="text-sm text-green-600">
-                                        {language === 'ar' ? 'يشمل الخصم' : 'Includes discount'}
+                                        ))}
                                     </div>
-                                )}
-                            </div>
-                        </div>
+                                );
 
-                        {/* Action Buttons */}
-                        <div className="flex flex-col gap-3">
-                            {!product.skip_cart && (
-                                <Button
-                                    size="lg"
-                                    className="flex-1 h-14 md:h-11 rounded-xl md:rounded-md text-base md:text-sm font-semibold md:font-medium shadow-md md:shadow-none"
-                                    onClick={handleAddToCart}
-                                    disabled={addingToCart || (!product.ignore_stock && product.stock_quantity === 0)}
-                                >
-                                    {addingToCart ? (
-                                        <Loader2 className="w-5 h-5 md:w-4 md:h-4 animate-spin" />
-                                    ) : (
-                                        <ShoppingCart className="w-5 h-5 md:w-4 md:h-4 me-2" />
-                                    )}
-                                    {(!product.ignore_stock && product.stock_quantity === 0)
-                                        ? (language === 'ar' ? 'نفذت الكمية' : 'Out of Stock')
-                                        : (language === 'ar' ? 'إضافة للسلة' : 'Add to Cart')
-                                    }
-                                </Button>
-                            )}
+                            case 'buy_buttons':
+                                return (
+                                    <div key={block.id} className="space-y-4 pt-4 border-t mt-4">
+                                        <div className="flex flex-col gap-3">
+                                            {!product.skip_cart && (
+                                                <Button
+                                                    size="lg"
+                                                    className="flex-1 h-14 md:h-11 rounded-xl md:rounded-md text-base md:text-sm font-semibold md:font-medium shadow-md md:shadow-none"
+                                                    onClick={handleAddToCart}
+                                                    disabled={addingToCart || (!product.ignore_stock && product.stock_quantity === 0)}
+                                                >
+                                                    {addingToCart ? (
+                                                        <Loader2 className="w-5 h-5 md:w-4 md:h-4 animate-spin" />
+                                                    ) : (
+                                                        <ShoppingCart className="w-5 h-5 md:w-4 md:h-4 me-2" />
+                                                    )}
+                                                    {(!product.ignore_stock && product.stock_quantity === 0)
+                                                        ? (language === 'ar' ? 'نفذت الكمية' : 'Out of Stock')
+                                                        : (block.settings?.add_to_cart_text || addToCartText)
+                                                    }
+                                                </Button>
+                                            )}
 
-                            <Button
-                                size="lg"
-                                variant={product.skip_cart ? "default" : "outline"}
-                                className={cn(
-                                    "w-full rounded-xl md:rounded-md text-base md:text-sm font-bold shadow-md md:shadow-none transition-all duration-200 active:scale-95",
-                                    product.skip_cart ? "h-16 md:h-14 text-lg md:text-base bg-emerald-600 hover:bg-emerald-700 text-white" : "h-14 md:h-11 border-primary text-primary hover:bg-primary/10 bg-background"
-                                )}
-                                onClick={handleQuickOrder}
-                                disabled={!product.ignore_stock && product.stock_quantity === 0}
-                            >
-                                <Zap className={cn("me-2", product.skip_cart ? "w-6 h-6" : "w-5 h-5 md:w-4 md:h-4")} />
-                                {language === 'ar' ? 'اطلب الآن (شراء مباشر)' : 'Order Now (Buy Now)'}
-                            </Button>
-                        </div>
+                                            {block.settings?.show_quick_buy !== false && block.settings?.show_quick_buy !== 'false' && (
+                                                <Button
+                                                    size="lg"
+                                                    variant={product.skip_cart ? "default" : "outline"}
+                                                    className={cn(
+                                                        "w-full rounded-xl md:rounded-md text-base md:text-sm font-bold shadow-md md:shadow-none transition-all duration-200 active:scale-95",
+                                                        product.skip_cart ? "h-16 md:h-14 text-lg md:text-base bg-emerald-600 hover:bg-emerald-700 text-white" : "h-14 md:h-11 border-primary text-primary hover:bg-primary/10 bg-background"
+                                                    )}
+                                                    onClick={handleQuickOrder}
+                                                    disabled={!product.ignore_stock && product.stock_quantity === 0}
+                                                >
+                                                    <Zap className={cn("me-2", product.skip_cart ? "w-6 h-6" : "w-5 h-5 md:w-4 md:h-4")} />
+                                                    {language === 'ar' ? 'اطلب الآن (شراء مباشر)' : 'Order Now (Buy Now)'}
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
 
-                        {/* Shipping Info Bottom */}
-                        <div className="bg-muted/30 p-3 rounded-lg text-center text-sm text-muted-foreground">
-                            {product.free_shipping
-                                ? (language === 'ar' ? '✨ شحن مجاني لهذا المنتج' : '✨ Free Shipping for this product')
-                                : (() => {
-                                    const shipping = store.settings?.shipping;
-                                    if (shipping?.type === 'fixed') {
-                                        const cost = Number(shipping.fixed_price) || 0;
-                                        return cost === 0
-                                            ? (language === 'ar' ? '✨ شحن مجاني لهذا المنتج' : '✨ Free Shipping')
-                                            : (language === 'ar' ? `🚚 تكلفة الشحن: ${formatPrice(cost)}` : `🚚 Shipping Cost: ${formatPrice(cost)}`);
-                                    } else if (shipping?.type === 'dynamic') {
-                                        return language === 'ar' ? '🚚 يتم حساب الشحن حسب محافظتك' : '🚚 Shipping calculated at checkout';
-                                    }
-                                    return null;
-                                })()}
-                        </div>
-                    </div>
+                            case 'shipping_info':
+                                return (
+                                    <div key={block.id} className="bg-muted/30 p-3 rounded-lg text-center text-sm text-muted-foreground mt-2">
+                                        {block.settings?.shipping_text ? (
+                                            <div className="flex items-center justify-center gap-2">
+                                                <Truck className="w-4 h-4" />
+                                                <span>{block.settings.shipping_text}</span>
+                                            </div>
+                                        ) : product.free_shipping
+                                            ? (language === 'ar' ? '✨ شحن مجاني لهذا المنتج' : '✨ Free Shipping for this product')
+                                            : (() => {
+                                                const shipping = store.settings?.shipping;
+                                                if (shipping?.type === 'fixed') {
+                                                    const cost = Number(shipping.fixed_price) || 0;
+                                                    return cost === 0
+                                                        ? (language === 'ar' ? '✨ شحن مجاني لهذا المنتج' : '✨ Free Shipping')
+                                                        : (language === 'ar' ? `🚚 تكلفة الشحن: ${formatPrice(cost)}` : `🚚 Shipping Cost: ${formatPrice(cost)}`);
+                                                } else if (shipping?.type === 'dynamic') {
+                                                    return language === 'ar' ? '🚚 يتم حساب الشحن حسب محافظتك' : '🚚 Shipping calculated at checkout';
+                                                }
+                                                return <Truck className="inline-block w-4 h-4 me-1" />;
+                                            })()}
+                                    </div>
+                                );
+
+                            case 'description':
+                                return (
+                                    <div key={block.id} className="pt-6 border-t mt-6 prose dark:prose-invert max-w-none text-foreground/80 text-sm md:text-base">
+                                        <div dangerouslySetInnerHTML={{ __html: product.description[language] || product.description.ar || '' }} />
+                                    </div>
+                                );
+
+                            default:
+                                return null;
+                        }
+                    })}
+
                     {/* Quick Order Dialog */}
                     <QuickOrderForm
                         isOpen={quickOrderOpen}

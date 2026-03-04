@@ -1,0 +1,153 @@
+{
+    "name": "صفحة الدفع",
+    "type": "main_checkout",
+    "settings": [
+        {
+            "type": "text",
+            "id": "form_title",
+            "label": "عنوان نموذج الدفع",
+            "default": "معلومات الشحن والدفع"
+        },
+        {
+            "type": "text",
+            "id": "button_text",
+            "label": "نص زر تأكيد الطلب",
+            "default": "تأكيد الطلب الآن"
+        },
+        {
+            "type": "text",
+            "id": "notes_placeholder",
+            "label": "نص ملاحظات الطلب الوهمي",
+            "default": "اكتب ملاحظاتك مع الطلب هنا..."
+        }
+    ],
+    "blocks": [
+        {
+            "type": "trust_badge",
+            "name": "شارة ثقة (Trust Badge)",
+            "limit": 4,
+            "settings": [
+                {
+                    "type": "image_picker",
+                    "id": "image",
+                    "label": "صورة الشارة"
+                },
+                {
+                    "type": "text",
+                    "id": "title",
+                    "label": "عنوان الشارة",
+                    "default": "دفع آمن"
+                }
+            ]
+        },
+        {
+            "type": "checkout_field",
+            "name": "حقل أساسي (Name, Phone, etc)",
+            "settings": [
+                {
+                    "type": "select",
+                    "id": "field_id",
+                    "label": "نوع الحقل",
+                    "default": "name",
+                    "options": [
+                        {
+                            "value": "name",
+                            "label": "الاسم الكامل"
+                        },
+                        {
+                            "value": "phone",
+                            "label": "رقم الجوال"
+                        },
+                        {
+                            "value": "alt_phone",
+                            "label": "رقم جوال بديل"
+                        },
+                        {
+                            "value": "email",
+                            "label": "البريد الإلكتروني"
+                        },
+                        {
+                            "value": "governorate",
+                            "label": "المحافظة/المنطقة"
+                        },
+                        {
+                            "value": "city",
+                            "label": "المدينة"
+                        },
+                        {
+                            "value": "address",
+                            "label": "العنوان التفصيلي"
+                        },
+                        {
+                            "value": "notes",
+                            "label": "ملاحظات الطلب"
+                        }
+                    ]
+                },
+                {
+                    "type": "boolean",
+                    "id": "visible",
+                    "label": "إظهار الحقل",
+                    "default": true
+                },
+                {
+                    "type": "boolean",
+                    "id": "required",
+                    "label": "حقل إلزامي",
+                    "default": true
+                },
+                {
+                    "type": "text",
+                    "id": "placeholder",
+                    "label": "النص الوهمي (Placeholder)"
+                }
+            ]
+        },
+        {
+            "type": "custom_text_field",
+            "name": "حقل نصي مخصص (سطر واحد)",
+            "settings": [
+                {
+                    "type": "text",
+                    "id": "label",
+                    "label": "اسم الحقل",
+                    "default": "حقل إضافي"
+                },
+                {
+                    "type": "boolean",
+                    "id": "required",
+                    "label": "حقل إلزامي",
+                    "default": false
+                },
+                {
+                    "type": "text",
+                    "id": "placeholder",
+                    "label": "النص الوهمي (Placeholder)"
+                }
+            ]
+        },
+        {
+            "type": "custom_textarea_field",
+            "name": "حقل نصي مخصص (متعدد الأسطر)",
+            "settings": [
+                {
+                    "type": "text",
+                    "id": "label",
+                    "label": "اسم الحقل",
+                    "default": "ملاحظات إضافية"
+                },
+                {
+                    "type": "boolean",
+                    "id": "required",
+                    "label": "حقل إلزامي",
+                    "default": false
+                },
+                {
+                    "type": "text",
+                    "id": "placeholder",
+                    "label": "النص الوهمي (Placeholder)"
+                }
+            ]
+        }
+    ]
+}

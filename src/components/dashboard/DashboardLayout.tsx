@@ -180,6 +180,12 @@ export function DashboardLayout({
         },
         {
             icon: Paintbrush,
+            label: language === 'ar' ? 'المظهر (الثيمات)' : 'Themes',
+            href: `/dashboard/${storeId}/themes`,
+            show: isEditor,
+        },
+        {
+            icon: LayoutDashboard,
             label: language === 'ar' ? 'محرر المتجر' : 'Store Editor',
             href: `/dashboard/${storeId}/editor`,
             show: isEditor,
@@ -196,15 +202,7 @@ export function DashboardLayout({
             href: `/dashboard/${storeId}/wallet`,
             show: isOwner,
         },
-    ].filter(item => item.show).map(item => {
-        // If we are on a subdomain (passed from server), clean the URLs
-        if (isSubdomain) {
-            if (item.href.startsWith(`/dashboard/${storeId}`)) {
-                return { ...item, href: item.href.replace(`/dashboard/${storeId}`, '/dashboard') };
-            }
-        }
-        return item;
-    });
+    ].filter(item => item.show);
 
     const NavContent = () => (
         <nav className="space-y-1">

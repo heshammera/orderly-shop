@@ -2,8 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
-import { RenderEngine } from '@/components/store/builder/RenderEngine';
-import { DEFAULT_STORE_LAYOUT } from '@/lib/store-builder/types';
+import ThemePreviewManager from '@/components/ThemeEngine/ThemePreviewManager';
 import { Metadata } from 'next';
 
 export const revalidate = 0;
@@ -151,34 +150,68 @@ export default async function StorePage({ params }: { params: { storeSlug: strin
         headerCategories: parsedHeaderCategories,
     };
 
-    // Fetch Home Page Layout for Active Stores
-    // console.log('[StorePage] Fetching home page for store_id:', store.id);
-    const { data: page, error: pageError } = await supabase
-        .from('store_pages')
-        .select('content, updated_at')
+    // Fetch Active Theme and Overrides
+    const { data: activeTheme, error: themeError } = await supabase
+        .from('store_themes')
+        .select(`
+            id,
+            global_tokens,
+            store_theme_templates (page_type, settings_data),
+            theme_versions (
+                themes (
+                    folder_name
+                )
+            )
+        `)
         .eq('store_id', store.id)
-        .eq('slug', 'home')
-        .eq('is_published', true)
+        .eq('is_active', true)
         .maybeSingle();
 
-    if (pageError) {
-        console.error('[StorePage] Error fetching page:', pageError);
+    if (themeError) {
+        console.error('[StorePage] Error fetching active theme:', themeError);
     }
 
-    // console.log('[StorePage] Page data - exists:', !!page, 'sections:', page?.content?.sections?.length);
+    const homeOverride = activeTheme?.store_theme_templates?.find((o: any) => o.page_type === 'home')?.settings_data;
 
-    // Use DB content or Fallback to Professional Default
-    const pageContent = page?.content || DEFAULT_STORE_LAYOUT;
-    // console.log('[StorePage] Using content with sections count:', pageContent?.sections?.length);
+    // Safely type-cast the deeply nested relation to get folder_name
+    const themeName = (activeTheme?.theme_versions as any)?.themes?.folder_name || 'default';
+
+    // Default Fallback
+    const DEFAULT_PAGE_DATA = {
+        sections_order: ['header_1', 'hero_banner_1', 'category_slider_1', 'featured_grid_1', 'newsletter_1', 'footer_1'],
+        sections_data: {
+            'header_1': { type: 'header', settings: { notice_text: '🔥 شحن مجاني للطلبات فوق 200 ريال!', search_placeholder: 'ابحث عن منتج...' }, blocks: [{ type: 'link', settings: { label: 'الرئيسية', url: '/' } }, { type: 'link', settings: { label: 'كل المنتجات', url: '/products' } }] },
+            'hero_banner_1': { type: 'hero_banner', settings: { heading: 'اكتشف أحدث العروض الحصرية', subheading: 'تسوق الآن واحصل على خصم 20%', button_label: 'تسوق الآن' }, blocks: [] },
+            'category_slider_1': { type: 'category_slider', settings: { heading: 'تسوق حسب القسم', subheading: 'تصفح مجموعاتنا' }, blocks: [] },
+            'featured_grid_1': { type: 'featured_grid', settings: { heading: 'استمتع بأحدث التشكيلات', subheading: 'اخترنا لك بعناية' }, blocks: [] },
+            'footer_1': { type: 'footer', settings: { about_heading: 'عن متجرنا', about_text: 'نقدم أفضل المنتجات.', copyright: 'جميع الحقوق محفوظة' }, blocks: [] },
+            'newsletter_1': { type: 'newsletter', settings: { heading: 'اشترك في نشرتنا البريدية', button_label: 'اشتراك' }, blocks: [] }
+        }
+    };
+
+    const DEFAULT_GLOBAL_TOKENS = {
+        'primary': '262.1 83.3% 57.8%',
+        'primary-foreground': '210 40% 98%',
+        'background': '0 0% 100%',
+        'foreground': '222.2 84% 4.9%',
+        'radius': '1rem'
+    };
+
+    const initialPageData = homeOverride?.sections_order ? {
+        sections_order: homeOverride.sections_order,
+        sections_data: homeOverride.sections_data || {}
+    } : DEFAULT_PAGE_DATA;
+
+    const initialTokens = activeTheme?.global_tokens ? activeTheme.global_tokens : DEFAULT_GLOBAL_TOKENS;
 
     return (
         <main>
-            <RenderEngine
-                schema={pageContent}
-                storeId={store.id}
-                storeCurrency={store.currency || 'SAR'}
-                storeSlug={params.storeSlug}
-                store={storeWithCategories}
+            <ThemePreviewManager
+                initialPageData={initialPageData}
+                initialTokens={initialTokens}
+                isRTL={true}
+                storeContext={storeWithCategories}
+                themeName={themeName}
             />
         </main>
     );

@@ -128,7 +128,7 @@ export default function PlansPage() {
             })
         });
 
-        const data = await res.json();
+        const data: any = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to save plan');
 
         toast.success(editingPlan ? 'Plan updated successfully' : 'Plan created successfully');
@@ -142,7 +142,7 @@ export default function PlansPage() {
         if (!confirm('Are you sure you want to delete this plan?')) return;
 
         const res = await fetch(`/api/admin/plans?id=${plan.id}`, { method: 'DELETE' });
-        const data = await res.json();
+        const data: any = await res.json();
 
         if (!res.ok) {
             // Check for foreign key constraint violation (code 23503)
@@ -150,7 +150,7 @@ export default function PlansPage() {
                 const deactivate = confirm('This plan cannot be deleted because it has active subscriptions. Do you want to deactivate it instead? (It will no longer be available for new stores)');
                 if (deactivate) {
                     const deactRes = await fetch(`/api/admin/plans?id=${plan.id}&action=deactivate`, { method: 'DELETE' });
-                    const deactData = await deactRes.json();
+                    const deactData: any = await deactRes.json();
 
                     if (!deactRes.ok) {
                         toast.error(deactData.error || 'Failed to deactivate plan');

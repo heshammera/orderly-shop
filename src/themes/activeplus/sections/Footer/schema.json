@@ -1,0 +1,54 @@
+{
+    "name": "تذييل الموقع (Footer)",
+    "type": "footer",
+    "settings": [
+        {
+            "type": "text",
+            "id": "about_heading",
+            "label": "عنوان عن المتجر",
+            "default": "عن متجرنا"
+        },
+        {
+            "type": "text",
+            "id": "about_text",
+            "label": "نص عن المتجر",
+            "default": "نحن نقدم أفضل المنتجات جودة وأسعاراً تنافسية لعملائنا في جميع أنحاء العالم."
+        },
+        {
+            "type": "text",
+            "id": "links_heading",
+            "label": "عنوان الروابط السريعة",
+            "default": "روابط سريعة"
+        },
+        {
+            "type": "text",
+            "id": "contact_heading",
+            "label": "عنوان اتصل بنا",
+            "default": "تواصل معنا"
+        },
+        {
+            "type": "text",
+            "id": "contact_email",
+            "label": "البريد الإلكتروني",
+            "default": "support@example.com"
+        },
+        {
+            "type": "text",
+            "id": "contact_phone",
+            "label": "رقم الهاتف",
+            "default": "+966 000 000 000"
+        },
+        {
+            "type": "text",
+            "id": "copyright",
+            "label": "نص حقوق الملكية",
+            "default": "جميع الحقوق محفوظة © 2026"
+        }
+    ],
+    "presets": [
+        {
+            "name": "الفوتر الأساسي",
+            "category": "تصميم المتجر"
+        }
+    ]
+}

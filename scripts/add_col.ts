@@ -10,10 +10,16 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PU
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function main() {
+    const fs = require('fs');
+    const sql = fs.readFileSync('supabase/migrations/20260304000000_add_theme_metadata.sql', 'utf8');
     const { data, error } = await supabase.rpc('execute_sql', {
-        query: 'ALTER TABLE variant_options ADD COLUMN IF NOT EXISTS in_stock BOOLEAN DEFAULT true;'
+        query: sql
     });
-    console.log(error || data);
+    if (error) {
+        console.error("Error executing add_theme_metadata SQL:", error);
+    } else {
+        console.log("Columns added successfully:", data);
+    }
 }
 
 main();

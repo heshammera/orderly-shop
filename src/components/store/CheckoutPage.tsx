@@ -9,9 +9,11 @@ import { Loader2 } from 'lucide-react';
 interface CheckoutPageProps {
     store: any;
     pageSchema: PageSchema | null;
+    themeSettings?: any;
+    themeBlocks?: any[];
 }
 
-export function CheckoutPage({ store, pageSchema }: CheckoutPageProps) {
+export function CheckoutPage({ store, pageSchema, themeSettings, themeBlocks }: CheckoutPageProps) {
     // Default Schema if not customized
     const schema = pageSchema || {
         globalSettings: {
@@ -26,8 +28,62 @@ export function CheckoutPage({ store, pageSchema }: CheckoutPageProps) {
         ]
     } as PageSchema;
 
-    const headerSection = schema.sections.find(s => s.type === 'CheckoutHeader');
-    const otherSections = schema.sections.filter(s => s.type !== 'CheckoutHeader');
+    const modifiedSchema = JSON.parse(JSON.stringify(schema)); // deep clone
+
+    if (themeSettings) {
+        const checkoutFormSection = modifiedSchema.sections.find((s: any) => s.type === 'CheckoutForm');
+        if (checkoutFormSection) {
+            checkoutFormSection.content = checkoutFormSection.content || {};
+            if (themeSettings.form_title) checkoutFormSection.content.title = themeSettings.form_title;
+        }
+
+        const orderSummarySection = modifiedSchema.sections.find((s: any) => s.type === 'OrderSummary');
+        if (orderSummarySection) {
+            orderSummarySection.content = orderSummarySection.content || {};
+            if (themeSettings.button_text) orderSummarySection.content.buttonText = themeSettings.button_text;
+        }
+    }
+
+    if (themeBlocks && themeBlocks.length > 0) {
+        // 1. Trust Badges
+        const trustBadgeBlocks = themeBlocks.filter(b => b.type === 'trust_badge');
+        if (trustBadgeBlocks.length > 0) {
+            const trustBadgesSection = modifiedSchema.sections.find((s: any) => s.type === 'TrustBadges');
+            if (trustBadgesSection) {
+                trustBadgesSection.content = trustBadgesSection.content || {};
+                trustBadgesSection.content.badges = trustBadgeBlocks.map((b: any) => ({
+                    id: Math.random().toString(),
+                    title: b.settings?.title || '',
+                    image: b.settings?.image || ''
+                }));
+            }
+        }
+
+        // 2. Checkout Fields
+        const fieldBlockTypes = ['checkout_field', 'custom_text_field', 'custom_textarea_field'];
+        const checkoutFieldBlocks = themeBlocks.filter(b => fieldBlockTypes.includes(b.type));
+
+        if (checkoutFieldBlocks.length > 0) {
+            const checkoutFormSection = modifiedSchema.sections.find((s: any) => s.type === 'CheckoutForm');
+            if (checkoutFormSection) {
+                checkoutFormSection.settings = checkoutFormSection.settings || {};
+                // Map the blocks to a structured array that CheckoutForm understands
+                checkoutFormSection.settings.checkoutFields = checkoutFieldBlocks.map((block: any, index: number) => ({
+                    id: block.id, // Generate an ID if needed, or use the block's internal ID
+                    type: block.type,
+                    field_id: block.settings.field_id, // For standard fields
+                    label: block.settings.label, // For custom fields
+                    placeholder: block.settings.placeholder,
+                    required: block.settings.required,
+                    visible: block.type === 'checkout_field' ? block.settings.visible : true, // Custom fields are always visible if added
+                    order: index
+                }));
+            }
+        }
+    }
+
+    const headerSection = modifiedSchema.sections.find((s: any) => s.type === 'CheckoutHeader');
+    const otherSections = modifiedSchema.sections.filter((s: any) => s.type !== 'CheckoutHeader');
 
     if (!store) return (
         <div className="min-h-screen flex items-center justify-center">
@@ -41,7 +97,7 @@ export function CheckoutPage({ store, pageSchema }: CheckoutPageProps) {
                 {/* Fixed Header */}
                 {headerSection && (
                     <RenderEngine
-                        schema={{ ...schema, sections: [headerSection] }}
+                        schema={{ ...modifiedSchema, sections: [headerSection] }}
                         storeId={store.id}
                         storeCurrency={store.currency}
                         storeSlug={store.slug}
@@ -55,8 +111,8 @@ export function CheckoutPage({ store, pageSchema }: CheckoutPageProps) {
                         <div className="w-full lg:col-span-7 xl:col-span-8 space-y-8">
                             <RenderEngine
                                 schema={{
-                                    ...schema,
-                                    sections: otherSections.filter(s => s.type !== 'OrderSummary')
+                                    ...modifiedSchema,
+                                    sections: otherSections.filter((s: any) => s.type !== 'OrderSummary')
                                 }}
                                 storeId={store.id}
                                 storeCurrency={store.currency}
@@ -69,8 +125,8 @@ export function CheckoutPage({ store, pageSchema }: CheckoutPageProps) {
                         <aside className="w-full lg:col-span-5 xl:col-span-4 sticky top-24">
                             <RenderEngine
                                 schema={{
-                                    ...schema,
-                                    sections: otherSections.filter(s => s.type === 'OrderSummary')
+                                    ...modifiedSchema,
+                                    sections: otherSections.filter((s: any) => s.type === 'OrderSummary')
                                 }}
                                 storeId={store.id}
                                 storeCurrency={store.currency}

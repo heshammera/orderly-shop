@@ -374,7 +374,8 @@ export async function middleware(request: NextRequest) {
         !url.pathname.startsWith('/signup') &&
         !url.pathname.startsWith('/sso') &&
         !url.pathname.startsWith('/dashboard') &&
-        !url.pathname.startsWith('/editor')
+        !url.pathname.startsWith('/editor') &&
+        !url.pathname.startsWith('/test-theme')
     ) {
         const newUrl = url.clone();
         newUrl.pathname = `/s/${subdomain}${url.pathname}`;

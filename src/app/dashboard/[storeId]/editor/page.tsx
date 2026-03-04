@@ -1,102 +1,338 @@
-"use client";
+'use client';
 
-
-import { useState, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { createClient } from '@/lib/supabase/client';
-import { PageSchema, DEFAULT_STORE_LAYOUT, ComponentSchema, COMPONENT_DEFAULTS, ComponentType } from '@/lib/store-builder/types';
-import { StoreTemplate } from '@/lib/store-builder/templates';
-import { Button } from '@/components/ui/button';
-import { Loader2, Save, Eye, ArrowLeft, Undo2, Redo2 } from 'lucide-react';
+import { Loader2, ArrowLeft, Eye, Save, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import { DndContext, DragEndEvent, DragOverlay, useSensor, useSensors, PointerSensor, DragStartEvent, closestCorners } from '@dnd-kit/core';
+
+import SidebarForm from '@/components/ThemeEngine/Customizer/SidebarForm';
+import { SortableSidebarItem } from '@/components/ThemeEngine/Customizer/SortableSidebarItem';
+
+// Import schemas
+import featuredGridSchema from '@/themes/default/sections/FeaturedGrid/schema.json';
+import heroBannerSchema from '@/themes/default/sections/HeroBanner/schema.json';
+import categorySliderSchema from '@/themes/default/sections/CategorySlider/schema.json';
+import footerSchema from '@/themes/default/sections/Footer/schema.json';
+import headerSchema from '@/themes/default/sections/Header/schema.json';
+import newsletterSchema from '@/themes/default/sections/Newsletter/schema.json';
+import mainCheckoutSchema from '@/themes/default/sections/MainCheckout/schema.json';
+import mainProductSchema from '@/themes/default/sections/MainProduct/schema.json';
+
+import { hslToHex, hexToHsl } from '@/lib/color-utils';
 import {
-    ResizableHandle,
-    ResizablePanel,
-    ResizablePanelGroup,
-} from "@/components/ui/resizable";
-import { Canvas } from '@/components/store/builder/Canvas';
-import { EditorSidebar } from '@/components/store/builder/EditorSidebar';
-import { PropertiesPanel } from '@/components/store/builder/PropertiesPanel';
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LayoutList, Palette, PlusCircle } from 'lucide-react';
+
+const sectionSchemas: Record<string, any> = {
+    'header': headerSchema,
+    'hero_banner': heroBannerSchema,
+    'category_slider': categorySliderSchema,
+    'featured_grid': featuredGridSchema,
+    'newsletter': newsletterSchema,
+    'footer': footerSchema,
+    'main_checkout': mainCheckoutSchema,
+    'main_product': mainProductSchema,
+};
+
+const DEFAULT_GLOBAL_TOKENS = {
+    'primary': '262.1 83.3% 57.8%',
+    'primary-foreground': '210 40% 98%',
+    'background': '0 0% 100%',
+    'foreground': '222.2 84% 4.9%',
+    'radius': '1rem'
+};
+
+const DEFAULT_PAGE_DATA = {
+    sections_order: ['header_1', 'hero_banner_1', 'category_slider_1', 'featured_grid_1', 'newsletter_1', 'footer_1'],
+    sections_data: {
+        'header_1': { type: 'header', settings: { notice_text: '🔥 شحن مجاني للطلبات فوق 200 ريال!', search_placeholder: 'ابحث عن منتج...' }, blocks: [{ type: 'link', settings: { label: 'الرئيسية', url: '/' } }, { type: 'link', settings: { label: 'كل المنتجات', url: '/products' } }] },
+        'hero_banner_1': { type: 'hero_banner', settings: { heading: 'اكتشف أحدث العروض الحصرية', subheading: 'تسوق الآن واحصل على خصم 20%', button_label: 'تسوق الآن' }, blocks: [] },
+        'category_slider_1': {
+            type: 'category_slider', settings: { heading: 'تسوق حسب القسم', subheading: 'تصفح مجموعاتنا' }, blocks: [
+                { type: 'category', settings: { title: 'إلكترونيات', image_url: '', link: '' } },
+                { type: 'category', settings: { title: 'أزياء', image_url: '', link: '' } },
+                { type: 'category', settings: { title: 'عطور', image_url: '', link: '' } },
+                { type: 'category', settings: { title: 'مكياج', image_url: '', link: '' } }
+            ]
+        },
+        'featured_grid_1': {
+            type: 'featured_grid', settings: { heading: 'استمتع بأحدث التشكيلات', subheading: 'اخترنا لك بعناية' }, blocks: [
+                { type: 'product', settings: { product_id: '' } },
+                { type: 'product', settings: { product_id: '' } },
+                { type: 'product', settings: { product_id: '' } },
+                { type: 'product', settings: { product_id: '' } }
+            ]
+        },
+        'footer_1': { type: 'footer', settings: { about_heading: 'عن متجرنا', about_text: 'نقدم أفضل المنتجات.', copyright: 'جميع الحقوق محفوظة' }, blocks: [] },
+        'newsletter_1': { type: 'newsletter', settings: { heading: 'اشترك في نشرتنا البريدية', button_label: 'اشتراك' }, blocks: [] }
+    }
+};
 
 export default function EditorPage({ params }: { params: { storeId: string } }) {
     const { storeId } = params;
     const { language } = useLanguage();
     const router = useRouter();
+    const iframeRef = useRef<HTMLIFrameElement>(null);
 
     // State
-    const [layout, setLayout] = useState<PageSchema | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null);
-    const [store, setStore] = useState<any>(null); // Store full object
-    const [pageSlug, setPageSlug] = useState<string>('home'); // 'home' or 'checkout'
-    const [activeDragType, setActiveDragType] = useState<string | null>(null);
+    const [store, setStore] = useState<any>(null);
+    const [pageSlug, setPageSlug] = useState<string>('home');
+    const [previewProductId, setPreviewProductId] = useState<string | null>(null);
+
+    // Theme Engine State
+    const [globalTokens, setGlobalTokens] = useState<Record<string, string>>(DEFAULT_GLOBAL_TOKENS);
+    const [pageData, setPageData] = useState<Record<string, any>>(DEFAULT_PAGE_DATA);
 
     const supabase = createClient();
 
     const sensors = useSensors(
-        useSensor(PointerSensor, {
-            activationConstraint: {
-                distance: 8,
-            },
-        })
+        useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
 
-    // Fetch Data
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const [pageRes, storeRes] = await Promise.all([
-                    supabase
-                        .from('store_pages')
-                        .select('content')
+                const [themeRes, storeRes, productsRes] = await Promise.all([
+                    supabase.from('store_themes')
+                        .select('id, global_tokens, store_theme_templates(page_type, settings_data)')
                         .eq('store_id', storeId)
-                        .eq('slug', pageSlug)
-                        .single(),
-                    supabase
-                        .from('stores')
-                        .select('*') // Fetch all for context
-                        .eq('id', storeId)
-                        .single()
+                        .eq('is_active', true)
+                        .maybeSingle(),
+                    supabase.from('stores').select('*').eq('id', storeId).single(),
+                    supabase.from('products').select('id').eq('store_id', storeId).limit(1)
                 ]);
 
-                if (pageRes.data?.content) {
-                    // Merge saved sections with latest COMPONENT_DEFAULTS to backfill new settings
-                    const savedLayout = pageRes.data.content as PageSchema;
-                    if (savedLayout.sections) {
-                        savedLayout.sections = savedLayout.sections.map(section => {
-                            const defaults = COMPONENT_DEFAULTS[section.type];
-                            if (defaults?.settings) {
-                                return {
-                                    ...section,
-                                    settings: { ...defaults.settings, ...section.settings }
+                if (productsRes.data && productsRes.data.length > 0) {
+                    setPreviewProductId(productsRes.data[0].id);
+                }
+
+                if (themeRes.data) {
+                    if (themeRes.data.global_tokens && Object.keys(themeRes.data.global_tokens).length > 0) {
+                        setGlobalTokens(themeRes.data.global_tokens);
+                    } else {
+                        setGlobalTokens(DEFAULT_GLOBAL_TOKENS);
+                    }
+
+                    const overrides = themeRes.data.store_theme_templates || [];
+                    const homeOverride = overrides.find((o: any) => o.page_type === 'home')?.settings_data;
+                    const currentOverride = overrides.find((o: any) => o.page_type === pageSlug)?.settings_data;
+
+                    // Extract Global Sections (Header & Footer) from Home
+                    let globalHeaderId = 'header_1';
+                    let globalFooterId = 'footer_1';
+                    let globalHeaderData = DEFAULT_PAGE_DATA.sections_data['header_1'];
+                    let globalFooterData = DEFAULT_PAGE_DATA.sections_data['footer_1'];
+
+                    if (homeOverride?.sections_order) {
+                        globalHeaderId = homeOverride.sections_order.find((id: string) => homeOverride.sections_data[id]?.type === 'header') || 'header_1';
+                        globalFooterId = homeOverride.sections_order.find((id: string) => homeOverride.sections_data[id]?.type === 'footer') || 'footer_1';
+                        if (homeOverride.sections_data[globalHeaderId]) globalHeaderData = homeOverride.sections_data[globalHeaderId];
+                        if (homeOverride.sections_data[globalFooterId]) globalFooterData = homeOverride.sections_data[globalFooterId];
+                    }
+
+                    // Assemble Base Data for current page
+                    let newOrder: string[] = [];
+                    let newData: any = {};
+
+                    if (currentOverride?.sections_order) {
+                        newOrder = currentOverride.sections_order;
+                        newData = currentOverride.sections_data || {};
+
+                        // Defensive: if overrides were saved with empty blocks, populate defaults
+                        if (pageSlug === 'home') {
+                            const catKey = newOrder.find((id: string) => newData[id]?.type === 'category_slider');
+                            if (catKey && (!newData[catKey].blocks || newData[catKey].blocks.length === 0)) {
+                                newData[catKey] = {
+                                    ...newData[catKey], blocks: [
+                                        { type: 'category', settings: { title: 'إلكترونيات', image_url: '', link: '' } },
+                                        { type: 'category', settings: { title: 'أزياء', image_url: '', link: '' } },
+                                        { type: 'category', settings: { title: 'عطور', image_url: '', link: '' } },
+                                        { type: 'category', settings: { title: 'مكياج', image_url: '', link: '' } }
+                                    ]
                                 };
                             }
-                            return section;
-                        });
+                            const gridKey = newOrder.find((id: string) => newData[id]?.type === 'featured_grid');
+                            if (gridKey && (!newData[gridKey].blocks || newData[gridKey].blocks.length === 0)) {
+                                newData[gridKey] = {
+                                    ...newData[gridKey], blocks: [
+                                        { type: 'product', settings: { product_id: '' } },
+                                        { type: 'product', settings: { product_id: '' } },
+                                        { type: 'product', settings: { product_id: '' } },
+                                        { type: 'product', settings: { product_id: '' } }
+                                    ]
+                                };
+                            }
+                        } else if (pageSlug === 'product') {
+                            const mainKey = newOrder.find((id: string) => newData[id]?.type === 'main_product');
+                            if (mainKey && (!newData[mainKey].blocks || newData[mainKey].blocks.length === 0)) {
+                                newData[mainKey] = {
+                                    ...newData[mainKey], blocks: [
+                                        { type: 'title', id: 'block_title', settings: {} },
+                                        { type: 'price', id: 'block_price', settings: {} },
+                                        { type: 'visitors', id: 'block_visitors', settings: {} },
+                                        { type: 'quantity', id: 'block_quantity', settings: {} },
+                                        { type: 'offers', id: 'block_offers', settings: {} },
+                                        { type: 'variants', id: 'block_variants', settings: {} },
+                                        { type: 'buy_buttons', id: 'block_buy_buttons', settings: {} },
+                                        { type: 'countdown', id: 'block_countdown', settings: {} },
+                                        { type: 'shipping_info', id: 'block_shipping', settings: {} },
+                                        { type: 'description', id: 'block_description', settings: {} }
+                                    ]
+                                };
+                            }
+                        } else if (pageSlug === 'checkout') {
+                            const mainKey = newOrder.find((id: string) => newData[id]?.type === 'main_checkout');
+                            if (mainKey && (!newData[mainKey].blocks || newData[mainKey].blocks.length === 0)) {
+                                newData[mainKey] = {
+                                    ...newData[mainKey], blocks: [
+                                        { type: 'checkout_field', id: 'field_name', settings: { field_id: 'name', visible: true, required: true, placeholder: '' } },
+                                        { type: 'checkout_field', id: 'field_phone', settings: { field_id: 'phone', visible: true, required: true, placeholder: '' } },
+                                        { type: 'checkout_field', id: 'field_alt_phone', settings: { field_id: 'alt_phone', visible: false, required: false, placeholder: '' } },
+                                        { type: 'checkout_field', id: 'field_email', settings: { field_id: 'email', visible: false, required: false, placeholder: '' } },
+                                        { type: 'checkout_field', id: 'field_governorate', settings: { field_id: 'governorate', visible: false, required: false, placeholder: '' } },
+                                        { type: 'checkout_field', id: 'field_city', settings: { field_id: 'city', visible: true, required: true, placeholder: '' } },
+                                        { type: 'checkout_field', id: 'field_address', settings: { field_id: 'address', visible: true, required: true, placeholder: '' } },
+                                        { type: 'checkout_field', id: 'field_notes', settings: { field_id: 'notes', visible: false, required: false, placeholder: '' } },
+                                    ]
+                                };
+                            }
+                        }
+                    } else {
+                        if (pageSlug === 'home') {
+                            newOrder = [...DEFAULT_PAGE_DATA.sections_order];
+                            newData = { ...DEFAULT_PAGE_DATA.sections_data };
+                        } else if (pageSlug === 'product') {
+                            newOrder = ['main_product_1'];
+                            newData = {
+                                'main_product_1': {
+                                    type: 'main_product',
+                                    settings: {},
+                                    blocks: [
+                                        { type: 'title', id: 'block_title', settings: {} },
+                                        { type: 'price', id: 'block_price', settings: {} },
+                                        { type: 'visitors', id: 'block_visitors', settings: {} },
+                                        { type: 'quantity', id: 'block_quantity', settings: {} },
+                                        { type: 'offers', id: 'block_offers', settings: {} },
+                                        { type: 'variants', id: 'block_variants', settings: {} },
+                                        { type: 'buy_buttons', id: 'block_buy_buttons', settings: {} },
+                                        { type: 'countdown', id: 'block_countdown', settings: {} },
+                                        { type: 'shipping_info', id: 'block_shipping', settings: {} },
+                                        { type: 'description', id: 'block_description', settings: {} }
+                                    ]
+                                }
+                            };
+                        } else if (pageSlug === 'checkout') {
+                            newOrder = ['main_checkout_1'];
+                            newData = {
+                                'main_checkout_1': {
+                                    type: 'main_checkout',
+                                    settings: {},
+                                    blocks: [
+                                        { type: 'checkout_field', id: 'field_name', settings: { field_id: 'name', visible: true, required: true, placeholder: '' } },
+                                        { type: 'checkout_field', id: 'field_phone', settings: { field_id: 'phone', visible: true, required: true, placeholder: '' } },
+                                        { type: 'checkout_field', id: 'field_alt_phone', settings: { field_id: 'alt_phone', visible: false, required: false, placeholder: '' } },
+                                        { type: 'checkout_field', id: 'field_email', settings: { field_id: 'email', visible: false, required: false, placeholder: '' } },
+                                        { type: 'checkout_field', id: 'field_governorate', settings: { field_id: 'governorate', visible: false, required: false, placeholder: '' } },
+                                        { type: 'checkout_field', id: 'field_city', settings: { field_id: 'city', visible: true, required: true, placeholder: '' } },
+                                        { type: 'checkout_field', id: 'field_address', settings: { field_id: 'address', visible: true, required: true, placeholder: '' } },
+                                        { type: 'checkout_field', id: 'field_notes', settings: { field_id: 'notes', visible: false, required: false, placeholder: '' } },
+                                    ]
+                                }
+                            };
+                        }
                     }
-                    setLayout(savedLayout);
+
+                    // Enforce Global Header and Footer injection
+                    newOrder = newOrder.filter((id: string) => newData[id]?.type !== 'header' && newData[id]?.type !== 'footer');
+                    newOrder = [globalHeaderId, ...newOrder, globalFooterId];
+                    newData[globalHeaderId] = globalHeaderData;
+                    newData[globalFooterId] = globalFooterData;
+
+                    setPageData({
+                        sections_order: newOrder,
+                        sections_data: newData
+                    });
+
                 } else {
-                    // Default layouts
-                    if (pageSlug === 'checkout') {
-                        // Default Checkout Layout
-                        setLayout({
-                            globalSettings: DEFAULT_STORE_LAYOUT.globalSettings,
-                            sections: [
-                                { ...COMPONENT_DEFAULTS['CheckoutHeader'], id: 'header-1' } as ComponentSchema,
-                                { ...COMPONENT_DEFAULTS['CheckoutForm'], id: 'form-1' } as ComponentSchema,
-                                { ...COMPONENT_DEFAULTS['OrderSummary'], id: 'summary-1' } as ComponentSchema,
-                                { ...COMPONENT_DEFAULTS['TrustBadges'], id: 'badges-1' } as ComponentSchema,
-                            ]
+                    // No active theme found — build page-aware defaults
+                    const defaultHeaderData = DEFAULT_PAGE_DATA.sections_data['header_1'];
+                    const defaultFooterData = DEFAULT_PAGE_DATA.sections_data['footer_1'];
+
+                    if (pageSlug === 'home') {
+                        setPageData({ ...DEFAULT_PAGE_DATA });
+                    } else if (pageSlug === 'product') {
+                        setPageData({
+                            sections_order: ['header_1', 'main_product_1', 'footer_1'],
+                            sections_data: {
+                                'header_1': defaultHeaderData,
+                                'main_product_1': {
+                                    type: 'main_product',
+                                    settings: {},
+                                    blocks: [
+                                        { type: 'title', id: 'block_title', settings: {} },
+                                        { type: 'price', id: 'block_price', settings: {} },
+                                        { type: 'visitors', id: 'block_visitors', settings: {} },
+                                        { type: 'quantity', id: 'block_quantity', settings: {} },
+                                        { type: 'offers', id: 'block_offers', settings: {} },
+                                        { type: 'variants', id: 'block_variants', settings: {} },
+                                        { type: 'buy_buttons', id: 'block_buy_buttons', settings: {} },
+                                        { type: 'countdown', id: 'block_countdown', settings: {} },
+                                        { type: 'shipping_info', id: 'block_shipping', settings: {} },
+                                        { type: 'description', id: 'block_description', settings: {} }
+                                    ]
+                                },
+                                'footer_1': defaultFooterData,
+                            }
+                        });
+                    } else if (pageSlug === 'checkout') {
+                        setPageData({
+                            sections_order: ['header_1', 'main_checkout_1', 'footer_1'],
+                            sections_data: {
+                                'header_1': defaultHeaderData,
+                                'main_checkout_1': {
+                                    type: 'main_checkout',
+                                    settings: {},
+                                    blocks: [
+                                        { type: 'checkout_field', id: 'field_name', settings: { field_id: 'name', visible: true, required: true, placeholder: '' } },
+                                        { type: 'checkout_field', id: 'field_phone', settings: { field_id: 'phone', visible: true, required: true, placeholder: '' } },
+                                        { type: 'checkout_field', id: 'field_alt_phone', settings: { field_id: 'alt_phone', visible: false, required: false, placeholder: '' } },
+                                        { type: 'checkout_field', id: 'field_email', settings: { field_id: 'email', visible: false, required: false, placeholder: '' } },
+                                        { type: 'checkout_field', id: 'field_governorate', settings: { field_id: 'governorate', visible: false, required: false, placeholder: '' } },
+                                        { type: 'checkout_field', id: 'field_city', settings: { field_id: 'city', visible: true, required: true, placeholder: '' } },
+                                        { type: 'checkout_field', id: 'field_address', settings: { field_id: 'address', visible: true, required: true, placeholder: '' } },
+                                        { type: 'checkout_field', id: 'field_notes', settings: { field_id: 'notes', visible: false, required: false, placeholder: '' } },
+                                    ]
+                                },
+                                'footer_1': defaultFooterData,
+                            }
                         });
                     } else {
-                        setLayout(DEFAULT_STORE_LAYOUT);
+                        setPageData({ ...DEFAULT_PAGE_DATA });
                     }
+                    setGlobalTokens(DEFAULT_GLOBAL_TOKENS);
                 }
 
                 if (storeRes.data) {
@@ -112,38 +348,121 @@ export default function EditorPage({ params }: { params: { storeId: string } }) 
         fetchData();
     }, [storeId, supabase, pageSlug]);
 
-    // ... (handleSave - update slug to pageSlug)
+    // Send full data to iframe when loaded
+    useEffect(() => {
+        if (!loading && iframeRef.current?.contentWindow) {
+            // Give iframe a moment to mount before sending initial postMessage if it was just loaded
+            setTimeout(() => {
+                iframeRef.current?.contentWindow?.postMessage({
+                    type: 'REPLACE_PAGE_DATA',
+                    pageData: pageData
+                }, '*');
+                iframeRef.current?.contentWindow?.postMessage({
+                    type: 'UPDATE_GLOBAL_TOKEN',
+                    tokens: globalTokens
+                }, '*');
+            }, 500);
+        }
+    }, [loading]);
+
     const handleSave = async (arg?: any) => {
         const retryCount = typeof arg === 'number' ? arg : 0;
         setSaving(true);
         let currentError: any = null;
 
         try {
-            // Save to database
-            const { error: upsertError } = await supabase
-                .from('store_pages')
-                .upsert({
-                    store_id: storeId,
-                    slug: pageSlug, // Use current pageSlug
-                    content: layout,
-                    is_published: true,
-                    updated_at: new Date().toISOString()
-                }, { onConflict: 'store_id, slug' });
+            // 1. Current Active Theme
+            const { data: activeTheme } = await supabase
+                .from('store_themes')
+                .select('id')
+                .eq('store_id', storeId)
+                .eq('is_active', true)
+                .single();
 
-            if (upsertError) throw upsertError;
+            if (!activeTheme) {
+                toast.error(language === 'ar' ? 'يجب تفعيل ثيم أولاً من مدير الثيمات' : 'You must activate a theme first from Theme Manager');
+                setSaving(false);
+                return;
+            }
 
-            // Force Next.js to revalidate
+            const contentToSave = {
+                sections_order: pageData.sections_order,
+                sections_data: pageData.sections_data,
+            };
+
+            // 2. Update Global Tokens in store_themes
+            const { error: themeUpdateError } = await supabase
+                .from('store_themes')
+                .update({ global_tokens: globalTokens })
+                .eq('id', activeTheme.id);
+
+            if (themeUpdateError) throw themeUpdateError;
+
+            // 3. Save Overrides for current page (select-first to avoid needing a unique constraint)
+            const { data: existingTemplate } = await supabase
+                .from('store_theme_templates')
+                .select('id')
+                .eq('store_theme_id', activeTheme.id)
+                .eq('page_type', pageSlug)
+                .maybeSingle();
+
+            let saveError;
+            if (existingTemplate) {
+                const { error } = await supabase
+                    .from('store_theme_templates')
+                    .update({ settings_data: contentToSave })
+                    .eq('id', existingTemplate.id);
+                saveError = error;
+            } else {
+                const { error } = await supabase
+                    .from('store_theme_templates')
+                    .insert({
+                        store_theme_id: activeTheme.id,
+                        page_type: pageSlug,
+                        settings_data: contentToSave
+                    });
+                saveError = error;
+            }
+
+            if (saveError) throw saveError;
+
+            // 4. Force Sync Global Sections to Home if we are on another page and edited them!
+            if (pageSlug !== 'home') {
+                const globalHeaderId = pageData.sections_order.find((id: string) => pageData.sections_data[id]?.type === 'header');
+                const globalFooterId = pageData.sections_order.find((id: string) => pageData.sections_data[id]?.type === 'footer');
+
+                if (globalHeaderId && globalFooterId) {
+                    const { data: homeOverrideData } = await supabase
+                        .from('store_theme_templates')
+                        .select('settings_data')
+                        .eq('store_theme_id', activeTheme.id)
+                        .eq('page_type', 'home')
+                        .maybeSingle();
+
+                    if (homeOverrideData && homeOverrideData.settings_data) {
+                        const newHomeData = { ...homeOverrideData.settings_data };
+                        if (!newHomeData.sections_data) newHomeData.sections_data = {};
+                        newHomeData.sections_data[globalHeaderId] = pageData.sections_data[globalHeaderId];
+                        newHomeData.sections_data[globalFooterId] = pageData.sections_data[globalFooterId];
+
+                        await supabase
+                            .from('store_theme_templates')
+                            .update({ settings_data: newHomeData })
+                            .eq('store_theme_id', activeTheme.id)
+                            .eq('page_type', 'home');
+                    }
+                }
+            }
+
             if (store?.slug) {
                 try {
-                    const path = pageSlug === 'home' ? `/ s / ${store.slug} ` : ` / s / ${store.slug}/${pageSlug}`;
+                    const path = pageSlug === 'home' ? `/s/${store.slug}` : `/s/${store.slug}/${pageSlug}`;
                     await fetch(`/api/revalidate?path=${path}`, { method: 'POST' });
                 } catch (e) { }
             }
 
-            router.refresh();
-            toast.success(language === 'ar' ? 'تم الحفظ بنجاح!' : 'Saved successfully!');
+            toast.success(language === 'ar' ? 'تم حفظ التغييرات بنجاح!' : 'Changes saved successfully!');
         } catch (error: any) {
-            // ... (error handling)
             currentError = error;
             console.error('Save error:', error);
             if (retryCount < 2) {
@@ -156,230 +475,322 @@ export default function EditorPage({ params }: { params: { storeId: string } }) 
         }
     };
 
-    // ... (handleDragStart, handleDragEnd etc - keep mostly same)
-    const handleDragStart = (event: DragStartEvent) => {
-        const { active } = event;
-        if (active.data.current?.isNew) {
-            setActiveDragType(active.data.current.type);
-        }
+    const getHexFromToken = (hslStr: string) => {
+        try { return hslStr?.startsWith('#') ? hslStr : hslToHex(hslStr); } catch { return '#000000'; }
+    };
+
+    const setHexToToken = (key: string, hexStr: string) => {
+        try { handleColorChange(key, hexToHsl(hexStr)); } catch { handleColorChange(key, hexStr); }
+    };
+
+    const handleSettingChange = (sectionId: string, key: string, value: any) => {
+        setPageData(prev => {
+            const newData = {
+                ...prev, sections_data: {
+                    ...prev.sections_data, [sectionId]: {
+                        ...prev.sections_data[sectionId], settings: {
+                            ...prev.sections_data[sectionId].settings, [key]: value
+                        }
+                    }
+                }
+            };
+            iframeRef.current?.contentWindow?.postMessage({ type: 'UPDATE_SECTION_SETTING', sectionId, settings: { [key]: value } }, '*');
+            return newData;
+        });
+    };
+
+    const handleBlockChange = (sectionId: string, blockIndex: number, key: string, value: any) => {
+        setPageData(prev => {
+            const section = prev.sections_data[sectionId];
+            if (!section || !section.blocks) return prev;
+            const newBlocks = [...section.blocks];
+            newBlocks[blockIndex] = { ...newBlocks[blockIndex], settings: { ...newBlocks[blockIndex].settings, [key]: value } };
+            const newData = { ...prev, sections_data: { ...prev.sections_data, [sectionId]: { ...section, blocks: newBlocks } } };
+            iframeRef.current?.contentWindow?.postMessage({ type: 'REPLACE_PAGE_DATA', pageData: newData }, '*');
+            return newData;
+        });
+    };
+
+    const handleAddBlock = (sectionId: string, blockType: string) => {
+        setPageData(prev => {
+            const section = prev.sections_data[sectionId];
+            if (!section) return prev;
+            const newData = { ...prev, sections_data: { ...prev.sections_data, [sectionId]: { ...section, blocks: [...(section.blocks || []), { type: blockType, settings: {} }] } } };
+            iframeRef.current?.contentWindow?.postMessage({ type: 'REPLACE_PAGE_DATA', pageData: newData }, '*');
+            return newData;
+        });
+    };
+
+    const handleRemoveBlock = (sectionId: string, blockIndex: number) => {
+        setPageData(prev => {
+            const section = prev.sections_data[sectionId];
+            if (!section || !section.blocks) return prev;
+            const newBlocks = [...section.blocks];
+            newBlocks.splice(blockIndex, 1);
+            const newData = { ...prev, sections_data: { ...prev.sections_data, [sectionId]: { ...section, blocks: newBlocks } } };
+            iframeRef.current?.contentWindow?.postMessage({ type: 'REPLACE_PAGE_DATA', pageData: newData }, '*');
+            return newData;
+        });
+    };
+
+    const handleReorderBlocks = (sectionId: string, oldIndex: number, newIndex: number) => {
+        setPageData(prev => {
+            const section = prev.sections_data[sectionId];
+            if (!section || !section.blocks) return prev;
+            const newBlocks = [...section.blocks];
+            const [moved] = newBlocks.splice(oldIndex, 1);
+            newBlocks.splice(newIndex, 0, moved);
+            const newData = { ...prev, sections_data: { ...prev.sections_data, [sectionId]: { ...section, blocks: newBlocks } } };
+            iframeRef.current?.contentWindow?.postMessage({ type: 'REPLACE_PAGE_DATA', pageData: newData }, '*');
+            return newData;
+        });
+    };
+
+    const handleColorChange = (key: string, value: string) => {
+        setGlobalTokens(prev => ({ ...prev, [key]: value }));
+        iframeRef.current?.contentWindow?.postMessage({ type: 'UPDATE_GLOBAL_TOKEN', tokens: { [key]: value } }, '*');
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
-        setActiveDragType(null);
-
-        if (!over || !layout) return;
-
-        if (active.data.current?.isNew && over.id === 'canvas-droppable') {
-            const type = active.data.current.type as ComponentType;
-            // Generate ID
-            const newSection = {
-                ...COMPONENT_DEFAULTS[type],
-                id: `${type.toLowerCase()}-${Date.now()}`,
-            } as ComponentSchema;
-
-            // If adding generic component (RichText/Banner) to Checkout, it's allowed.
-            // If adding Checkout specific to Home, Sidebar filtering prevents it.
-
-            setLayout({
-                ...layout,
-                sections: [...layout.sections, newSection]
+        if (over && active.id !== over.id) {
+            setPageData((prev) => {
+                const oldIndex = prev.sections_order.indexOf(active.id as string);
+                const newIndex = prev.sections_order.indexOf(over.id as string);
+                const newOrder = arrayMove(prev.sections_order, oldIndex, newIndex);
+                const newData = { ...prev, sections_order: newOrder };
+                iframeRef.current?.contentWindow?.postMessage({ type: 'REPLACE_PAGE_DATA', pageData: newData }, '*');
+                return newData;
             });
-            toast.success(`Added ${type}`);
-            setSelectedComponentId(newSection.id);
         }
     };
 
-    // ... (updateComponentSettings, updateComponentContent, updateGlobalSettings)
-    const updateComponentSettings = (id: string, newSettings: any) => {
-        if (!layout) return;
-        const newSections = layout.sections.map(sec =>
-            sec.id === id ? { ...sec, settings: { ...sec.settings, ...newSettings } } : sec
-        );
-        setLayout({ ...layout, sections: newSections });
-    };
-
-    const updateComponentContent = (id: string, newContent: any) => {
-        if (!layout) return;
-        const newSections = layout.sections.map(sec =>
-            sec.id === id ? { ...sec, content: { ...sec.content, ...newContent } } : sec
-        );
-        setLayout({ ...layout, sections: newSections });
-    };
-
-    const updateGlobalSettings = (newGlobal: any) => {
-        if (!layout) return;
-        setLayout({ ...layout, globalSettings: newGlobal });
+    const handleAddSection = (type: string) => {
+        const id = `${type}_${Date.now()}`;
+        setPageData(prev => {
+            const newData = {
+                ...prev,
+                sections_order: [...prev.sections_order, id],
+                sections_data: {
+                    ...prev.sections_data,
+                    [id]: {
+                        type,
+                        settings: {},
+                        blocks: []
+                    }
+                }
+            };
+            iframeRef.current?.contentWindow?.postMessage({ type: 'REPLACE_PAGE_DATA', pageData: newData }, '*');
+            toast.success(`Section added`);
+            return newData;
+        });
     };
 
     const deleteSection = (id: string) => {
-        if (!layout) return;
+        setPageData(prev => {
+            const newOrder = prev.sections_order.filter(secId => secId !== id);
+            const newData = { ...prev };
+            delete newData.sections_data[id];
 
-        // Prevent deleting critical checkout components
-        if (pageSlug === 'checkout') {
-            const section = layout.sections.find(s => s.id === id);
-            if (section && ['CheckoutForm', 'OrderSummary'].includes(section.type)) {
-                toast.error(language === 'ar' ? 'لا يمكن حذف هذا العنصر الأساسي' : 'Cannot delete this core component');
-                return;
-            }
-        }
-
-        const newSections = layout.sections.filter(sec => sec.id !== id);
-        setLayout({ ...layout, sections: newSections });
-        if (selectedComponentId === id) {
-            setSelectedComponentId(null);
-        }
-        toast.success(language === 'ar' ? 'تم حذف القسم' : 'Section deleted');
+            const finalData = {
+                ...newData,
+                sections_order: newOrder
+            };
+            iframeRef.current?.contentWindow?.postMessage({ type: 'REPLACE_PAGE_DATA', pageData: finalData }, '*');
+            toast.success(`Section removed`);
+            return finalData;
+        });
     };
 
-    const moveSectionUp = (id: string) => {
-        if (!layout) return;
-        const index = layout.sections.findIndex(sec => sec.id === id);
-        if (index <= 0) return;
-        const newSections = [...layout.sections];
-        [newSections[index - 1], newSections[index]] = [newSections[index], newSections[index - 1]];
-        setLayout({ ...layout, sections: newSections });
-    };
+    if (loading) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
 
-    const moveSectionDown = (id: string) => {
-        if (!layout) return;
-        const index = layout.sections.findIndex(sec => sec.id === id);
-        if (index < 0 || index >= layout.sections.length - 1) return;
-        const newSections = [...layout.sections];
-        [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]];
-        setLayout({ ...layout, sections: newSections });
-    };
-
-    // ... (handleApplyTemplate - restrict to Home for now)
-    const handleApplyTemplate = (template: StoreTemplate) => {
-        if (pageSlug === 'checkout') {
-            toast.error(language === 'ar' ? 'القوالب متاحة للصفحة الرئيسية فقط حالياً' : 'Templates are only available for Home page currently');
-            return;
-        }
-        if (!confirm(language === 'ar' ? 'هل أنت متأكد من تغيير التصميم؟ سيتم فقدان التغييرات الحالية.' : 'Are you sure you want to apply this template? Current changes will be lost.')) {
-            return;
-        }
-
-        const newLayout = JSON.parse(JSON.stringify(template.schema));
-        if (newLayout.sections) {
-            newLayout.sections = newLayout.sections.map((section: any) => ({
-                ...section,
-                id: crypto.randomUUID()
-            }));
-        }
-
-        setLayout(newLayout);
-        setSelectedComponentId(null);
-        toast.success(language === 'ar' ? 'تم تطبيق التصميم بنجاح' : 'Template applied successfully');
-    };
-
-    if (loading || !layout) {
-        return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
+    let previewUrl = `/s/${store?.slug || storeId}?preview=true`;
+    if (pageSlug === 'product') {
+        previewUrl = previewProductId
+            ? `/s/${store?.slug || storeId}/p/${previewProductId}?preview=true`
+            : `/s/${store?.slug || storeId}/products?preview=true`; // Fallback if no products
+    } else if (pageSlug === 'checkout') {
+        previewUrl = `/s/${store?.slug || storeId}/checkout?preview=true`;
     }
 
-    const selectedComponent = layout.sections.find(s => s.id === selectedComponentId) || null;
-
     return (
-        <DndContext
-            sensors={sensors}
-            collisionDetection={closestCorners}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-        >
-            <div className="h-screen flex flex-col bg-slate-50 overflow-hidden">
-                {/* Header */}
-                <header className="h-14 border-b bg-white flex items-center justify-between px-4 z-50 shadow-sm relative">
-                    <div className="flex items-center gap-4">
-                        <Button variant="ghost" size="sm" asChild>
-                            <Link href={`/dashboard/${storeId}`}>
-                                <ArrowLeft className={`w-4 h-4 ${language === 'ar' ? 'ml-2' : 'mr-2'} ${language === 'ar' ? 'rotate-180' : ''}`} />
-                                {language === 'ar' ? 'عودة' : 'Back'}
-                            </Link>
-                        </Button>
-                        <div className="h-6 w-px bg-slate-200" />
+        <div className="flex h-screen w-full bg-background overflow-hidden relative flex-col" dir={language === 'ar' ? 'rtl' : 'ltr'}>
 
-                        {/* Page Switcher */}
-                        <Select value={pageSlug} onValueChange={setPageSlug}>
-                            <SelectTrigger className="w-[180px] h-8">
-                                <SelectValue placeholder="Select Page" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="home">{language === 'ar' ? 'الصفحة الرئيسية' : 'Home Page'}</SelectItem>
-                                <SelectItem value="checkout">{language === 'ar' ? 'صفحة الدفع' : 'Checkout Page'}</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
+            {/* Header */}
+            <header className="h-14 border-b bg-white flex items-center justify-between px-4 z-50 shadow-sm shrink-0">
+                <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="sm" asChild>
+                        <Link href={`/dashboard/${storeId}`}>
+                            <ArrowLeft className={`w-4 h-4 mr-2 ${language === 'ar' ? 'ml-2 mr-0 rotate-180' : ''}`} />
+                            {language === 'ar' ? 'عودة' : 'Back'}
+                        </Link>
+                    </Button>
+                    <div className="h-6 w-px bg-slate-200" />
+                    <Select value={pageSlug} onValueChange={setPageSlug}>
+                        <SelectTrigger className="w-[180px] h-8 text-sm bg-white" dir="rtl">
+                            <SelectValue placeholder="اختر الصفحة" />
+                        </SelectTrigger>
+                        <SelectContent dir="rtl">
+                            <SelectItem value="home">الصفحة الرئيسية</SelectItem>
+                            <SelectItem value="product">صفحة المنتج</SelectItem>
+                            <SelectItem value="checkout">صفحة الدفع</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
 
-                    <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1">
-                        <span className="text-xs font-medium text-muted-foreground mr-2 hidden sm:inline-block">
-                            {saving ? (language === 'ar' ? 'جاري الحفظ...' : 'Saving...') : ''}
-                        </span>
-                    </div>
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" asChild className="hidden sm:flex">
+                        <Link href={previewUrl.replace('?preview=true', '')} target="_blank">
+                            <Eye className={`w-4 h-4 ${language === 'ar' ? 'ml-2' : 'mr-2'}`} />
+                            {language === 'ar' ? 'معاينة حية' : 'Live Preview'}
+                        </Link>
+                    </Button>
+                    <Button size="sm" onClick={() => handleSave()} disabled={saving} className="min-w-[100px]">
+                        {saving ? <Loader2 className={`animate-spin w-4 h-4 ${language === 'ar' ? 'ml-2' : 'mr-2'}`} /> : <Save className={`w-4 h-4 ${language === 'ar' ? 'ml-2' : 'mr-2'}`} />}
+                        {language === 'ar' ? 'حفظ ونشر' : 'Save & Publish'}
+                    </Button>
+                </div>
+            </header>
 
-                    <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" asChild className="hidden sm:flex">
-                            <Link href={pageSlug === 'home' ? `/s/${store?.slug || storeId}` : `/s/${store?.slug || storeId}/checkout`} target="_blank">
-                                <Eye className="w-4 h-4 mr-2" />
-                                {language === 'ar' ? 'معاينة' : 'Preview'}
-                            </Link>
-                        </Button>
-                        <Button size="sm" onClick={() => handleSave()} disabled={saving} className="min-w-[100px]">
-                            {saving ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                            {language === 'ar' ? 'نشر' : 'Publish'}
-                        </Button>
-                    </div>
-                </header>
+            <div className="flex flex-1 overflow-hidden">
+                {/* 1. Editor Sidebar */}
+                <aside className="w-80 h-full bg-card border-l border-border flex flex-col shadow-xl z-10 shrink-0 overflow-y-auto">
+                    <div className="p-4 flex flex-col gap-6">
 
-                {/* Main Editor Area */}
-                <ResizablePanelGroup direction="horizontal" className="flex-1">
+                        <Tabs defaultValue="sections" className="w-full flex-1 flex flex-col" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                            <TabsList className="w-full grid grid-cols-3 mb-6">
+                                <TabsTrigger value="sections" className="text-xs flex gap-2">
+                                    <LayoutList className="w-4 h-4" />
+                                    {language === 'ar' ? 'الأقسام' : 'Sections'}
+                                </TabsTrigger>
+                                <TabsTrigger value="add" className="text-xs flex gap-2">
+                                    <PlusCircle className="w-4 h-4" />
+                                    {language === 'ar' ? 'إضافة' : 'Add'}
+                                </TabsTrigger>
+                                <TabsTrigger value="theme" className="text-xs flex gap-2">
+                                    <Palette className="w-4 h-4" />
+                                    {language === 'ar' ? 'الألوان' : 'Colors'}
+                                </TabsTrigger>
+                            </TabsList>
 
-                    {/* Left Sidebar: Components */}
-                    <ResizablePanel defaultSize={20} minSize={15} maxSize={25} className="bg-white border-r z-10">
-                        <EditorSidebar onApplyTemplate={handleApplyTemplate} pageSlug={pageSlug} />
-                    </ResizablePanel>
+                            {/* Tab 1: Sections List */}
+                            <TabsContent value="sections" className="flex-1 overflow-y-auto pr-1">
+                                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                                    <SortableContext items={pageData.sections_order} strategy={verticalListSortingStrategy}>
+                                        <div className="space-y-4">
+                                            {pageData.sections_order.map((sectionId: string) => {
+                                                const sectionData = pageData.sections_data[sectionId];
+                                                if (!sectionData) return null;
+                                                // Hide Header/Footer from sidebar on non-home pages (they're global, editable only from Home)
+                                                if (pageSlug !== 'home' && (sectionData.type === 'header' || sectionData.type === 'footer')) return null;
+                                                const schema = sectionSchemas[sectionData.type];
+                                                if (!schema) return null;
 
-                    <ResizableHandle />
+                                                return (
+                                                    <div key={sectionId} className="relative group">
+                                                        <SortableSidebarItem id={sectionId}>
+                                                            <SidebarForm
+                                                                sectionId={sectionId}
+                                                                schema={schema}
+                                                                settings={sectionData.settings || {}}
+                                                                blocks={sectionData.blocks || []}
+                                                                globalTokens={globalTokens}
+                                                                onChange={handleSettingChange}
+                                                                onBlockChange={handleBlockChange}
+                                                                onAddBlock={handleAddBlock}
+                                                                onRemoveBlock={handleRemoveBlock}
+                                                                onReorderBlocks={handleReorderBlocks}
+                                                                onColorChange={handleColorChange}
+                                                            />
+                                                        </SortableSidebarItem>
+                                                        <button
+                                                            onClick={() => deleteSection(sectionId)}
+                                                            className="absolute top-2 left-2 z-20 p-1.5 bg-red-100 text-red-600 rounded hover:bg-red-200 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                            title="Delete Section"
+                                                        >
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </SortableContext>
+                                </DndContext>
+                            </TabsContent>
 
-                    {/* Center: Canvas */}
-                    <ResizablePanel defaultSize={55} className="bg-slate-100 flex flex-col relative">
-                        <Canvas
-                            schema={layout}
-                            storeId={storeId}
-                            onSelectComponent={setSelectedComponentId}
-                            selectedComponentId={selectedComponentId}
-                            onUpdate={updateComponentContent}
-                            onDelete={deleteSection}
-                            onMoveUp={moveSectionUp}
-                            onMoveDown={moveSectionDown}
-                            pageSlug={pageSlug}
-                            store={store}
-                        />
-                        {/* Drag Overlay for Visual Feedback */}
-                        <DragOverlay>
-                            {activeDragType ? (
-                                <div className="p-4 bg-white border border-primary shadow-xl rounded-lg opacity-90 cursor-grabbing">
-                                    Dragging {activeDragType}
+                            {/* Tab 2: Add New Section */}
+                            <TabsContent value="add" className="space-y-4">
+                                <div className="text-sm text-muted-foreground mb-4">
+                                    {language === 'ar' ? 'اختر قسماً لإضافته للمتجر:' : 'Select a section to add:'}
                                 </div>
-                            ) : null}
-                        </DragOverlay>
-                    </ResizablePanel>
+                                <div className="grid gap-3">
+                                    {Object.keys(sectionSchemas)
+                                        .filter(key => {
+                                            if (key.startsWith('main_') || key === 'header' || key === 'footer') return false;
+                                            if (pageSlug === 'checkout') return key === 'newsletter'; // restrict heavy sections on checkout
+                                            return true;
+                                        })
+                                        .map(key => (
+                                            <div
+                                                key={key}
+                                                className="border rounded-lg p-3 hover:border-primary hover:bg-slate-50 cursor-pointer flex items-center justify-between group transition-all"
+                                                onClick={() => handleAddSection(key)}
+                                            >
+                                                <div className="font-medium text-sm">
+                                                    {sectionSchemas[key].name || key}
+                                                </div>
+                                                <PlusCircle className="w-4 h-4 text-slate-400 group-hover:text-primary" />
+                                            </div>
+                                        ))}
+                                </div>
+                            </TabsContent>
 
-                    <ResizableHandle />
+                            {/* Tab 3: Global Theme Attributes */}
+                            <TabsContent value="theme">
+                                <div className="bg-card text-card-foreground p-4 rounded-lg shadow-sm border border-border">
+                                    <h3 className="font-bold text-lg mb-4 border-b pb-2">{language === 'ar' ? 'ألوان المتجر (Global)' : 'Store Colors (Global)'}</h3>
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <label className="block text-sm font-medium">{language === 'ar' ? 'لون الأساس (Primary)' : 'Primary Color'}</label>
+                                            <input type="color" value={getHexFromToken(globalTokens['primary'] || '')} onChange={(e) => setHexToToken('primary', e.target.value)} className="w-10 h-10 rounded border p-0 cursor-pointer" />
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <label className="block text-sm font-medium">{language === 'ar' ? 'الخلفية (Background)' : 'Background Color'}</label>
+                                            <input type="color" value={getHexFromToken(globalTokens['background'] || '')} onChange={(e) => setHexToToken('background', e.target.value)} className="w-10 h-10 rounded border p-0 cursor-pointer" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </TabsContent>
 
-                    {/* Right Sidebar: Properties */}
-                    <ResizablePanel defaultSize={25} minSize={20} maxSize={30} className="bg-white border-l z-10">
-                        <PropertiesPanel
-                            selectedComponent={selectedComponent}
-                            layout={layout}
-                            onUpdateContent={updateComponentContent}
-                            onUpdateSettings={updateComponentSettings}
-                            onUpdateGlobal={updateGlobalSettings}
-                            language={language}
+                        </Tabs>
+
+
+                    </div>
+                </aside>
+
+                {/* 2. Live Preview Iframe */}
+                <main className="flex-1 h-full bg-slate-100 relative p-4 flex flex-col items-center overflow-hidden">
+                    <div className="w-full max-w-5xl flex-1 flex flex-col bg-white overflow-hidden rounded-xl shadow-xl border border-slate-200">
+                        <div className="w-full h-10 bg-slate-50 border-b flex items-center px-4 gap-2 shrink-0">
+                            <div className="flex gap-1.5">
+                                <div className="w-2.5 h-2.5 rounded-full bg-red-400"></div>
+                                <div className="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
+                                <div className="w-2.5 h-2.5 rounded-full bg-green-400"></div>
+                            </div>
+                            <div className="mx-auto bg-slate-100 rounded px-4 py-1 text-xs text-slate-500 truncate pointer-events-none">
+                                {window.location.origin}{previewUrl}
+                            </div>
+                        </div>
+
+                        <iframe
+                            ref={iframeRef}
+                            src={previewUrl}
+                            className="w-full flex-1 border-0"
+                            title="Theme Preview"
                         />
-                    </ResizablePanel>
-
-                </ResizablePanelGroup>
+                    </div>
+                </main>
             </div>
-        </DndContext>
+        </div>
     );
 }

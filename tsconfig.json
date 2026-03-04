@@ -40,6 +40,8 @@
   "exclude": [
     "node_modules",
     "_ARCHIVE",
-    "_ARCHIVE_OLD_VERSION"
+    "_ARCHIVE_OLD_VERSION",
+    "src/themes/raw_themes",
+    "scripts"
   ]
 }

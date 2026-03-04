@@ -39,3 +39,18 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+src/themes/raw_themes/
+src/themes/raw_themes_backup/
+tmp/
+build.log
+out.txt
+tsc_output.txt
+ts_errors*
+scripts/debug_out.txt
+tmp_sql_out.txt
+git_status.txt
+scripts/check_*.js
+scripts/cleanup_*.js
+scripts/scaffold_*.js
+scripts/test_*.js
+scripts/full_debug.js
