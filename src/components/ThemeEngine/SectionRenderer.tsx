@@ -13,6 +13,45 @@ export default function SectionRenderer({ pageData, storeContext, themeName = 'd
 
     const currentRegistry = themeRegistries[themeName] || themeRegistries['default'];
 
+    const storeIdentifier = storeContext?.store?.slug || storeContext?.storeData?.slug || storeContext?.slug || storeContext?.id || '';
+
+    // Deep mapping of links to resolve them dynamically to the correct storefront url
+    const resolveLinks = (obj: any): any => {
+        if (!obj || !storeIdentifier) return obj;
+        if (typeof obj === 'string') {
+            const productMatch = obj.match(/^\/product(s)?\/(.+)$/);
+            if (productMatch) {
+                return `/s/${storeIdentifier}/p/${productMatch[2]}`;
+            }
+            const categoryMatch = obj.match(/^\/categor(y|ies)\/(.+)$/);
+            if (categoryMatch) {
+                return `/s/${storeIdentifier}/products?category=${categoryMatch[2]}`;
+            }
+            if (obj === '/products' || obj === '/products/') {
+                return `/s/${storeIdentifier}/products`;
+            }
+            if (obj === '/categories' || obj === '/categories/') {
+                return `/s/${storeIdentifier}/products`;
+            }
+            // Add root replacement if needed
+            if (obj === '/') {
+                return `/s/${storeIdentifier}`;
+            }
+            return obj;
+        }
+        if (Array.isArray(obj)) {
+            return obj.map(item => resolveLinks(item));
+        }
+        if (typeof obj === 'object') {
+            const newObj: any = {};
+            for (const key in obj) {
+                newObj[key] = resolveLinks(obj[key]);
+            }
+            return newObj;
+        }
+        return obj;
+    };
+
     return (
         <div className="theme-layout-builder flex flex-col w-full">
             {sections_order.map((sectionId) => {
@@ -27,11 +66,14 @@ export default function SectionRenderer({ pageData, storeContext, themeName = 'd
                     return null;
                 }
 
+                const resolvedSettings = resolveLinks(sectionContent.settings);
+                const resolvedBlocks = resolveLinks(sectionContent.blocks);
+
                 return (
                     <section key={sectionId} id={sectionId} className="w-full relative">
                         <SectionComponent
-                            settings={sectionContent.settings}
-                            blocks={sectionContent.blocks}
+                            settings={resolvedSettings}
+                            blocks={resolvedBlocks}
                             storeContext={storeContext}
                         />
                     </section>

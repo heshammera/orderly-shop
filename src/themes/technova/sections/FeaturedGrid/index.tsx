@@ -8,6 +8,7 @@ interface ProductSnippet {
     title: string;
     price: string;
     image: string;
+    href?: string;
 }
 
 interface FeaturedGridProps {
@@ -28,7 +29,7 @@ interface FeaturedGridProps {
 function ProductCard({ item }: { item: ProductSnippet }) {
     return (
         <div className="group relative rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-            <Link href={`/product/${item.handle}`} className="block">
+            <Link href={item.href || `/product/${item.handle}`} className="block">
                 {/* Image */}
                 <div className="aspect-square overflow-hidden relative">
                     <img
@@ -58,20 +59,59 @@ function ProductCard({ item }: { item: ProductSnippet }) {
 }
 
 export default function FeaturedGrid({ settings, blocks, storeContext, sectionId = 'featured_grid_1' }: FeaturedGridProps) {
+    const storeIdentifier = storeContext?.store?.slug || storeContext?.storeData?.slug || storeContext?.slug || storeContext?.id || '';
+    const baseUrl = storeIdentifier ? `/s/${storeIdentifier}/p` : '/product';
+    const currency = storeContext?.store?.currency || storeContext?.storeData?.currency || storeContext?.currency || 'SAR';
+
     const mockProducts: ProductSnippet[] = [
-        { id: 'prod_1', handle: 'product-1', title: 'iPhone 16 Pro Max', price: '4,999 SAR', image: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=400&q=80' },
-        { id: 'prod_2', handle: 'product-2', title: 'MacBook Pro M4', price: '8,999 SAR', image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&q=80' },
-        { id: 'prod_3', handle: 'product-3', title: 'Sony WH-1000XM5', price: '1,299 SAR', image: 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=400&q=80' },
-        { id: 'prod_4', handle: 'product-4', title: 'Apple Watch Ultra 2', price: '3,199 SAR', image: 'https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?w=400&q=80' },
+        { id: 'prod_1', handle: 'product-1', title: 'iPhone 16 Pro Max', price: `4,999 ${currency}`, image: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=400&q=80' },
+        { id: 'prod_2', handle: 'product-2', title: 'MacBook Pro M4', price: `8,999 ${currency}`, image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&q=80' },
+        { id: 'prod_3', handle: 'product-3', title: 'Sony WH-1000XM5', price: `1,299 ${currency}`, image: 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=400&q=80' },
+        { id: 'prod_4', handle: 'product-4', title: 'Apple Watch Ultra 2', price: `3,199 ${currency}`, image: 'https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?w=400&q=80' },
     ];
+
+    const realProducts = storeContext?.products || [];
+
+    const formatProduct = (p: any): ProductSnippet => {
+        let title = p.name;
+        try {
+            if (typeof p.name === 'string' && p.name.startsWith('{')) {
+                const parsed = JSON.parse(p.name);
+                title = parsed.ar || parsed.en || p.name;
+            } else if (typeof p.name === 'object') {
+                title = p.name.ar || p.name.en || 'Unnamed';
+            }
+        } catch (e) { }
+
+        let image = 'https://via.placeholder.com/600';
+        try {
+            const parsedImages = typeof p.images === 'string' ? JSON.parse(p.images) : p.images;
+            if (Array.isArray(parsedImages) && parsedImages.length > 0) {
+                image = parsedImages[0];
+            }
+        } catch (e) { }
+
+        return {
+            id: p.id,
+            handle: p.id,
+            title,
+            price: `${p.sale_price || p.price || 0} ${currency}`,
+            image,
+            href: `${baseUrl}/${p.id}`
+        };
+    };
 
     const products = blocks?.length > 0
         ? blocks.map((b, idx) => {
-            const found = mockProducts.find(p => p.id === b.settings?.product_id);
+            const realFound = realProducts.find((p: any) => p.id === b.settings?.product_id);
+            if (realFound) return formatProduct(realFound);
+
+            const mockFound = mockProducts.find(p => p.id === b.settings?.product_id);
             // Fallback to the mock product at the same index if no ID is provided or product not found
-            return found || mockProducts[idx % mockProducts.length];
+            const fallback = mockFound || mockProducts[idx % mockProducts.length];
+            return { ...fallback, href: `${baseUrl}/${fallback.handle}` };
         })
-        : mockProducts;
+        : mockProducts.map(p => ({ ...p, href: `${baseUrl}/${p.handle}` }));
 
     if (!products || products.length === 0) return null;
 

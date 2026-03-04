@@ -140,6 +140,14 @@ export default async function StorePage({ params }: { params: { storeSlug: strin
         .eq('show_in_header', true)
         .order('sort_order');
 
+    // Fetch store products to be used by Theme Sections
+    const { data: storeProducts } = await supabaseAdmin
+        .from('products')
+        .select('id, name, price, sale_price, images, category_id:product_categories(category_id)')
+        .eq('store_id', store.id)
+        .eq('status', 'active')
+        .limit(50);
+
     const parsedHeaderCategories = headerCategories?.map(c => ({
         ...c,
         name: typeof c.name === 'string' ? JSON.parse(c.name) : c.name,
@@ -148,6 +156,7 @@ export default async function StorePage({ params }: { params: { storeSlug: strin
     const storeWithCategories = {
         ...store,
         headerCategories: parsedHeaderCategories,
+        products: storeProducts || [],
     };
 
     // Fetch Active Theme and Overrides

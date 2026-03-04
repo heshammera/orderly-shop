@@ -122,7 +122,8 @@ export default function EditorPage({ params }: { params: { storeId: string } }) 
                         .eq('is_active', true)
                         .maybeSingle(),
                     supabase.from('stores').select('*').eq('id', storeId).single(),
-                    supabase.from('products').select('id').eq('store_id', storeId).limit(1)
+                    supabase.from('products').select('id').eq('store_id', storeId).limit(1),
+                    supabase.from('products').select('id, name, price, sale_price, images, category_id:product_categories(category_id)').eq('store_id', storeId).eq('status', 'active').limit(50)
                 ]);
 
                 if (productsRes.data && productsRes.data.length > 0) {
@@ -581,6 +582,7 @@ export default function EditorPage({ params }: { params: { storeId: string } }) 
                 }
             };
             iframeRef.current?.contentWindow?.postMessage({ type: 'REPLACE_PAGE_DATA', pageData: newData }, '*');
+            iframeRef.current?.contentWindow?.postMessage({ type: 'UPDATE_STORE_CONTEXT', storeContext: store }, '*');
             toast.success(`Section added`);
             return newData;
         });
@@ -597,6 +599,7 @@ export default function EditorPage({ params }: { params: { storeId: string } }) 
                 sections_order: newOrder
             };
             iframeRef.current?.contentWindow?.postMessage({ type: 'REPLACE_PAGE_DATA', pageData: finalData }, '*');
+            iframeRef.current?.contentWindow?.postMessage({ type: 'UPDATE_STORE_CONTEXT', storeContext: store }, '*');
             toast.success(`Section removed`);
             return finalData;
         });
@@ -722,7 +725,7 @@ export default function EditorPage({ params }: { params: { storeId: string } }) 
                             {/* Tab 2: Add New Section */}
                             <TabsContent value="add" className="space-y-4">
                                 <div className="text-sm text-muted-foreground mb-4">
-                                    {language === 'ar' ? 'اختر قسماً لإضافته للمتجر:' : 'Select a section to add:'}
+                                    {language === 'ar' ? 'اختر تصنيفاً لإضافته للمتجر:' : 'Select a section to add:'}
                                 </div>
                                 <div className="grid gap-3">
                                     {Object.keys(sectionSchemas)

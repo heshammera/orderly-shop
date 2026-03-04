@@ -27,26 +27,8 @@ export default function ItemPickerModal({ isOpen, onClose, onSelect, type, store
     }, [isOpen, type, storeId]);
 
     const fetchItems = async () => {
-        // If no storeId (like in our test page), we just show mock data
         if (!storeId) {
-            setLoading(true);
-            setTimeout(() => {
-                if (type === 'product') {
-                    setItems([
-                        { id: 'prod_1', title: 'هاتف ذكي متطور', image_url: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9' },
-                        { id: 'prod_2', title: 'ساعة ذكية رياضية', image_url: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12' },
-                        { id: 'prod_3', title: 'سماعات رأس لاسلكية', image_url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e' },
-                        { id: 'prod_4', title: 'حقيبة ظهر عصرية', image_url: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62' },
-                    ]);
-                } else {
-                    setItems([
-                        { id: 'cat_1', name: 'إلكترونيات', image_url: 'https://images.unsplash.com/photo-1498049794561-7780e7231661' },
-                        { id: 'cat_2', name: 'ملابس رجالية', image_url: 'https://images.unsplash.com/photo-1617137968427-85924c800a22' },
-                        { id: 'cat_3', name: 'أجهزة منزلية', image_url: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d' },
-                    ]);
-                }
-                setLoading(false);
-            }, 500);
+            setItems([]);
             return;
         }
 
@@ -55,7 +37,7 @@ export default function ItemPickerModal({ isOpen, onClose, onSelect, type, store
         try {
             const supabase = createClient();
             const table = type === 'product' ? 'products' : 'categories';
-            const selectCols = type === 'product' ? 'id, name, images' : 'id, name';
+            const selectCols = type === 'product' ? 'id, name, images' : 'id, name_ar, name_en';
 
             const { data, error } = await supabase
                 .from(table)
@@ -66,17 +48,23 @@ export default function ItemPickerModal({ isOpen, onClose, onSelect, type, store
             if (error) throw error;
 
             const mappedData: PickerItem[] = (data || []).map((item: any) => {
-                // Parse name JSON if needed (usually stored as {ar: '...', en: '...'})
-                let displayName = item.name;
-                try {
-                    if (typeof item.name === 'string' && item.name.startsWith('{')) {
-                        const parsed = JSON.parse(item.name);
-                        displayName = parsed.ar || parsed.en || item.name;
-                    } else if (typeof item.name === 'object') {
-                        displayName = item.name.ar || item.name.en || 'Unnamed';
+                let displayName = 'Unnamed';
+
+                if (type === 'category') {
+                    displayName = item.name_ar || item.name_en || 'Unnamed Category';
+                } else {
+                    // product
+                    displayName = item.name;
+                    try {
+                        if (typeof item.name === 'string' && item.name.startsWith('{')) {
+                            const parsed = JSON.parse(item.name);
+                            displayName = parsed.ar || parsed.en || item.name;
+                        } else if (typeof item.name === 'object' && item.name !== null) {
+                            displayName = item.name.ar || item.name.en || 'Unnamed';
+                        }
+                    } catch (e) {
+                        // keep original string
                     }
-                } catch (e) {
-                    // keep original string
                 }
 
                 // Parse images for products

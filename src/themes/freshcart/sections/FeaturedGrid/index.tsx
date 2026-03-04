@@ -9,6 +9,7 @@ interface ProductSnippet {
     title: string;
     price: string;
     image: string;
+    href?: string;
 }
 
 interface FeaturedGridProps {
@@ -60,7 +61,7 @@ function GridItem({ item, size }: { item: ProductSnippet, size: 'full' | 'half' 
         >
             <Link
                 className="relative block aspect-square h-full w-full"
-                href={`/product/${item.handle}`}
+                href={item.href || `/product/${item.handle}`}
                 prefetch={true}
             >
                 <GridTileImage
@@ -77,22 +78,61 @@ function GridItem({ item, size }: { item: ProductSnippet, size: 'full' | 'half' 
 }
 
 export default function FeaturedGrid({ settings, blocks, storeContext, sectionId = 'featured_grid_1' }: FeaturedGridProps) {
+    const storeIdentifier = storeContext?.store?.slug || storeContext?.storeData?.slug || storeContext?.slug || storeContext?.id || '';
+    const baseUrl = storeIdentifier ? `/s/${storeIdentifier}/p` : '/product';
+    const currency = storeContext?.store?.currency || storeContext?.storeData?.currency || storeContext?.currency || 'SAR';
+
     const mockProducts: ProductSnippet[] = [
-        { id: 'prod_1', handle: 'product-1', title: 'سلة الخضروات العضوية', price: '120 SAR', image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80' },
-        { id: 'prod_2', handle: 'product-2', title: 'فواكه موسمية طازجة', price: '85 SAR', image: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=600&q=80' },
-        { id: 'prod_3', handle: 'product-3', title: 'عسل جبلي طبيعي', price: '150 SAR', image: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=600&q=80' },
-        { id: 'prod_4', handle: 'product-4', title: 'زيت زيتون بكر', price: '75 SAR', image: 'https://images.unsplash.com/photo-1474979266404-7eaacbadcbaf?w=600&q=80' },
+        { id: 'prod_1', handle: 'product-1', title: 'سلة الخضروات العضوية', price: `120 ${currency}`, image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80' },
+        { id: 'prod_2', handle: 'product-2', title: 'فواكه موسمية طازجة', price: `85 ${currency}`, image: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=600&q=80' },
+        { id: 'prod_3', handle: 'product-3', title: 'عسل جبلي طبيعي', price: `150 ${currency}`, image: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=600&q=80' },
+        { id: 'prod_4', handle: 'product-4', title: 'زيت زيتون بكر', price: `75 ${currency}`, image: 'https://images.unsplash.com/photo-1474979266404-7eaacbadcbaf?w=600&q=80' },
     ];
+
+    const realProducts = storeContext?.products || [];
+
+    const formatProduct = (p: any): ProductSnippet => {
+        let title = p.name;
+        try {
+            if (typeof p.name === 'string' && p.name.startsWith('{')) {
+                const parsed = JSON.parse(p.name);
+                title = parsed.ar || parsed.en || p.name;
+            } else if (typeof p.name === 'object') {
+                title = p.name.ar || p.name.en || 'Unnamed';
+            }
+        } catch (e) { }
+
+        let image = 'https://via.placeholder.com/600';
+        try {
+            const parsedImages = typeof p.images === 'string' ? JSON.parse(p.images) : p.images;
+            if (Array.isArray(parsedImages) && parsedImages.length > 0) {
+                image = parsedImages[0];
+            }
+        } catch (e) { }
+
+        return {
+            id: p.id,
+            handle: p.id,
+            title,
+            price: `${p.sale_price || p.price || 0} ${currency}`,
+            image,
+            href: `${baseUrl}/${p.id}`
+        };
+    };
 
     const products = blocks?.length > 0
         ? blocks.map((b, idx) => {
-            const found = mockProducts.find(p => p.id === b.settings?.product_id);
-            // Fallback to the mock product at the same index if no ID is provided or product not found
-            return found || mockProducts[idx % mockProducts.length];
-        })
-        : mockProducts;
+            const realFound = realProducts.find((p: any) => p.id === b.settings?.product_id);
+            if (realFound) return formatProduct(realFound);
 
-    if (!products || products.length < 3) return null;
+            const mockFound = mockProducts.find(p => p.id === b.settings?.product_id);
+            // Fallback to the mock product at the same index if no ID is provided or product not found
+            const fallback = mockFound || mockProducts[idx % mockProducts.length];
+            return { ...fallback, href: `${baseUrl}/${fallback.handle}` };
+        })
+        : mockProducts.map(p => ({ ...p, href: `${baseUrl}/${p.handle}` }));
+
+    if (!products || products.length === 0) return null;
 
     return (
         <section className="bg-white py-24">

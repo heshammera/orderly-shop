@@ -11,6 +11,7 @@ interface ProductSnippet {
     image: string;
     category?: string;
     compareAtPrice?: string;
+    href?: string;
 }
 
 interface FeaturedGridProps {
@@ -32,7 +33,7 @@ function ProductCard({ item }: { item: ProductSnippet }) {
     return (
         <div className="w-full sm:w-1/2 lg:w-1/4 px-4 mb-8">
             <div className="bg-white p-3 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 border border-gray-100 group">
-                <Link href={`/product/${item.handle}`} className="block relative overflow-hidden rounded-lg mb-4 aspect-[4/5] bg-gray-50">
+                <Link href={item.href || `/product/${item.handle}`} className="block relative overflow-hidden rounded-lg mb-4 aspect-[4/5] bg-gray-50">
                     <img
                         src={item.image}
                         alt={item.title}
@@ -40,7 +41,7 @@ function ProductCard({ item }: { item: ProductSnippet }) {
                     />
                 </Link>
                 <div className="px-1 text-left rtl:text-right">
-                    <Link href={`/product/${item.handle}`} className="text-lg font-bold text-gray-900 mb-1 hover:text-primary transition-colors line-clamp-1 block">
+                    <Link href={item.href || `/product/${item.handle}`} className="text-lg font-bold text-gray-900 mb-1 hover:text-primary transition-colors line-clamp-1 block">
                         {item.title}
                     </Link>
                     <p className="text-sm text-gray-500 mb-3">{item.category || 'Women, Fashion'}</p>
@@ -60,6 +61,9 @@ function ProductCard({ item }: { item: ProductSnippet }) {
 }
 
 export default function FeaturedGrid({ settings, blocks, storeContext, sectionId = 'featured_grid_1' }: FeaturedGridProps) {
+    const storeIdentifier = storeContext?.store?.slug || storeContext?.storeData?.slug || storeContext?.slug || storeContext?.id || '';
+    const baseUrl = storeIdentifier ? `/s/${storeIdentifier}/p` : '/product';
+    const currency = storeContext?.store?.currency || storeContext?.storeData?.currency || storeContext?.currency || 'SAR';
 
     const mockProducts: ProductSnippet[] = [
         { id: 'prod_1', handle: 'product-1', title: 'Summer Black Dress', price: '$19.99', compareAtPrice: '$24.99', image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&q=80', category: 'Women' },
@@ -68,13 +72,48 @@ export default function FeaturedGrid({ settings, blocks, storeContext, sectionId
         { id: 'prod_4', handle: 'product-4', title: 'Black Leather Jacket', price: '$39.99', compareAtPrice: '$49.99', image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400&q=80', category: 'Women' },
     ];
 
+    const realProducts = storeContext?.products || [];
+
+    const formatProduct = (p: any): ProductSnippet => {
+        let title = p.name;
+        try {
+            if (typeof p.name === 'string' && p.name.startsWith('{')) {
+                const parsed = JSON.parse(p.name);
+                title = parsed.ar || parsed.en || p.name;
+            } else if (typeof p.name === 'object') {
+                title = p.name.ar || p.name.en || 'Unnamed';
+            }
+        } catch (e) { }
+
+        let image = 'https://via.placeholder.com/600';
+        try {
+            const parsedImages = typeof p.images === 'string' ? JSON.parse(p.images) : p.images;
+            if (Array.isArray(parsedImages) && parsedImages.length > 0) {
+                image = parsedImages[0];
+            }
+        } catch (e) { }
+
+        return {
+            id: p.id,
+            handle: p.id,
+            title,
+            price: `${p.sale_price || p.price || 0} ${currency}`,
+            image,
+            href: `${baseUrl}/${p.id}`
+        };
+    };
+
     const products = blocks?.length > 0
         ? blocks.map((b, idx) => {
-            const found = mockProducts.find(p => p.id === b.settings?.product_id);
+            const realFound = realProducts.find((p: any) => p.id === b.settings?.product_id);
+            if (realFound) return formatProduct(realFound);
+
+            const mockFound = mockProducts.find(p => p.id === b.settings?.product_id);
             // Fallback to the mock product at the same index if no ID is provided or product not found
-            return found || mockProducts[idx % mockProducts.length];
+            const fallback = mockFound || mockProducts[idx % mockProducts.length];
+            return { ...fallback, href: `${baseUrl}/${fallback.handle}` };
         })
-        : mockProducts;
+        : mockProducts.map(p => ({ ...p, href: `${baseUrl}/${p.handle}` }));
 
     if (!products || products.length === 0) return null;
 

@@ -9,6 +9,7 @@ interface ProductSnippet {
     title: string;
     price: string;
     image: string;
+    href?: string;
 }
 
 interface FeaturedGridProps {
@@ -63,7 +64,7 @@ function GridItem({ item, size, index }: { item: ProductSnippet, size: 'full' | 
         >
             <Link
                 className="relative block aspect-square h-full w-full"
-                href={`/product/${item.handle}`}
+                href={item.href || `/product/${item.handle}`}
                 prefetch={true}
             >
                 <GridTileImage
@@ -81,22 +82,61 @@ function GridItem({ item, size, index }: { item: ProductSnippet, size: 'full' | 
 }
 
 export default function FeaturedGrid({ settings, blocks, storeContext, sectionId = 'featured_grid_1' }: FeaturedGridProps) {
+    const storeIdentifier = storeContext?.store?.slug || storeContext?.storeData?.slug || storeContext?.slug || storeContext?.id || '';
+    const baseUrl = storeIdentifier ? `/s/${storeIdentifier}/p` : '/product';
+    const currency = storeContext?.store?.currency || storeContext?.storeData?.currency || storeContext?.currency || 'SAR';
+
     const mockProducts: ProductSnippet[] = [
-        { id: 'prod_1', handle: 'product-1', title: 'مجموعة بناء القصر التعليمية', price: '250 SAR', image: 'https://images.unsplash.com/photo-1585366119957-e556f24975af?w=800&q=80' },
-        { id: 'prod_2', handle: 'product-2', title: 'دب تيدي ناعم وكبير', price: '120 SAR', image: 'https://images.unsplash.com/photo-1559411933-7286395fb7eb?w=600&q=80' },
-        { id: 'prod_3', handle: 'product-3', title: 'سيارة دفع رباعي لاسلكية', price: '180 SAR', image: 'https://images.unsplash.com/photo-1594787318286-3d835c1d207f?w=600&q=80' },
-        { id: 'prod_4', handle: 'product-4', title: 'مكعبات ملونة للأطفال', price: '65 SAR', image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=600&q=80' },
+        { id: 'prod_1', handle: 'product-1', title: 'مجموعة بناء القصر التعليمية', price: `250 ${currency}`, image: 'https://images.unsplash.com/photo-1585366119957-e556f24975af?w=800&q=80' },
+        { id: 'prod_2', handle: 'product-2', title: 'دب تيدي ناعم وكبير', price: `120 ${currency}`, image: 'https://images.unsplash.com/photo-1559411933-7286395fb7eb?w=600&q=80' },
+        { id: 'prod_3', handle: 'product-3', title: 'سيارة دفع رباعي لاسلكية', price: `180 ${currency}`, image: 'https://images.unsplash.com/photo-1594787318286-3d835c1d207f?w=600&q=80' },
+        { id: 'prod_4', handle: 'product-4', title: 'مكعبات ملونة للأطفال', price: `65 ${currency}`, image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=600&q=80' },
     ];
+
+    const realProducts = storeContext?.products || [];
+
+    const formatProduct = (p: any): ProductSnippet => {
+        let title = p.name;
+        try {
+            if (typeof p.name === 'string' && p.name.startsWith('{')) {
+                const parsed = JSON.parse(p.name);
+                title = parsed.ar || parsed.en || p.name;
+            } else if (typeof p.name === 'object') {
+                title = p.name.ar || p.name.en || 'Unnamed';
+            }
+        } catch (e) { }
+
+        let image = 'https://via.placeholder.com/600';
+        try {
+            const parsedImages = typeof p.images === 'string' ? JSON.parse(p.images) : p.images;
+            if (Array.isArray(parsedImages) && parsedImages.length > 0) {
+                image = parsedImages[0];
+            }
+        } catch (e) { }
+
+        return {
+            id: p.id,
+            handle: p.id,
+            title,
+            price: `${p.sale_price || p.price || 0} ${currency}`,
+            image,
+            href: `${baseUrl}/${p.id}`
+        };
+    };
 
     const products = blocks?.length > 0
         ? blocks.map((b, idx) => {
-            const found = mockProducts.find(p => p.id === b.settings?.product_id);
-            // Fallback to the mock product at the same index if no ID is provided or product not found
-            return found || mockProducts[idx % mockProducts.length];
-        })
-        : mockProducts;
+            const realFound = realProducts.find((p: any) => p.id === b.settings?.product_id);
+            if (realFound) return formatProduct(realFound);
 
-    if (!products || products.length < 3) return null;
+            const mockFound = mockProducts.find(p => p.id === b.settings?.product_id);
+            // Fallback to the mock product at the same index if no ID is provided or product not found
+            const fallback = mockFound || mockProducts[idx % mockProducts.length];
+            return { ...fallback, href: `${baseUrl}/${fallback.handle}` };
+        })
+        : mockProducts.map(p => ({ ...p, href: `${baseUrl}/${p.handle}` }));
+
+    if (!products || products.length === 0) return null;
 
     return (
         <section className="bg-[#fffcf2] py-24 relative overflow-hidden">
