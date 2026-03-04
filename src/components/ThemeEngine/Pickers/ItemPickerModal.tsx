@@ -50,18 +50,57 @@ export default function ItemPickerModal({ isOpen, onClose, onSelect, type, store
             return;
         }
 
-        // Real Supabase Fetching (For Phase 4 final integration)
+        // Real Supabase Fetching
         setLoading(true);
         try {
             const supabase = createClient();
             const table = type === 'product' ? 'products' : 'categories';
+            const selectCols = type === 'product' ? 'id, name, images' : 'id, name';
 
-            let query = supabase.from(table).select('id, name, title, image_url').eq('store_id', storeId);
-
-            const { data, error } = await query.limit(20);
+            const { data, error } = await supabase
+                .from(table)
+                .select(selectCols)
+                .eq('store_id', storeId)
+                .limit(50);
 
             if (error) throw error;
-            setItems(data || []);
+
+            const mappedData: PickerItem[] = (data || []).map((item: any) => {
+                // Parse name JSON if needed (usually stored as {ar: '...', en: '...'})
+                let displayName = item.name;
+                try {
+                    if (typeof item.name === 'string' && item.name.startsWith('{')) {
+                        const parsed = JSON.parse(item.name);
+                        displayName = parsed.ar || parsed.en || item.name;
+                    } else if (typeof item.name === 'object') {
+                        displayName = item.name.ar || item.name.en || 'Unnamed';
+                    }
+                } catch (e) {
+                    // keep original string
+                }
+
+                // Parse images for products
+                let imageUrl = undefined;
+                if (type === 'product' && item.images) {
+                    try {
+                        const parsedImages = typeof item.images === 'string' ? JSON.parse(item.images) : item.images;
+                        if (Array.isArray(parsedImages) && parsedImages.length > 0) {
+                            imageUrl = parsedImages[0];
+                        }
+                    } catch (e) {
+                        // ignore error
+                    }
+                }
+
+                return {
+                    id: item.id,
+                    name: displayName,
+                    title: displayName,
+                    image_url: imageUrl
+                };
+            });
+
+            setItems(mappedData);
         } catch (error) {
             console.error(`Error fetching ${type}s:`, error);
         } finally {
