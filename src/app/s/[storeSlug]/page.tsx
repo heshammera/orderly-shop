@@ -182,7 +182,7 @@ export default async function StorePage({ params }: { params: { storeSlug: strin
         sections_data: {
             'header_1': { type: 'header', settings: { notice_text: '🔥 شحن مجاني للطلبات فوق 200 ريال!', search_placeholder: 'ابحث عن منتج...' }, blocks: [{ type: 'link', settings: { label: 'الرئيسية', url: '/' } }, { type: 'link', settings: { label: 'كل المنتجات', url: '/products' } }] },
             'hero_banner_1': { type: 'hero_banner', settings: { heading: 'اكتشف أحدث العروض الحصرية', subheading: 'تسوق الآن واحصل على خصم 20%', button_label: 'تسوق الآن' }, blocks: [] },
-            'category_slider_1': { type: 'category_slider', settings: { heading: 'تسوق حسب القسم', subheading: 'تصفح مجموعاتنا' }, blocks: [] },
+            'category_slider_1': { type: 'category_slider', settings: { heading: 'تسوق حسب التصنيف', subheading: 'تصفح مجموعاتنا' }, blocks: [] },
             'featured_grid_1': { type: 'featured_grid', settings: { heading: 'استمتع بأحدث التشكيلات', subheading: 'اخترنا لك بعناية' }, blocks: [] },
             'footer_1': { type: 'footer', settings: { about_heading: 'عن متجرنا', about_text: 'نقدم أفضل المنتجات.', copyright: 'جميع الحقوق محفوظة' }, blocks: [] },
             'newsletter_1': { type: 'newsletter', settings: { heading: 'اشترك في نشرتنا البريدية', button_label: 'اشتراك' }, blocks: [] }

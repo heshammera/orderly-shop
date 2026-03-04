@@ -69,7 +69,7 @@ export function SectionControls({
                     className="h-6 w-6 hover:bg-destructive hover:text-destructive-foreground"
                     onClick={(e) => {
                         e.stopPropagation();
-                        if (confirm('هل أنت متأكد من حذف هذا القسم؟')) {
+                        if (confirm('هل أنت متأكد من حذف هذا التصنيف؟')) {
                             onDelete(section.id);
                         }
                     }}

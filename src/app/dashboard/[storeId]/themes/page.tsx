@@ -161,7 +161,7 @@ export default function ThemesPage({ params }: { params: { storeId: string } }) 
                             'header_1': { type: 'header', settings: { notice_text: '🔥 شحن مجاني للطلبات فوق 200 ريال!', search_placeholder: 'ابحث عن منتج...' }, blocks: [{ type: 'link', settings: { label: 'الرئيسية', url: '/' } }, { type: 'link', settings: { label: 'كل المنتجات', url: '/products' } }] },
                             'hero_banner_1': { type: 'hero_banner', settings: { heading: 'اكتشف أحدث العروض الحصرية', subheading: 'تسوق الآن واحصل على خصم 20%', button_label: 'تسوق الآن', background_image: defaults.hero }, blocks: [] },
                             'category_slider_1': {
-                                type: 'category_slider', settings: { heading: 'تسوق حسب القسم', subheading: 'تصفح مجموعاتنا' }, blocks: [
+                                type: 'category_slider', settings: { heading: 'تسوق حسب التصنيف', subheading: 'تصفح مجموعاتنا' }, blocks: [
                                     { type: 'category', settings: { title: 'جديدنا', image_url: defaults.cat1, link: '' } },
                                     { type: 'category', settings: { title: 'الأكثر مبيعاً', image_url: defaults.cat2, link: '' } },
                                     { type: 'category', settings: { title: 'عروض خاصة', image_url: defaults.cat1, link: '' } },

@@ -67,7 +67,7 @@ const DEFAULT_PAGE_DATA = {
         'header_1': { type: 'header', settings: { notice_text: '🔥 شحن مجاني للطلبات فوق 200 ريال!', search_placeholder: 'ابحث عن منتج...' }, blocks: [{ type: 'link', settings: { label: 'الرئيسية', url: '/' } }, { type: 'link', settings: { label: 'كل المنتجات', url: '/products' } }] },
         'hero_banner_1': { type: 'hero_banner', settings: { heading: 'اكتشف أحدث العروض الحصرية', subheading: 'تسوق الآن واحصل على خصم 20%', button_label: 'تسوق الآن' }, blocks: [] },
         'category_slider_1': {
-            type: 'category_slider', settings: { heading: 'تسوق حسب القسم', subheading: 'تصفح مجموعاتنا' }, blocks: [
+            type: 'category_slider', settings: { heading: 'تسوق حسب التصنيف', subheading: 'تصفح مجموعاتنا' }, blocks: [
                 { type: 'category', settings: { title: 'إلكترونيات', image_url: '', link: '' } },
                 { type: 'category', settings: { title: 'أزياء', image_url: '', link: '' } },
                 { type: 'category', settings: { title: 'عطور', image_url: '', link: '' } },
@@ -701,6 +701,7 @@ export default function EditorPage({ params }: { params: { storeId: string } }) 
                                                                 onRemoveBlock={handleRemoveBlock}
                                                                 onReorderBlocks={handleReorderBlocks}
                                                                 onColorChange={handleColorChange}
+                                                                storeId={storeId}
                                                             />
                                                         </SortableSidebarItem>
                                                         <button

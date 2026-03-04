@@ -47,7 +47,7 @@ export default function ThemeEngineTestPage() {
             'category_slider_1': {
                 type: 'category_slider',
                 settings: {
-                    heading: 'تسوق حسب القسم',
+                    heading: 'تسوق حسب التصنيف',
                     subheading: 'تصفح مجموعاتنا المتنوعة للاختيار بسهولة'
                 },
                 blocks: [

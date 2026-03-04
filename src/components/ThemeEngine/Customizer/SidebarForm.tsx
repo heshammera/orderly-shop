@@ -56,6 +56,7 @@ interface SidebarFormProps {
     onReorderBlocks?: (sectionId: string, oldIndex: number, newIndex: number) => void;
     onColorChange: (colorToken: string, value: string) => void;
     globalTokens: Record<string, string>;
+    storeId?: string;
 }
 
 // Sortable block item wrapper
@@ -88,7 +89,8 @@ export default function SidebarForm({
     onRemoveBlock,
     onReorderBlocks,
     onColorChange,
-    globalTokens
+    globalTokens,
+    storeId
 }: SidebarFormProps) {
     const [openPicker, setOpenPicker] = useState<{ type: 'product' | 'category', blockIndex: number, settingId: string, isUrlParam?: boolean } | null>(null);
     const [uploadingImage, setUploadingImage] = useState<{ sectionId: string, blockIndex?: number, settingId: string } | null>(null);
@@ -179,7 +181,7 @@ export default function SidebarForm({
         <div className="flex flex-col gap-8 shrink-0 w-full">
             {/* Current Section Settings */}
             <div className="bg-card text-card-foreground p-4 rounded-lg shadow-sm border border-border">
-                <h3 className="font-bold text-lg mb-4 border-b pb-2">إعدادات القسم: {schema.name}</h3>
+                <h3 className="font-bold text-lg mb-4 border-b pb-2">إعدادات التصنيف: {schema.name}</h3>
 
                 <div className="space-y-4">
                     {schema.settings.map((setting) => {
@@ -221,7 +223,7 @@ export default function SidebarForm({
                                                 onClick={() => setOpenPicker({ type: 'category', blockIndex: -1, settingId: setting.id, isUrlParam: true })}
                                                 className="flex-1 flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 py-1.5 rounded text-xs font-semibold transition-colors border shadow-sm"
                                             >
-                                                <Tags className="w-3.5 h-3.5" /> قسم
+                                                <Tags className="w-3.5 h-3.5" /> تصنيف
                                             </button>
                                         </div>
                                     </div>
@@ -379,7 +381,7 @@ export default function SidebarForm({
                                                                                     onClick={() => setOpenPicker({ type: 'category', blockIndex: index, settingId: setting.id, isUrlParam: true })}
                                                                                     className="flex-1 flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 py-1.5 rounded text-xs font-semibold transition-colors border shadow-sm"
                                                                                 >
-                                                                                    <Tags className="w-3.5 h-3.5" /> قسم
+                                                                                    <Tags className="w-3.5 h-3.5" /> تصنيف
                                                                                 </button>
                                                                             </div>
                                                                         </div>
@@ -433,7 +435,7 @@ export default function SidebarForm({
 
                                                                     {setting.type === 'category' && (
                                                                         <div className="flex border border-input rounded-md px-2 py-1.5 text-sm bg-background items-center justify-between group-hover:border-primary/40 transition-colors min-h-[40px]">
-                                                                            <span className="truncate text-foreground font-medium pl-2">{val ? `${val}` : 'مرتبط بـ (بدون قسم)'}</span>
+                                                                            <span className="truncate text-foreground font-medium pl-2">{val ? `${val}` : 'مرتبط بـ (بدون تصنيف)'}</span>
                                                                             <button
                                                                                 className="bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground px-3 py-1 rounded text-xs font-bold transition-colors whitespace-nowrap"
                                                                                 onClick={() => setOpenPicker({ type: 'category', blockIndex: index, settingId: setting.id })}
@@ -483,6 +485,7 @@ export default function SidebarForm({
 
             {/* Picker Modal */}
             <ItemPickerModal
+                storeId={storeId}
                 isOpen={openPicker !== null}
                 onClose={() => setOpenPicker(null)}
                 type={openPicker?.type || 'product'}

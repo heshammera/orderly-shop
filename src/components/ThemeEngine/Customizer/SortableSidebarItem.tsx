@@ -31,7 +31,7 @@ export function SortableSidebarItem({ id, children }: SortableSidebarItemProps) 
                 {...attributes}
                 {...listeners}
                 className="absolute top-2 right-2 z-10 p-2 bg-background border border-border rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground"
-                title="سحب لترتيب القسم"
+                title="سحب لترتيب التصنيف"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="12" r="1" /><circle cx="9" cy="5" r="1" /><circle cx="9" cy="19" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="15" cy="5" r="1" /><circle cx="15" cy="19" r="1" /></svg>
             </div>

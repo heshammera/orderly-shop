@@ -1,17 +1,17 @@
-{
+﻿{
     "name": "شريط التصنيفات (Category Slider)",
     "type": "category_slider",
     "settings": [
         {
             "type": "text",
             "id": "heading",
-            "label": "عنوان القسم",
-            "default": "تسوق حسب القسم"
+            "label": "عنوان التصنيف",
+            "default": "تسوق حسب التصنيف"
         },
         {
             "type": "text",
             "id": "subheading",
-            "label": "وصف القسم",
+            "label": "وصف التصنيف",
             "default": "تصفح مجموعاتنا المتنوعة للاختيار بسهولة"
         }
     ],
