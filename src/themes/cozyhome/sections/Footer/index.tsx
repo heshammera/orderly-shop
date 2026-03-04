@@ -94,9 +94,27 @@ export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps
                         settingId="copyright"
                         value={settings.copyright || 'جميع الحقوق محفوظة © 2026 COZY HOME'}
                     />
-                    <a href="https://orderly.shop" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity text-stone-500">
-                        <span>Powered by</span>
-                        <span className="font-bold tracking-tighter text-stone-900">ORDERLY</span>
+                </div>
+
+                {/* ── Powered by ORDERLY ── */}
+                <div className="mt-10 pt-8 border-t border-stone-200">
+                    <a
+                        href="https://orderly.shop"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group flex flex-col items-center justify-center gap-3 py-6 rounded-2xl transition-all duration-500 hover:scale-105"
+                    >
+                        <span className="text-sm font-semibold text-stone-400 tracking-widest uppercase">Powered by</span>
+                        <span className="text-3xl md:text-4xl font-black tracking-[0.15em] bg-gradient-to-r from-amber-700 via-orange-500 to-yellow-500 bg-clip-text text-transparent drop-shadow-lg group-hover:from-yellow-500 group-hover:via-amber-500 group-hover:to-orange-600 transition-all duration-700">
+                            ORDERLY
+                        </span>
+                        <span className="flex items-center gap-2 text-xs text-stone-400">
+                            <span className="relative flex h-2.5 w-2.5">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                            </span>
+                            E-Commerce Platform
+                        </span>
                     </a>
                 </div>
             </div>
