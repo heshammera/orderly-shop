@@ -94,9 +94,10 @@ export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps
                         settingId="copyright"
                         value={settings.copyright || 'جميع الحقوق محفوظة © 2026 COZY HOME'}
                     />
-                    <div className="flex items-center gap-4 grayscale opacity-50">
-                        <span className="font-bold tracking-tighter text-stone-900 border-2 border-stone-900 px-2 py-1 rounded italic">SA-CART</span>
-                    </div>
+                    <a href="https://orderly.shop" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity text-stone-500">
+                        <span>Powered by</span>
+                        <span className="font-bold tracking-tighter text-stone-900">ORDERLY</span>
+                    </a>
                 </div>
             </div>
         </footer>

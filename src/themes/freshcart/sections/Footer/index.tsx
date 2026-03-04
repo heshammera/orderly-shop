@@ -93,9 +93,10 @@ export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps
                         settingId="copyright"
                         value={settings.copyright || 'All Rights Reserved © 2026 FRESHCART ORGANIC'}
                     />
-                    <div className="flex items-center gap-6">
-                        <span className="bg-[#1b4332] px-3 py-1 border border-[#2d6a4f] rounded italic">ECO FRIENDLY</span>
-                    </div>
+                    <a href="https://orderly.shop" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 opacity-40 hover:opacity-100 transition-opacity text-[#40916c]">
+                        <span>Powered by</span>
+                        <span className="font-bold tracking-tighter text-[#2d6a4f]">ORDERLY</span>
+                    </a>
                 </div>
             </div>
         </footer>

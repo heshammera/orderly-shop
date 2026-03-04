@@ -100,6 +100,10 @@ export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps
                             <li><Link href="#" className="hover:text-primary transition-colors">FAQ</Link></li>
                         </ul>
                     </div>
+                    <a href="https://orderly.shop" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity text-gray-400">
+                        <span>Powered by</span>
+                        <span className="font-bold tracking-tighter text-gray-900">ORDERLY</span>
+                    </a>
                 </div>
             </div>
         </footer>

@@ -87,10 +87,10 @@ export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps
                         settingId="copyright"
                         value={settings.copyright || 'جميع الحقوق محفوظة © 2026'}
                     />
-                    <div className="flex items-center gap-4">
-                        <span className="opacity-70">طُور بواسطة</span>
-                        <span className="font-bold tracking-tighter text-primary">شوبيفاي العرب</span>
-                    </div>
+                    <a href="https://orderly.shop" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 opacity-70 hover:opacity-100 transition-opacity">
+                        <span>Powered by</span>
+                        <span className="font-bold tracking-tighter text-primary">ORDERLY</span>
+                    </a>
                 </div>
             </div>
         </footer>

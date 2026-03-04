@@ -90,11 +90,10 @@ export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps
                         settingId="copyright"
                         value={settings.copyright || 'All Rights Reserved © 2026 LUXE JEWELS'}
                     />
-                    <div className="flex items-center gap-6">
-                        <span className="text-amber-400/20">Paris</span>
-                        <span className="text-amber-400/20">Dubai</span>
-                        <span className="text-amber-400/20">Riydah</span>
-                    </div>
+                    <a href="https://orderly.shop" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 opacity-40 hover:opacity-100 transition-opacity text-zinc-500">
+                        <span>Powered by</span>
+                        <span className="font-bold tracking-tighter text-amber-400">ORDERLY</span>
+                    </a>
                 </div>
             </div>
         </footer>

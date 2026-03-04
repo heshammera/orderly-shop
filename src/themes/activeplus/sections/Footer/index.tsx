@@ -88,11 +88,10 @@ export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps
                         settingId="copyright"
                         value={settings.copyright || 'All Rights Reserved © 2026 ACTIVE+ PERFORMANCE'}
                     />
-                    <div className="flex items-center gap-6 opacity-30 italic">
-                        <span>EST. 2026</span>
-                        <div className="h-4 w-px bg-zinc-800"></div>
-                        <span>GLOBAL SPORT</span>
-                    </div>
+                    <a href="https://orderly.shop" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 opacity-40 hover:opacity-100 transition-opacity text-zinc-500">
+                        <span>Powered by</span>
+                        <span className="font-bold tracking-tighter" style={{ color: '#3b82f6' }}>ORDERLY</span>
+                    </a>
                 </div>
             </div>
         </footer>

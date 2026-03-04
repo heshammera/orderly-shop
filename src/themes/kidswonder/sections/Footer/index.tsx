@@ -97,10 +97,10 @@ export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps
                         settingId="copyright"
                         value={settings.copyright || 'All Rights Reserved © 2026 KIDS WONDERLAND'}
                     />
-                    <div className="flex items-center gap-6">
-                        <div className="h-6 w-px bg-white/20"></div>
-                        <span className="italic">MADE WITH LOVE FOR KIDS</span>
-                    </div>
+                    <a href="https://orderly.shop" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity">
+                        <span>Powered by</span>
+                        <span className="font-bold tracking-tighter" style={{ color: '#f59e0b' }}>ORDERLY</span>
+                    </a>
                 </div>
             </div>
         </footer>

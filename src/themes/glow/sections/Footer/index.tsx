@@ -88,9 +88,10 @@ export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps
                         settingId="copyright"
                         value={settings.copyright || 'All Rights Reserved © 2026 GLOW BEAUTY'}
                     />
-                    <div className="flex items-center gap-4 grayscale opacity-30">
-                        <span className="bg-stone-800 text-white px-3 py-1 rounded italic low-caps text-[10px]">PREMIUM EXPERIENCE</span>
-                    </div>
+                    <a href="https://orderly.shop" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 opacity-40 hover:opacity-100 transition-opacity text-stone-400">
+                        <span>Powered by</span>
+                        <span className="font-bold tracking-tighter text-rose-400">ORDERLY</span>
+                    </a>
                 </div>
             </div>
         </footer>
