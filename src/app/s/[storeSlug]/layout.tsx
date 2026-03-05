@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { createClient } from '@supabase/supabase-js';
 import { notFound } from 'next/navigation';
 import { StoreClientLayout } from '@/components/store/StoreClientLayout';

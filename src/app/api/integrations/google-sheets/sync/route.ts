@@ -1,4 +1,6 @@
 
+export const runtime = 'edge';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { appendRow, getSheetValues } from '@/lib/google-sheets';
 import { createAdminClient } from '@/lib/supabase/admin';

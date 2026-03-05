@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { notFound, redirect } from 'next/navigation';
 import { createServerClient } from '@supabase/ssr';
