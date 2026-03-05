@@ -11,8 +11,9 @@ import { ShippingTab } from './ShippingTab';
 import { DomainsTab } from './DomainsTab';
 import { CopyrightRemovalTab } from './CopyrightRemovalTab';
 import { PagesTab } from './PagesTab';
+import { SecurityTab } from './SecurityTab';
 import { IntegrationsManager } from '@/components/dashboard/IntegrationsManager';
-import { Store, Phone, Globe, Search, Truck, Link, Plug, ShieldCheck, FileText } from 'lucide-react';
+import { Store, Phone, Globe, Search, Truck, Link, Plug, ShieldCheck, FileText, Shield } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useRouter } from 'next/navigation';
@@ -117,6 +118,11 @@ export function StoreSettingsForm({ store: initialStore }: StoreSettingsFormProp
             value: 'copyright',
             label: language === 'ar' ? 'إزالة الحقوق' : 'Remove Copyright',
             icon: ShieldCheck,
+        },
+        {
+            value: 'security',
+            label: language === 'ar' ? 'الأمان' : 'Security',
+            icon: Shield,
         },
     ];
 
@@ -289,6 +295,24 @@ export function StoreSettingsForm({ store: initialStore }: StoreSettingsFormProp
                     </CardHeader>
                     <CardContent>
                         <CopyrightRemovalTab store={initialStore} />
+                    </CardContent>
+                </Card>
+            </TabsContent>
+
+            <TabsContent value="security">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            {language === 'ar' ? 'الأمان وكلمة المرور' : 'Security & Password'}
+                        </CardTitle>
+                        <CardDescription>
+                            {language === 'ar'
+                                ? 'تغيير كلمة المرور الخاصة بحسابك.'
+                                : 'Change your account password.'}
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <SecurityTab />
                     </CardContent>
                 </Card>
             </TabsContent>
