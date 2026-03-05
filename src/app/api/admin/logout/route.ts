@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getAdminSessionToken, deleteAdminSession } from '@/lib/admin-auth'
 import { NextResponse } from 'next/server'

@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { StatusPage } from '@/components/store-status/StatusPage';
 
 export default async function StoreSuspendedPage({
