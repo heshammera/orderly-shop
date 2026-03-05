@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { WalletBalance } from '@/components/dashboard/WalletBalance';
 import { TransactionHistory } from '@/components/dashboard/TransactionHistory';
-import { RechargeHistoryTable } from '@/components/dashboard/RechargeHistoryTable';
+import { RechargeRequestsList } from '@/components/dashboard/RechargeRequestsList';
 import { RechargeAmountCards } from '@/components/dashboard/RechargeAmountCards';
 import { WalletRechargeDialog } from '@/components/dashboard/WalletRechargeDialog';
 import { createClient } from '@/lib/supabase/client';
@@ -66,7 +66,7 @@ export default function WalletPage({ params }: { params: { storeId: string } }) 
             />
 
             {/* Recharge History Table */}
-            <RechargeHistoryTable storeId={params.storeId} currency={currency} />
+            <RechargeRequestsList storeId={params.storeId} currency={currency} />
 
             {/* Transaction History Table */}
             <TransactionHistory storeId={params.storeId} currency={currency} />

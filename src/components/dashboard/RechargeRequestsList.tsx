@@ -19,11 +19,11 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface RechargeRequest {
     id: string;
-    amount: number;
+    amount_local: number;
     status: 'pending' | 'approved' | 'rejected';
     created_at: string;
     rejection_reason?: string;
-    proof_url?: string;
+    proof_image?: string;
 }
 
 export function RechargeRequestsList({ storeId, currency }: { storeId: string, currency: string }) {
@@ -126,7 +126,7 @@ export function RechargeRequestsList({ storeId, currency }: { storeId: string, c
                                             {format(new Date(request.created_at), 'yyyy/MM/dd HH:mm')}
                                         </TableCell>
                                         <TableCell className="font-medium">
-                                            {request.amount} {currency}
+                                            {request.amount_local} {currency}
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex flex-col gap-2">
@@ -145,9 +145,9 @@ export function RechargeRequestsList({ storeId, currency }: { storeId: string, c
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-end">
-                                            {request.proof_url ? (
+                                            {request.proof_image ? (
                                                 <a
-                                                    href={request.proof_url}
+                                                    href={request.proof_image}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="text-primary hover:text-primary/80 inline-flex items-center gap-1 text-sm font-medium transition-colors"
