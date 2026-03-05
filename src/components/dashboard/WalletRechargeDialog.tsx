@@ -174,9 +174,17 @@ export function WalletRechargeDialog({
 
         } catch (error: any) {
             console.error('Recharge error:', error);
+
+            let errorMessage = error.message || (language === 'ar' ? 'حدث خطأ أثناء تقديم الطلب' : 'An error occurred while submitting request');
+
+            // Special handling for DB constraint error
+            if (error.code === '23514' || errorMessage.includes('min_recharge_amount_usd')) {
+                errorMessage = language === 'ar' ? 'الحد الأدنى للشحن هو 5 دولار' : 'Minimum recharge amount is $5 USD';
+            }
+
             toast({
                 title: language === 'ar' ? 'خطأ' : 'Error',
-                description: error.message || (language === 'ar' ? 'حدث خطأ أثناء تقديم الطلب' : 'An error occurred while submitting request'),
+                description: errorMessage,
                 variant: "destructive"
             });
         } finally {
@@ -234,6 +242,11 @@ export function WalletRechargeDialog({
                                     step="1"
                                     value={usdAmount}
                                     onChange={(e) => setUsdAmount(parseFloat(e.target.value) || 0)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && usdAmount < 5) {
+                                            e.preventDefault();
+                                        }
+                                    }}
                                     placeholder="5.00"
                                     className={usdAmount < 5 ? "border-red-500 focus-visible:ring-red-500" : ""}
                                 />
