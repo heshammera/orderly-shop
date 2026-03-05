@@ -22,10 +22,10 @@ interface HeaderProps {
     };
     blocks?: HeaderLink[];
     sectionId?: string;
-    store?: any; // Pushed from SectionRenderer
+    storeContext?: any; // Pushed from SectionRenderer
 }
 
-export default function Header({ settings, blocks = [], sectionId = 'header_1', store }: HeaderProps) {
+export default function Header({ settings, blocks = [], sectionId = 'header_1', storeContext }: HeaderProps) {
     const { language } = useLanguage();
     const router = useRouter();
     const { cartCount, openCart } = useCart();
@@ -34,6 +34,7 @@ export default function Header({ settings, blocks = [], sectionId = 'header_1', 
     const [searchQuery, setSearchQuery] = useState('');
     const [isSearchOpen, setIsSearchOpen] = useState(false);
 
+    const store = storeContext?.store || storeContext; // Handle both direct DB record or context wrapper
     const storeName = store?.name ? (typeof store.name === 'string' ? store.name : store.name[language] || store.name.ar || store.name.en) : 'Store';
     const storeSlug = store?.slug || '';
 
