@@ -424,10 +424,10 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
 
     // Setup blocks for dynamic rendering
     const defaultBlocks = [
+        { type: 'countdown', id: 'block_countdown' },
         { type: 'title', id: 'block_title' },
         { type: 'price', id: 'block_price' },
         { type: 'visitors', id: 'block_visitors' },
-        { type: 'countdown', id: 'block_countdown' },
         { type: 'quantity', id: 'block_quantity' },
         { type: 'offers', id: 'block_offers' },
         { type: 'variants', id: 'block_variants' },
@@ -869,7 +869,7 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
                                             {!product.skip_cart && (
                                                 <Button
                                                     size="lg"
-                                                    className="flex-1 h-14 md:h-11 rounded-xl md:rounded-md text-base md:text-sm font-semibold md:font-medium shadow-md md:shadow-none"
+                                                    className="flex-1 h-16 md:h-14 rounded-xl md:rounded-md text-lg md:text-base font-bold md:font-semibold shadow-md md:shadow-none"
                                                     onClick={handleAddToCart}
                                                     disabled={addingToCart || (!product.ignore_stock && product.stock_quantity === 0)}
                                                 >
