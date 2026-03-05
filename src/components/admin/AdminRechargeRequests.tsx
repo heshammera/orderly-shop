@@ -384,31 +384,45 @@ export function AdminRechargeRequests() {
 
                             {/* Rejection Reason Input (for pending requests) */}
                             {selectedRequest.status === 'pending' && (
-                                <div className="space-y-2">
-                                    <Label>{language === 'ar' ? 'سبب الرفض (اختياري)' : 'Rejection Reason (optional)'}</Label>
+                                <div className="space-y-2 bg-red-50 dark:bg-red-950/20 p-3 rounded-lg border border-red-100 dark:border-red-900/50">
+                                    <Label className="text-red-800 dark:text-red-400 font-semibold flex items-center gap-2">
+                                        <XCircle className="w-4 h-4" />
+                                        {language === 'ar' ? 'سبب الرفض (مهم للتاجر)' : 'Rejection Reason (Important for merchant)'}
+                                    </Label>
                                     <Textarea
                                         value={rejectionReason}
                                         onChange={(e) => setRejectionReason(e.target.value)}
-                                        placeholder={language === 'ar' ? 'اكتب سبب الرفض...' : 'Enter rejection reason...'}
+                                        placeholder={language === 'ar' ? 'اكتب سبب الرفض هنا ليظهر للتاجر...' : 'Enter rejection reason here to show to the merchant...'}
                                         rows={3}
+                                        className="bg-background border-red-200 focus-visible:ring-red-500"
                                     />
                                 </div>
                             )}
                         </div>
 
-                        <DialogFooter>
+                        <DialogFooter className="p-6 pt-2">
                             {selectedRequest.status === 'pending' && (
-                                <div className="flex gap-2">
+                                <div className="flex gap-2 w-full sm:w-auto">
                                     <Button
-                                        variant="destructive"
-                                        onClick={() => handleReject(selectedRequest)}
+                                        variant="outline"
+                                        className="flex-1 sm:flex-none text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 dark:border-red-900/50 dark:hover:bg-red-950/30"
+                                        onClick={() => {
+                                            if (!rejectionReason.trim()) {
+                                                toast({
+                                                    title: language === 'ar' ? 'تنبيه' : 'Note',
+                                                    description: language === 'ar' ? 'يفضل كتابة سبب للرفض لتوضيح الأمر للتاجر' : 'It is recommended to provide a reason for the merchant',
+                                                });
+                                            }
+                                            handleReject(selectedRequest);
+                                        }}
                                         disabled={processing}
                                     >
                                         {processing && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
                                         <XCircle className="w-4 h-4 mr-2" />
-                                        {language === 'ar' ? 'رفض' : 'Reject'}
+                                        {language === 'ar' ? 'رفض الطلب' : 'Reject Request'}
                                     </Button>
                                     <Button
+                                        className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-white"
                                         onClick={() => handleApprove(selectedRequest)}
                                         disabled={processing}
                                     >

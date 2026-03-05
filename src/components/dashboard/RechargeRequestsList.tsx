@@ -14,7 +14,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { Loader2, ExternalLink, ArrowUpRight } from 'lucide-react';
+import { Loader2, ExternalLink, ArrowUpRight, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface RechargeRequest {
     id: string;
@@ -128,10 +129,18 @@ export function RechargeRequestsList({ storeId, currency }: { storeId: string, c
                                             {request.amount} {currency}
                                         </TableCell>
                                         <TableCell>
-                                            <div className="flex flex-col gap-1">
+                                            <div className="flex flex-col gap-2">
                                                 <div>{getStatusBadge(request.status)}</div>
                                                 {request.status === 'rejected' && request.rejection_reason && (
-                                                    <span className="text-xs text-destructive">{request.rejection_reason}</span>
+                                                    <Alert variant="destructive" className="py-2 px-3 mt-1 bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/50">
+                                                        <AlertCircle className="h-3.5 w-3.5" />
+                                                        <AlertDescription className="text-[11px] leading-tight opacity-90">
+                                                            <span className="font-semibold block mb-0.5">
+                                                                {language === 'ar' ? 'سبب الرفض:' : 'Rejection Reason:'}
+                                                            </span>
+                                                            {request.rejection_reason}
+                                                        </AlertDescription>
+                                                    </Alert>
                                                 )}
                                             </div>
                                         </TableCell>
