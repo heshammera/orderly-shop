@@ -27,6 +27,8 @@ interface StoreData {
     logo_url: string | null;
     contact_email: string | null;
     contact_phone: string | null;
+    contact_email_verified?: boolean;
+    contact_phone_verified?: boolean;
     currency: string;
     timezone: string;
     settings: any;
