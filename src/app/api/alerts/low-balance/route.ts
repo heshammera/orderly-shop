@@ -135,8 +135,6 @@ export async function POST(request: NextRequest) {
                 });
             }
 
-            // Add a small delay to avoid rate limiting on external APIs
-            await new Promise(resolve => setTimeout(resolve, 2000));
         }
 
         return NextResponse.json({
