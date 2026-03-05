@@ -77,9 +77,9 @@ export default function Header({ settings, blocks = [], sectionId = 'header_1', 
 
                 {/* Logo */}
                 <Link href={storeSlug ? `/s/${storeSlug}` : '/'} className="shrink-0 flex items-center gap-2">
-                    {settings.logo ? (
+                    {settings.logo || store?.logo_url ? (
                         <div className="h-10 md:h-12 w-auto max-w-[150px]">
-                            <img src={settings.logo} alt={storeName} className="h-full w-auto object-contain" />
+                            <img src={settings.logo || store?.logo_url} alt={storeName} className="h-full w-auto object-contain" />
                         </div>
                     ) : (
                         <span className="text-xl md:text-2xl font-black tracking-tight text-foreground">
