@@ -36,9 +36,8 @@ CREATE POLICY "Service role full access on low_balance_alerts"
 
 -- 2. Create RPC to get stores needing low balance alert
 -- Excludes stores that have unlimited balance
--- Excludes stores that have been alerted in the last 48 hours
--- Balance threshold is conceptually $2 USD, but balance is stored in local currency
--- So we check if (balance / exchange_rate) < 2
+-- Excludes stores that have been alerted in the last 48 hours  
+-- Checks if balance is below 2 (local currency units)
 CREATE OR REPLACE FUNCTION public.get_stores_needing_low_balance_alert()
 RETURNS TABLE (
     store_id UUID,
@@ -66,9 +65,9 @@ BEGIN
     JOIN 
         auth.users u ON u.id = s.owner_id
     WHERE 
-        s.has_unlimited_balance = false AND
-        (s.balance / COALESCE((SELECT rate FROM public.exchange_rates WHERE to_currency = s.currency ORDER BY created_at DESC LIMIT 1), 1)) < 2.00 AND
-        NOT EXISTS (
+        s.has_unlimited_balance = false
+        AND s.balance < 2.00
+        AND NOT EXISTS (
             SELECT 1 
             FROM public.low_balance_alerts lba 
             WHERE lba.store_id = s.id 
@@ -76,3 +75,4 @@ BEGIN
         );
 END;
 $$;
+
