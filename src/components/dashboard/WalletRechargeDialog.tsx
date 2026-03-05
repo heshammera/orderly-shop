@@ -233,9 +233,16 @@ export function WalletRechargeDialog({
                                     min="5"
                                     step="1"
                                     value={usdAmount}
-                                    onChange={(e) => setUsdAmount(parseFloat(e.target.value) || 5)}
+                                    onChange={(e) => setUsdAmount(parseFloat(e.target.value) || 0)}
                                     placeholder="5.00"
+                                    className={usdAmount < 5 ? "border-red-500 focus-visible:ring-red-500" : ""}
                                 />
+                                {usdAmount < 5 && usdAmount > 0 && (
+                                    <p className="text-xs text-red-500 flex items-center gap-1 mt-1">
+                                        <AlertTriangle className="w-3 h-3" />
+                                        {language === 'ar' ? 'الحد الأدنى 5 دولار' : 'Minimum $5 USD'}
+                                    </p>
+                                )}
                             </div>
                         )}
 
