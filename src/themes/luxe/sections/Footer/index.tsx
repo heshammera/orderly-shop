@@ -92,27 +92,7 @@ export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps
                     />
                 </div>
 
-                {/* ── Powered by ORDERLY ── */}
-                <div className="mt-10 pt-8 border-t border-zinc-900">
-                    <a
-                        href="https://orderly.shop"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group flex flex-col items-center justify-center gap-3 py-6 rounded-2xl transition-all duration-500 hover:scale-105"
-                    >
-                        <span className="text-sm font-semibold text-zinc-600 tracking-widest uppercase">Powered by</span>
-                        <span className="text-3xl md:text-4xl font-black tracking-[0.15em] bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 bg-clip-text text-transparent drop-shadow-lg group-hover:from-yellow-300 group-hover:via-amber-400 group-hover:to-yellow-500 transition-all duration-700">
-                            ORDERLY
-                        </span>
-                        <span className="flex items-center gap-2 text-xs text-zinc-600">
-                            <span className="relative flex h-2.5 w-2.5">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
-                            </span>
-                            E-Commerce Platform
-                        </span>
-                    </a>
-                </div>
+
             </div>
         </footer>
     );

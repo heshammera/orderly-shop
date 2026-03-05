@@ -1,7 +1,3 @@
-export const runtime = 'edge';
-export const dynamic = 'force-dynamic';
-
-
 import { NextRequest, NextResponse } from 'next/server';
 import { AIService } from '@/lib/ai/service'; // Assuming service is created here
 import { createServerClient } from '@supabase/ssr';

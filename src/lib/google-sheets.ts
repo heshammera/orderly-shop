@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 
 interface ServiceAccountCredentials {
     client_email: string;
@@ -14,12 +15,9 @@ interface GoogleToken {
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 
-function base64UrlEncode(buffer: ArrayBuffer | string): string {
-    const base64 = typeof buffer === 'string'
-        ? btoa(unescape(encodeURIComponent(buffer)))
-        : btoa(String.fromCharCode(...new Uint8Array(buffer)));
-
-    return base64
+function base64UrlEncode(str: string): string {
+    return Buffer.from(str)
+        .toString('base64')
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
         .replace(/=+$/, '');
@@ -49,38 +47,15 @@ async function getGoogleAuthToken(serviceAccountJson: string): Promise<string> {
 
         const encodedHeader = base64UrlEncode(JSON.stringify(header));
         const encodedClaimSet = base64UrlEncode(JSON.stringify(claimSet));
-        const payload = `${encodedHeader}.${encodedClaimSet}`;
 
-        // 1. Clean and Import the Private Key (Web Crypto requires PKCS#8 or SPKI)
-        const pemHeader = "-----BEGIN PRIVATE KEY-----";
-        const pemFooter = "-----END PRIVATE KEY-----";
-        const pemContents = credentials.private_key
-            .replace(pemHeader, "")
-            .replace(pemFooter, "")
-            .replace(/\s/g, "");
+        const signer = crypto.createSign('RSA-SHA256');
+        signer.update(`${encodedHeader}.${encodedClaimSet}`);
+        const signature = signer.sign(credentials.private_key, 'base64')
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=+$/, '');
 
-        const binaryKey = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0));
-
-        const key = await crypto.subtle.importKey(
-            "pkcs8",
-            binaryKey.buffer,
-            {
-                name: "RSASSA-PKCS1-v1_5",
-                hash: { name: "SHA-256" },
-            },
-            false,
-            ["sign"]
-        );
-
-        // 2. Sign the Payload
-        const signatureBuffer = await crypto.subtle.sign(
-            "RSASSA-PKCS1-v1_5",
-            key,
-            new TextEncoder().encode(payload)
-        );
-
-        const signature = base64UrlEncode(signatureBuffer);
-        const jwt = `${payload}.${signature}`;
+        const jwt = `${encodedHeader}.${encodedClaimSet}.${signature}`;
 
         const response = await fetch(GOOGLE_TOKEN_URL, {
             method: 'POST',
