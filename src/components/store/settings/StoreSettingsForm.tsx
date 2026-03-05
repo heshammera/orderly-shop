@@ -59,7 +59,8 @@ export function StoreSettingsForm({ store: initialStore }: StoreSettingsFormProp
                 className: "bg-green-50 border-green-200"
             });
 
-            router.refresh(); // Refresh server data
+            // Refresh server data and hard reload to ensure layout and sidebar update
+            window.location.reload();
         } catch (error: any) {
             console.error('Error updating store:', error);
             toast({
