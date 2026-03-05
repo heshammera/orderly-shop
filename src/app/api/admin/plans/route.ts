@@ -47,6 +47,18 @@ export async function POST(req: Request) {
             }))
             const { error: fvError } = await supabase.from('plan_feature_values').upsert(featureUpserts)
             if (fvError) throw fvError
+
+            // Sync features JSONB on plans table (used by enforcement triggers like check_product_limit)
+            const featuresJsonb: Record<string, any> = {}
+            for (const [key, val] of Object.entries(features)) {
+                const numVal = Number(val)
+                featuresJsonb[key] = isNaN(numVal) ? val : numVal
+            }
+            const { error: syncError } = await supabase
+                .from('plans')
+                .update({ features: featuresJsonb })
+                .eq('id', targetPlanId)
+            if (syncError) console.error('Features JSONB sync error:', syncError)
         }
 
         return NextResponse.json({ success: true, data: planData })
