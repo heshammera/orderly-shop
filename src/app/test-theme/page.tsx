@@ -1,5 +1,6 @@
 import React from 'react';
 import ThemePreviewManager from '@/components/ThemeEngine/ThemePreviewManager';
+import { CartProvider } from '@/contexts/CartContext';
 
 export default function ThemeEngineTestPage() {
 
@@ -96,14 +97,16 @@ export default function ThemeEngineTestPage() {
     };
 
     return (
-        <div className="min-h-screen bg-background text-foreground font-sans">
-            <main>
-                <ThemePreviewManager
-                    initialPageData={pageData}
-                    initialTokens={mockGlobalTokens}
-                    isRTL={true}
-                />
-            </main>
-        </div>
+        <CartProvider storeId="test-store">
+            <div className="min-h-screen bg-background text-foreground font-sans">
+                <main>
+                    <ThemePreviewManager
+                        initialPageData={pageData}
+                        initialTokens={mockGlobalTokens}
+                        isRTL={true}
+                    />
+                </main>
+            </div>
+        </CartProvider>
     );
 }

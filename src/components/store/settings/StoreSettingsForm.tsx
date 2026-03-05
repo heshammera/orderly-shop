@@ -312,7 +312,7 @@ export function StoreSettingsForm({ store: initialStore }: StoreSettingsFormProp
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <SecurityTab />
+                        <SecurityTab store={initialStore} />
                     </CardContent>
                 </Card>
             </TabsContent>
