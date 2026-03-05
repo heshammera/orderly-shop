@@ -16,7 +16,9 @@ export async function middleware(request: NextRequest) {
     const isMainDomain = hostname === 'localhost' ||
         hostname === '127.0.0.1' ||
         hostname === '::1' ||
-        hostname.endsWith('.vercel.app'); // Treat Vercel deployments as main domain
+        hostname.endsWith('.vercel.app') || // Treat Vercel deployments as main domain
+        hostname === 'orderlyshops.com' ||
+        hostname === 'www.orderlyshops.com';
 
     // 3. SECURE ADMIN ROUTES (BLOCK ON SUBDOMAINS)
     if (pathname.startsWith('/admin')) {
