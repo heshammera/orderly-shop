@@ -45,7 +45,7 @@ export function DomainsTab({ store, onSave }: DomainsTabProps) {
     }, []);
 
     const storePathUrl = `${origin}/s/${store.slug}`;
-    const subdomainUrl = currentDomain ? `${store.slug}.${currentDomain}` : `${store.slug}.yourdomain.com`;
+    const subdomainUrl = `${store.slug}.orderlyshops.com`;
 
     const handleCopy = (text: string) => {
         navigator.clipboard.writeText(text);
@@ -126,19 +126,7 @@ export function DomainsTab({ store, onSave }: DomainsTabProps) {
                         </Button>
                     </div>
                 </div>
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <p className="text-sm text-yellow-800">
-                        {language === 'ar' ? (
-                            <>
-                                <strong>للتطوير المحلي:</strong> استخدم <code className="bg-yellow-100 px-2 py-1 rounded text-xs">{store.slug}.localhost:3000</code>
-                            </>
-                        ) : (
-                            <>
-                                <strong>For local development:</strong> Use <code className="bg-yellow-100 px-2 py-1 rounded text-xs">{store.slug}.localhost:3000</code>
-                            </>
-                        )}
-                    </p>
-                </div>
+
             </div>
 
             <hr className="border-border" />
@@ -204,7 +192,7 @@ export function DomainsTab({ store, onSave }: DomainsTabProps) {
                                         <code className="bg-background px-2 py-1 rounded">CNAME</code>
 
                                         <span className="text-muted-foreground">Value:</span>
-                                        <code className="bg-background px-2 py-1 rounded">domains.orderly.com</code>
+                                        <code className="bg-background px-2 py-1 rounded">domains.orderlyshops.com</code>
                                     </div>
                                 </div>
                             )}
