@@ -1,6 +1,9 @@
 import React from 'react';
 import Link from 'next/link';
 import InlineEditableText from '@/components/ThemeEngine/InlineEditableText';
+import { QuickViewModal } from '@/components/store/QuickViewModal';
+import { Eye, ShoppingCart } from 'lucide-react';
+import React, { useState } from 'react';
 
 interface ProductSnippet {
     id: string;
@@ -26,7 +29,14 @@ interface FeaturedGridProps {
     sectionId?: string;
 }
 
-function ProductCard({ item }: { item: ProductSnippet }) {
+function ProductCard({ item, storeId }: { item: ProductSnippet, storeId: string }) {
+    const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
+
+    const handleQuickAction = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsQuickViewOpen(true);
+    };
     return (
         <div className="group relative rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
             <Link href={item.href || `/product/${item.handle}`} className="block">
@@ -37,7 +47,13 @@ function ProductCard({ item }: { item: ProductSnippet }) {
                         alt={item.title}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: 'linear-gradient(0deg, rgba(10,10,26,0.8) 0%, transparent 50%)' }}></div>
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" style={{ background: 'linear-gradient(0deg, rgba(10,10,26,0.8) 0%, transparent 50%)' }}></div>
+                    {/* Quick View Button Overlay */}
+                    <div className="absolute inset-x-0 bottom-4 flex justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-4 group-hover:translate-y-0 pointer-events-none z-10">
+                        <button onClick={handleQuickAction} className="pointer-events-auto bg-white/10 backdrop-blur-md rounded-full w-10 h-10 flex items-center justify-center text-white hover:bg-white hover:text-black transition-colors" title="Quick View">
+                            <Eye className="w-4 h-4" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Info */}
@@ -143,7 +159,7 @@ export default function FeaturedGrid({ settings, blocks, storeContext, sectionId
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {products.map((item, index) => (
-                        <ProductCard key={index} item={item} />
+                        <ProductCard key={index} item={item} storeId={storeIdentifier} />
                     ))}
                 </div>
             </div>

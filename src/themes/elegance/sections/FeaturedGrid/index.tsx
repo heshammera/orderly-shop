@@ -1,6 +1,9 @@
 import React from 'react';
 import Link from 'next/link';
 import InlineEditableText from '@/components/ThemeEngine/InlineEditableText';
+import { QuickViewModal } from '@/components/store/QuickViewModal';
+import { Eye, ShoppingCart } from 'lucide-react';
+import React, { useState } from 'react';
 
 // Helper interface
 interface ProductSnippet {
@@ -29,7 +32,14 @@ interface FeaturedGridProps {
     sectionId?: string;
 }
 
-function ProductCard({ item }: { item: ProductSnippet }) {
+function ProductCard({ item, storeId }: { item: ProductSnippet, storeId: string }) {
+    const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
+
+    const handleQuickAction = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsQuickViewOpen(true);
+    };
     return (
         <div className="w-full sm:w-1/2 lg:w-1/4 px-4 mb-8">
             <div className="bg-white p-3 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 border border-gray-100 group">
@@ -144,7 +154,7 @@ export default function FeaturedGrid({ settings, blocks, storeContext, sectionId
 
                 <div className="flex flex-wrap -mx-4 justify-center md:justify-start">
                     {products.slice(0, Math.max(4, products.length)).map((item, index) => (
-                        <ProductCard key={index} item={item} />
+                        <ProductCard key={index} item={item} storeId={storeIdentifier} />
                     ))}
                 </div>
             </div>
