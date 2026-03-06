@@ -12,6 +12,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Loader2, Search, SlidersHorizontal, X, Eye, ShoppingCart } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { QuickViewModal } from '@/components/store/QuickViewModal';
+import { useCart } from '@/contexts/CartContext';
 
 interface Product {
     id: string;
@@ -45,6 +46,7 @@ export function StoreProducts({ store, initialCategories, initialProducts }: Sto
     const router = useRouter();
     const pathname = usePathname();
     const supabase = createClient();
+    const { addToCart } = useCart();
 
     const [products, setProducts] = useState<Product[]>(initialProducts);
     const [categories, setCategories] = useState<Category[]>(initialCategories);
@@ -316,7 +318,20 @@ export function StoreProducts({ store, initialCategories, initialProducts }: Sto
                                                             )}
                                                         </div>
                                                         <button
-                                                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setQuickViewProduct(product.id); }}
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                addToCart({
+                                                                    productId: product.id,
+                                                                    productName: product.name,
+                                                                    productImage: product.images?.[0] || null,
+                                                                    basePrice: product.price,
+                                                                    unitPrice: product.price,
+                                                                    quantity: 1,
+                                                                    variants: [],
+                                                                    addedAt: new Date().toISOString()
+                                                                });
+                                                            }}
                                                             className="bg-gray-100 hover:bg-primary text-gray-800 hover:text-white p-2.5 rounded-full transition-colors flex-shrink-0"
                                                             title={language === 'ar' ? 'أضف للسلة' : 'Add to Cart'}
                                                         >
