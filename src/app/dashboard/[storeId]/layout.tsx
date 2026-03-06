@@ -92,17 +92,16 @@ export default async function Layout({
         .single();
 
     // Fetch tutorials enabled setting
-    const { data: settingsData } = await supabase
-        .from('system_settings')
-        .select('value')
-        .eq('key', 'tutorials_enabled_dashboard')
-        .maybeSingle();
-
-    const tutorialsEnabled = settingsData ? (
-        settingsData.value === 'true' ||
-        settingsData.value === true ||
-        JSON.stringify(settingsData.value) === '"true"'
-    ) : true; // Default to true if setting missing
+    let tutorialsEnabled = true;
+    try {
+        const { data: settingData } = await supabase.rpc('get_setting', { setting_key: 'tutorials_enabled_dashboard' });
+        if (settingData !== null && settingData !== undefined) {
+            const val = String(settingData).replace(/"/g, '');
+            tutorialsEnabled = val === 'true';
+        }
+    } catch (e) {
+        console.error("Failed to fetch tutorials setting", e);
+    }
 
     // Detect if we are on a subdomain to adjust links
     const hostname = headers().get('host') || '';

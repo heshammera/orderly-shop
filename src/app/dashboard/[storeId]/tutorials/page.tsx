@@ -14,7 +14,8 @@ export default async function DashboardTutorialsPage({ params }: { params: { sto
 
     // 1. Check if tutorials are enabled for dashboard globally
     const { data: settingData } = await supabase.rpc('get_setting', { setting_key: 'tutorials_enabled_dashboard' });
-    if (settingData !== 'true' && settingData !== true) {
+    const val = settingData !== null && settingData !== undefined ? String(settingData).replace(/"/g, '') : 'true';
+    if (val !== 'true') {
         redirect(`/dashboard/${params.storeId}`);
     }
 
