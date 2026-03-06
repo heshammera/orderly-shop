@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { createClient } from '@/lib/supabase/client';
-import { Loader2, ArrowLeft, Eye, Save, Plus } from 'lucide-react';
+import { Loader2, ArrowLeft, Eye, Save, Plus, Monitor, Tablet, Smartphone } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
@@ -99,6 +99,7 @@ export default function EditorPage({ params }: { params: { storeId: string } }) 
     const [store, setStore] = useState<any>(null);
     const [pageSlug, setPageSlug] = useState<string>('home');
     const [previewProductId, setPreviewProductId] = useState<string | null>(null);
+    const [deviceView, setDeviceView] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
 
     // Theme Engine State
     const [globalTokens, setGlobalTokens] = useState<Record<string, string>>(DEFAULT_GLOBAL_TOKENS);
@@ -641,6 +642,30 @@ export default function EditorPage({ params }: { params: { storeId: string } }) 
                     </Select>
                 </div>
 
+                <div className="hidden lg:flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200" dir="ltr">
+                    <button
+                        onClick={() => setDeviceView('desktop')}
+                        className={`p-1.5 rounded-md flex items-center justify-center transition-all ${deviceView === 'desktop' ? 'bg-white shadow-sm text-primary' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
+                        title="Desktop View"
+                    >
+                        <Monitor className="w-5 h-5" />
+                    </button>
+                    <button
+                        onClick={() => setDeviceView('tablet')}
+                        className={`p-1.5 rounded-md flex items-center justify-center transition-all ${deviceView === 'tablet' ? 'bg-white shadow-sm text-primary' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
+                        title="Tablet View"
+                    >
+                        <Tablet className="w-5 h-5" />
+                    </button>
+                    <button
+                        onClick={() => setDeviceView('mobile')}
+                        className={`p-1.5 rounded-md flex items-center justify-center transition-all ${deviceView === 'mobile' ? 'bg-white shadow-sm text-primary' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
+                        title="Mobile View"
+                    >
+                        <Smartphone className="w-5 h-5" />
+                    </button>
+                </div>
+
                 <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm" asChild className="hidden sm:flex">
                         <Link href={previewUrl.replace('?preview=true', '')} target="_blank">
@@ -773,15 +798,18 @@ export default function EditorPage({ params }: { params: { storeId: string } }) 
                 </aside>
 
                 {/* 2. Live Preview Iframe */}
-                <main className="flex-1 h-full bg-slate-100 relative p-4 flex flex-col items-center overflow-hidden">
-                    <div className="w-full max-w-5xl flex-1 flex flex-col bg-white overflow-hidden rounded-xl shadow-xl border border-slate-200">
+                <main className="flex-1 h-full bg-slate-100 relative p-4 flex flex-col items-center overflow-x-hidden overflow-y-auto">
+                    <div className={`transition-all duration-300 ease-in-out flex-1 flex flex-col bg-white overflow-hidden rounded-xl shadow-xl border border-slate-200 ${deviceView === 'desktop' ? 'w-full max-w-5xl' :
+                            deviceView === 'tablet' ? 'w-[768px]' :
+                                'w-[375px]'
+                        }`}>
                         <div className="w-full h-10 bg-slate-50 border-b flex items-center px-4 gap-2 shrink-0">
                             <div className="flex gap-1.5">
                                 <div className="w-2.5 h-2.5 rounded-full bg-red-400"></div>
                                 <div className="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
                                 <div className="w-2.5 h-2.5 rounded-full bg-green-400"></div>
                             </div>
-                            <div className="mx-auto bg-slate-100 rounded px-4 py-1 text-xs text-slate-500 truncate pointer-events-none">
+                            <div className="mx-auto bg-slate-100 rounded px-4 py-1 text-xs text-slate-500 flex-1 text-center truncate pointer-events-none">
                                 {window.location.origin}{previewUrl}
                             </div>
                         </div>
