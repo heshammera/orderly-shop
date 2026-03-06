@@ -9,11 +9,37 @@ import { PricingSection } from '@/components/landing/PricingSection';
 import { FAQSection } from '@/components/landing/FAQSection';
 import { FinalCTA } from '@/components/landing/FinalCTA';
 import { Footer } from '@/components/landing/Footer';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import { TutorialsSection } from '@/components/landing/TutorialsSection';
 
-export default function Home() {
+export default async function Home() {
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    }
+  );
+
+  // Fetch tutorials visibility setting
+  let tutorialsEnabled = true;
+  try {
+    const { data: settingData } = await supabase.rpc('get_setting', { setting_key: 'tutorials_enabled_landing' });
+    if (settingData) {
+      tutorialsEnabled = settingData === 'true' || settingData === true;
+    }
+  } catch (e) {
+    console.error("Failed to fetch tutorials setting", e);
+  }
+
   return (
-    <div className="min-h-screen">
-      <Header />
+    <div className="min-h-screen font-sans bg-slate-50">
       <main>
         <HeroSection />
         <SocialProofSection />
@@ -23,6 +49,7 @@ export default function Home() {
         <AdvancedCapabilities />
         <PricingSection />
         <FAQSection />
+        {tutorialsEnabled && <TutorialsSection />}
         <FinalCTA />
       </main>
       <Footer />

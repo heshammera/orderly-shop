@@ -69,6 +69,9 @@ export function Header() {
             <a href="#how-it-works" className={cn("text-sm font-medium transition-colors hover:text-primary", isScrolled ? "text-muted-foreground" : "text-foreground/80")}>
               {language === 'ar' ? 'كيف يعمل' : 'How it works'}
             </a>
+            <a href="/tutorials" className={cn("text-sm font-medium transition-colors hover:text-primary", isScrolled ? "text-muted-foreground" : "text-foreground/80")}>
+              {language === 'ar' ? 'الشروحات' : 'Tutorials'}
+            </a>
             <a href="#pricing" className={cn("text-sm font-medium transition-colors hover:text-primary", isScrolled ? "text-muted-foreground" : "text-foreground/80")}>
               {t.nav.pricing}
             </a>

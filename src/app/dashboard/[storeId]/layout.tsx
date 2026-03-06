@@ -91,6 +91,15 @@ export default async function Layout({
         .eq('id', params.storeId)
         .single();
 
+    // Fetch tutorials enabled setting
+    const { data: settingsData } = await supabase
+        .from('system_settings')
+        .select('value')
+        .eq('key', 'tutorials_enabled_dashboard')
+        .single();
+
+    const tutorialsEnabled = settingsData?.value === 'true' || settingsData?.value === true;
+
     // Detect if we are on a subdomain to adjust links
     const hostname = headers().get('host') || '';
     const isSubdomain = store.slug && hostname.startsWith(store.slug);
@@ -108,6 +117,7 @@ export default async function Layout({
                 storeSlug={store.slug}
                 isSubdomain={!!isSubdomain}
                 hideSidebar={true}
+                tutorialsEnabled={tutorialsEnabled}
             >
                 <StatusPage
                     type={fullStore.status as 'banned' | 'maintenance' | 'unpaid'}
@@ -124,6 +134,7 @@ export default async function Layout({
             storeName={storeName}
             storeSlug={store.slug}
             isSubdomain={!!isSubdomain}
+            tutorialsEnabled={tutorialsEnabled}
         >
             {children}
         </DashboardLayout>

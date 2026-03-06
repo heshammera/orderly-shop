@@ -15,7 +15,8 @@ import {
     X,
     Wallet,
     DollarSign,
-    FileText
+    FileText,
+    PlayCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -42,6 +43,11 @@ export function AdminSidebar() {
             icon: LayoutDashboard,
             label: language === 'ar' ? 'الرئيسية' : 'Dashboard',
             href: '/admin',
+        },
+        {
+            icon: PlayCircle,
+            label: language === 'ar' ? 'الشروحات (فيديو)' : 'Tutorials',
+            href: '/admin/tutorials',
         },
         {
             icon: Store,

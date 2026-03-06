@@ -31,6 +31,7 @@ import {
     UserPlus,
     Award,
     ShoppingBag,
+    PlayCircle,
 } from 'lucide-react';
 import { useStoreRole } from '@/hooks/useStoreRole';
 import { StoreSwitcher } from './StoreSwitcher';
@@ -42,6 +43,7 @@ interface DashboardLayoutProps {
     storeSlug?: string;
     isSubdomain?: boolean;
     hideSidebar?: boolean;
+    tutorialsEnabled: boolean;
 }
 
 export function DashboardLayout({
@@ -50,7 +52,8 @@ export function DashboardLayout({
     storeName,
     storeSlug,
     isSubdomain = false,
-    hideSidebar = false
+    hideSidebar = false,
+    tutorialsEnabled
 }: DashboardLayoutProps) {
     const { user, loading } = useAuth();
     const router = useRouter();
@@ -202,6 +205,14 @@ export function DashboardLayout({
             href: `/dashboard/${storeId}/wallet`,
             show: isOwner,
         },
+        {
+            icon: PlayCircle,
+            label: language === 'ar' ? 'الشروحات' : 'Tutorials',
+            href: `/dashboard/${storeId}/tutorials`,
+            active: pathname === `/dashboard/${storeId}/tutorials` || pathname.startsWith(`/dashboard/${storeId}/tutorials/`),
+            description: language === 'ar' ? 'دروس فيديو' : 'Video Guides',
+            show: tutorialsEnabled
+        }
     ].filter(item => item.show);
 
     const NavContent = () => (
