@@ -63,21 +63,21 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-8">
-            <a href="#features" className={cn("text-sm font-medium transition-colors hover:text-primary", isScrolled ? "text-muted-foreground" : "text-foreground/80")}>
+            <Link href="/#features" className={cn("text-sm font-medium transition-colors hover:text-primary", isScrolled ? "text-muted-foreground" : "text-foreground/80")}>
               {t.nav.features}
-            </a>
-            <a href="#how-it-works" className={cn("text-sm font-medium transition-colors hover:text-primary", isScrolled ? "text-muted-foreground" : "text-foreground/80")}>
+            </Link>
+            <Link href="/#how-it-works" className={cn("text-sm font-medium transition-colors hover:text-primary", isScrolled ? "text-muted-foreground" : "text-foreground/80")}>
               {language === 'ar' ? 'كيف يعمل' : 'How it works'}
-            </a>
-            <a href="/tutorials" className={cn("text-sm font-medium transition-colors hover:text-primary", isScrolled ? "text-muted-foreground" : "text-foreground/80")}>
+            </Link>
+            <Link href="/tutorials" className={cn("text-sm font-medium transition-colors hover:text-primary", isScrolled ? "text-muted-foreground" : "text-foreground/80")}>
               {language === 'ar' ? 'الشروحات' : 'Tutorials'}
-            </a>
-            <a href="#pricing" className={cn("text-sm font-medium transition-colors hover:text-primary", isScrolled ? "text-muted-foreground" : "text-foreground/80")}>
+            </Link>
+            <Link href="/#pricing" className={cn("text-sm font-medium transition-colors hover:text-primary", isScrolled ? "text-muted-foreground" : "text-foreground/80")}>
               {t.nav.pricing}
-            </a>
-            <a href="#faq" className={cn("text-sm font-medium transition-colors hover:text-primary", isScrolled ? "text-muted-foreground" : "text-foreground/80")}>
+            </Link>
+            <Link href="/#faq" className={cn("text-sm font-medium transition-colors hover:text-primary", isScrolled ? "text-muted-foreground" : "text-foreground/80")}>
               {language === 'ar' ? 'الأسئلة الشائعة' : 'FAQ'}
-            </a>
+            </Link>
           </nav>
 
           {/* Desktop Actions */}
@@ -159,38 +159,38 @@ export function Header() {
             className="fixed inset-0 top-0 left-0 right-0 bg-background/95 backdrop-blur-xl z-40 lg:hidden flex flex-col pt-24 px-6 overflow-y-auto"
           >
             <nav className="flex flex-col gap-6 text-lg font-medium">
-              <a
-                href="#features"
+              <Link
+                href="/#features"
                 className="flex items-center justify-between border-b border-border pb-4 hover:text-primary transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 {t.nav.features}
                 <ChevronRight className={cn("h-5 w-5 text-muted-foreground", dir === 'rtl' && "rotate-180")} />
-              </a>
-              <a
-                href="#how-it-works"
+              </Link>
+              <Link
+                href="/#how-it-works"
                 className="flex items-center justify-between border-b border-border pb-4 hover:text-primary transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 {language === 'ar' ? 'كيف يعمل' : 'How it works'}
                 <ChevronRight className={cn("h-5 w-5 text-muted-foreground", dir === 'rtl' && "rotate-180")} />
-              </a>
-              <a
-                href="#pricing"
+              </Link>
+              <Link
+                href="/#pricing"
                 className="flex items-center justify-between border-b border-border pb-4 hover:text-primary transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 {t.nav.pricing}
                 <ChevronRight className={cn("h-5 w-5 text-muted-foreground", dir === 'rtl' && "rotate-180")} />
-              </a>
-              <a
-                href="#faq"
+              </Link>
+              <Link
+                href="/#faq"
                 className="flex items-center justify-between border-b border-border pb-4 hover:text-primary transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 {language === 'ar' ? 'الأسئلة الشائعة' : 'FAQ'}
                 <ChevronRight className={cn("h-5 w-5 text-muted-foreground", dir === 'rtl' && "rotate-180")} />
-              </a>
+              </Link>
             </nav>
 
             <div className="mt-8 flex flex-col gap-4 pb-12">

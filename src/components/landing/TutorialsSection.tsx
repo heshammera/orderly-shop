@@ -47,8 +47,8 @@ export function TutorialsSection() {
     useEffect(() => {
         async function fetchTutorials() {
             try {
-                // Fetch featured tutorials
-                const { data, error } = await supabase
+                // 1. First try to fetch featured tutorials
+                let { data, error } = await supabase
                     .from('tutorials')
                     .select(`
                         id, title, description, thumbnail_url, video_url, video_type, category_id, slug,
@@ -58,6 +58,21 @@ export function TutorialsSection() {
                     .eq('is_featured', true)
                     .order('sort_order', { ascending: true })
                     .limit(10);
+
+                // 2. Fallback: if no featured found, show most recent published tutorials
+                if (!error && (!data || data.length === 0)) {
+                    const result = await supabase
+                        .from('tutorials')
+                        .select(`
+                            id, title, description, thumbnail_url, video_url, video_type, category_id, slug,
+                            category:category_id (name)
+                        `)
+                        .eq('is_published', true)
+                        .order('created_at', { ascending: false })
+                        .limit(6);
+                    data = result.data;
+                    error = result.error;
+                }
 
                 if (!error && data) {
                     const formattedData = data.map((t: any) => ({
