@@ -99,28 +99,11 @@ export async function middleware(request: NextRequest) {
     const hostnameWithoutPort = hostname;
     const hostParts = hostnameWithoutPort.split('.');
 
-    // Update Supabase session
-    const response = await updateSession(request);
+    // Update Supabase session and get user
+    const { response, user } = await updateSession(request);
 
-    // --- STORE STATUS & SUBSCRIPTION CHECK ---
-    // Check if logged in user has a store with pending issues
-    // Check if accessing dashboard or other protected user routes
+    // 5. PROTECTED ROUTES & STORE STATUS CHECK
     if (pathname.startsWith('/dashboard') || pathname === '/select-plan' || pathname === '/subscription-success') {
-        const supabase = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            {
-                cookies: {
-                    getAll() { return request.cookies.getAll() },
-                    setAll(cookiesToSet) {
-                        // Session update already handled above
-                    },
-                },
-            }
-        );
-
-        const { data: { user } } = await supabase.auth.getUser();
-
         if (user) {
             // --- EMAIL VERIFICATION ENFORCEMENT ---
             const isAuthRoute = pathname.startsWith('/auth') || pathname.startsWith('/login') || pathname.startsWith('/signup');
@@ -128,20 +111,12 @@ export async function middleware(request: NextRequest) {
             const isVerifyPage = pathname.startsWith('/email-verify');
 
             if (!user.email_confirmed_at && !isAuthRoute && !isVerifyPage && !isPublicRoute) {
-                // Allow users to see the landing page and stores, but not dashboard/account
                 const url = request.nextUrl.clone();
                 url.pathname = '/email-verify';
-                // Add redirect param so we can send them back after verification? 
-                // Currently just forcing verify.
                 return NextResponse.redirect(url);
             }
-            // -------------------------------------
 
-            // Fetch store status
-            // We need to find the store associated with the user
-            // If checking /dashboard/[storeId], we use that ID.
-            // If just navigating, we look up by owner_id.
-
+            // Fetch store status efficiently
             let storeId: string | null = null;
             if (pathname.startsWith('/dashboard/')) {
                 const pathParts = pathname.split('/');
@@ -150,22 +125,27 @@ export async function middleware(request: NextRequest) {
                 }
             }
 
-            // Fetch store
-            let query = supabase.from('stores').select('id, status, status_reason');
+            const supabase = createServerClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+                {
+                    cookies: {
+                        getAll() { return request.cookies.getAll() },
+                        setAll(cookiesToSet) { },
+                    },
+                }
+            );
 
+            let query = supabase.from('stores').select('id, status, status_reason');
             if (storeId) {
                 query = query.eq('id', storeId);
             } else {
                 query = query.eq('owner_id', user.id);
             }
 
-            const { data: store } = await query.single();
+            const { data: store } = await query.maybeSingle();
 
             if (store) {
-                // Determine if we should redirect or just pass through to the layout
-                // We no longer redirect for status issues like banned/maintenance
-                // but we still redirect for pending_plan to force plan selection.
-
                 if (store.status === 'pending_plan' && !pathname.startsWith('/select-plan')) {
                     const url = request.nextUrl.clone();
                     url.pathname = '/select-plan';
@@ -177,8 +157,6 @@ export async function middleware(request: NextRequest) {
                     url.pathname = '/subscription-success';
                     return NextResponse.redirect(url);
                 }
-
-                console.log(`[Middleware] Store status check: ${store.status} for ${pathname}`);
             }
         }
     }
