@@ -43,13 +43,13 @@ export default function Footer({ settings, blocks = [], sectionId = 'footer_1', 
     const displayLinks = blocks.length > 0 ? blocks : defaultLinks;
 
     return (
-        <footer className="bg-card text-card-foreground border-t border-border mt-16 pb-6 pt-12 text-sm">
+        <footer className="bg-card text-card-foreground border-t border-border mt-8 md:mt-16 pb-4 md:pb-6 pt-8 md:pt-12 text-sm">
             <div className="container mx-auto px-4">
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-8 md:mb-12">
 
                     {/* About Section */}
-                    <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-3 md:gap-4">
                         <InlineEditableText
                             as="h3"
                             sectionId={sectionId}
@@ -67,7 +67,7 @@ export default function Footer({ settings, blocks = [], sectionId = 'footer_1', 
                     </div>
 
                     {/* Quick Links Section */}
-                    <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-3 md:gap-4">
                         <InlineEditableText
                             as="h3"
                             sectionId={sectionId}
@@ -87,7 +87,7 @@ export default function Footer({ settings, blocks = [], sectionId = 'footer_1', 
                     </div>
 
                     {/* Contact Section */}
-                    <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-3 md:gap-4">
                         <InlineEditableText
                             as="h3"
                             sectionId={sectionId}
@@ -109,7 +109,7 @@ export default function Footer({ settings, blocks = [], sectionId = 'footer_1', 
                 </div>
 
                 {/* Footer Bottom / Copyright */}
-                <div className="pt-6 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4 text-muted-foreground text-xs md:text-sm">
+                <div className="pt-4 md:pt-6 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4 text-muted-foreground text-xs md:text-sm">
                     <InlineEditableText
                         as="p"
                         sectionId={sectionId}
