@@ -96,9 +96,13 @@ export default async function Layout({
         .from('system_settings')
         .select('value')
         .eq('key', 'tutorials_enabled_dashboard')
-        .single();
+        .maybeSingle();
 
-    const tutorialsEnabled = settingsData?.value === 'true' || settingsData?.value === true;
+    const tutorialsEnabled = settingsData ? (
+        settingsData.value === 'true' ||
+        settingsData.value === true ||
+        JSON.stringify(settingsData.value) === '"true"'
+    ) : true; // Default to true if setting missing
 
     // Detect if we are on a subdomain to adjust links
     const hostname = headers().get('host') || '';

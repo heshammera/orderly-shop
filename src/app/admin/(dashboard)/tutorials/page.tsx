@@ -26,6 +26,7 @@ interface Tutorial {
     slug: string;
     sort_order: number;
     is_published: boolean;
+    is_featured: boolean;
     display_mode: string;
     category?: { name: { ar: string; en: string } };
 }
@@ -64,7 +65,7 @@ export default function AdminTutorialsPage() {
         desc_ar: '', desc_en: '',
         video_type: 'youtube', video_url: '',
         category_id: '', slug: '',
-        is_published: true, display_mode: 'both',
+        is_published: true, is_featured: false, display_mode: 'both',
         sort_order: 0,
         thumbnail_url: '', uploaded_video_path: ''
     };
@@ -172,6 +173,7 @@ export default function AdminTutorialsPage() {
                 category_id: tutorialForm.category_id || null,
                 slug: tutorialForm.slug,
                 is_published: tutorialForm.is_published,
+                is_featured: tutorialForm.is_featured,
                 display_mode: tutorialForm.display_mode,
                 sort_order: tutorialForm.sort_order
             };
@@ -246,6 +248,7 @@ export default function AdminTutorialsPage() {
             category_id: t.category_id || '',
             slug: t.slug,
             is_published: t.is_published,
+            is_featured: t.is_featured || false,
             display_mode: t.display_mode,
             sort_order: t.sort_order,
             thumbnail_url: t.thumbnail_url || '',
@@ -349,6 +352,11 @@ export default function AdminTutorialsPage() {
                                 {!t.is_published && (
                                     <span className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded font-medium">
                                         {language === 'ar' ? 'مسودة' : 'Draft'}
+                                    </span>
+                                )}
+                                {t.is_featured && (
+                                    <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded font-medium shadow-sm flex items-center gap-1">
+                                        ★ {language === 'ar' ? 'مميز' : 'Featured'}
                                     </span>
                                 )}
                                 {t.category && (
@@ -545,6 +553,16 @@ export default function AdminTutorialsPage() {
                                 <Switch
                                     checked={tutorialForm.is_published}
                                     onCheckedChange={v => setTutorialForm({ ...tutorialForm, is_published: v })}
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-between p-3 border rounded-lg bg-primary/5">
+                                <div>
+                                    <p className="font-medium text-sm">{language === 'ar' ? 'عرض في سلايدر الصفحة الرئيسية' : 'Show in Landing Slider'}</p>
+                                </div>
+                                <Switch
+                                    checked={tutorialForm.is_featured}
+                                    onCheckedChange={v => setTutorialForm({ ...tutorialForm, is_featured: v })}
                                 />
                             </div>
                         </div>

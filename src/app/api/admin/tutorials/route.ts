@@ -64,7 +64,7 @@ export async function POST(req: Request) {
         const body = await req.json();
 
         // Auto-extract video IDs and thumbnails if not provided
-        let { video_type, video_url, video_id, thumbnail_url } = body;
+        let { video_type, video_url, video_id, thumbnail_url, is_featured } = body;
 
         if (video_url && video_type !== 'upload' && (!video_id || !thumbnail_url)) {
             const parsed = parseVideoUrl(video_url);
@@ -77,7 +77,8 @@ export async function POST(req: Request) {
             ...body,
             video_type,
             video_id,
-            thumbnail_url
+            thumbnail_url,
+            is_featured: is_featured ?? false
         };
 
         const { data, error } = await supabase
