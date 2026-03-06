@@ -209,11 +209,11 @@ export function OrderSummary({ data }: { data: ComponentSchema }) {
                 </div>
 
                 {/* Secure Payment Badges */}
-                <div className="flex justify-center items-center gap-4 opacity-50 grayscale hover:grayscale-0 transition-all pt-4">
-                    <img src="/payment-methods/visa.svg" alt="Visa" className="h-4" />
-                    <img src="/payment-methods/mastercard.svg" alt="Mastercard" className="h-4" />
-                    <img src="/payment-methods/mada.svg" alt="Mada" className="h-4" />
-                    <img src="/payment-methods/cod.svg" alt="COD" className="h-6" />
+                <div className="flex justify-between items-center gap-3 pt-4 px-2 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all">
+                    <img src="/payment-methods/visa.svg" alt="Visa" className="h-8 w-auto" />
+                    <img src="/payment-methods/mastercard.svg" alt="Mastercard" className="h-8 w-auto" />
+                    <img src="/payment-methods/mada.svg" alt="Mada" className="h-8 w-auto" />
+                    <img src="/payment-methods/cod.svg" alt="COD" className="h-8 w-auto" />
                 </div>
             </CardContent>
         </Card>
