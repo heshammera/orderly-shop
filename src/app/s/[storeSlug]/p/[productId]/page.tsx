@@ -1,21 +1,24 @@
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
 import { notFound } from 'next/navigation';
 import ThemePreviewManager from '@/components/ThemeEngine/ThemePreviewManager';
 import { Metadata } from 'next';
+import { cache } from 'react';
 
 export const revalidate = 60; // Cache for 60 seconds to reduce server load
 
+const getAdminClient = cache(() => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) return null;
+    return createClient(url, key);
+});
+
 export async function generateMetadata({ params }: { params: { storeSlug: string, productId: string } }): Promise<Metadata> {
     try {
-        const cookieStore = cookies();
-        const supabase = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            { cookies: { get(name: string) { return cookieStore.get(name)?.value } } }
-        );
+        const supabaseAdmin = getAdminClient();
+        if (!supabaseAdmin) return {};
 
-        const { data: product } = await supabase
+        const { data: product } = await supabaseAdmin
             .from('products')
             .select('name, description, images')
             .eq('id', params.productId)
@@ -46,21 +49,11 @@ export async function generateMetadata({ params }: { params: { storeSlug: string
 }
 
 export default async function ProductPage({ params }: { params: { storeSlug: string, productId: string } }) {
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                get(name: string) {
-                    return cookieStore.get(name)?.value
-                },
-            },
-        }
-    );
+    const supabaseAdmin = getAdminClient();
+    if (!supabaseAdmin) return notFound();
 
     // Fetch Store by Slug to get details + settings
-    const { data: store, error: storeError } = await supabase
+    const { data: store, error: storeError } = await supabaseAdmin
         .from('stores')
         .select('id, name, logo_url, description, currency, settings, slug')
         .eq('slug', params.storeSlug)
@@ -72,32 +65,32 @@ export default async function ProductPage({ params }: { params: { storeSlug: str
 
     // Fetch ALL data in parallel to reduce total request time
     const [productRes, variantsRes, upsellRes, headerCategoriesRes, activeThemeRes] = await Promise.all([
-        supabase
+        supabaseAdmin
             .from('products')
             .select('*')
             .eq('id', params.productId)
             .eq('store_id', store.id)
             .eq('status', 'active')
             .single(),
-        supabase
+        supabaseAdmin
             .from('product_variants')
             .select('*, variant_options(*)')
             .eq('product_id', params.productId)
             .order('sort_order'),
-        supabase
+        supabaseAdmin
             .from('upsell_offers')
             .select('*')
             .eq('product_id', params.productId)
             .eq('is_active', true)
             .order('min_quantity'),
-        supabase
+        supabaseAdmin
             .from('categories')
             .select('id, name')
             .eq('store_id', store.id)
             .eq('status', 'active')
             .eq('show_in_header', true)
             .order('sort_order'),
-        supabase
+        supabaseAdmin
             .from('store_themes')
             .select(`
                 id,

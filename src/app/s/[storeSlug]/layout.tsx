@@ -5,10 +5,11 @@ import { AffiliateTracker } from '@/components/store/AffiliateTracker';
 import { StatusPage } from '@/components/store-status/StatusPage';
 import { VisitLogger } from '@/components/store/VisitLogger';
 import { Metadata } from 'next';
+import { cache } from 'react';
 
 export const revalidate = 60; // Cache for 60 seconds to reduce server load
 
-function getAdminClient() {
+const getAdminClient = cache(() => {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!url || !key) {
@@ -16,7 +17,7 @@ function getAdminClient() {
         return null;
     }
     return createClient(url, key);
-}
+});
 
 // Generate dynamic metadata for the store
 export async function generateMetadata({ params }: { params: { storeSlug: string } }): Promise<Metadata> {

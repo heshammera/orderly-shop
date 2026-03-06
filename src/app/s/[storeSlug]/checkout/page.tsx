@@ -5,8 +5,6 @@ import { CheckoutPage } from '@/components/store/CheckoutPage';
 import ThemePreviewManager from '@/components/ThemeEngine/ThemePreviewManager';
 import { Metadata } from 'next';
 
-export const revalidate = 60; // Cache for 60 seconds to reduce server load
-
 export async function generateMetadata({ params }: { params: { storeSlug: string } }): Promise<Metadata> {
     return {
         title: 'Checkout',

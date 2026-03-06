@@ -1,10 +1,17 @@
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
 import { notFound } from 'next/navigation';
 import ThemePreviewManager from '@/components/ThemeEngine/ThemePreviewManager';
 import { Metadata } from 'next';
+import { cache } from 'react';
 
 export const revalidate = 60; // Cache for 60 seconds to reduce server load
+
+const getAdminClient = cache(() => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) return null;
+    return createClient(url, key);
+});
 
 export async function generateMetadata({ params }: { params: { storeSlug: string } }): Promise<Metadata> {
     return {
@@ -14,21 +21,11 @@ export async function generateMetadata({ params }: { params: { storeSlug: string
 }
 
 export default async function ProductsPage({ params }: { params: { storeSlug: string } }) {
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                get(name: string) {
-                    return cookieStore.get(name)?.value
-                },
-            },
-        }
-    );
+    const supabaseAdmin = getAdminClient();
+    if (!supabaseAdmin) return notFound();
 
     // Fetch Store
-    const { data: store, error: storeError } = await supabase
+    const { data: store, error: storeError } = await supabaseAdmin
         .from('stores')
         .select('id, name, logo_url, description, currency, settings, slug')
         .eq('slug', params.storeSlug)
@@ -41,27 +38,27 @@ export default async function ProductsPage({ params }: { params: { storeSlug: st
 
     // Fetch all data in parallel to reduce total request time
     const [categoriesRes, productsRes, headerCategoriesRes, activeThemeRes] = await Promise.all([
-        supabase
+        supabaseAdmin
             .from('categories')
             .select('id, name, parent_id')
             .eq('store_id', store.id)
             .eq('status', 'active')
             .order('sort_order'),
-        supabase
+        supabaseAdmin
             .from('products')
             .select('id, name, price, compare_at_price, images')
             .eq('store_id', store.id)
             .eq('status', 'active')
             .order('created_at', { ascending: false })
             .limit(50),
-        supabase
+        supabaseAdmin
             .from('categories')
             .select('id, name')
             .eq('store_id', store.id)
             .eq('status', 'active')
             .eq('show_in_header', true)
             .order('sort_order'),
-        supabase
+        supabaseAdmin
             .from('store_themes')
             .select(`
                 id,

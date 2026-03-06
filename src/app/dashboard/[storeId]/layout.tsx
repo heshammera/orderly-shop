@@ -68,11 +68,17 @@ export default async function Layout({
         redirect('/login');
     }
 
-    const { data: store, error } = await supabase
-        .from('stores')
-        .select('name, slug')
-        .eq('id', params.storeId)
-        .single();
+    // Fetch store and settings in parallel
+    const [storeRes, settingRes] = await Promise.all([
+        supabase
+            .from('stores')
+            .select('name, slug, status, status_reason')
+            .eq('id', params.storeId)
+            .single(),
+        supabase.rpc('get_setting', { setting_key: 'tutorials_enabled_dashboard' })
+    ]);
+
+    const { data: store, error } = storeRes;
 
     if (error) {
         console.error(`[Dashboard Layout] Error fetching store: ${error.message}`);
@@ -84,32 +90,23 @@ export default async function Layout({
 
     const storeName = typeof store.name === 'string' ? JSON.parse(store.name) : store.name;
 
-    // Fetch full store data for status check
-    const { data: fullStore } = await supabase
-        .from('stores')
-        .select('status, status_reason')
-        .eq('id', params.storeId)
-        .single();
-
     // Fetch tutorials enabled setting
     let tutorialsEnabled = true;
     try {
-        const { data: settingData } = await supabase.rpc('get_setting', { setting_key: 'tutorials_enabled_dashboard' });
-        if (settingData !== null && settingData !== undefined) {
-            const val = String(settingData).replace(/"/g, '');
+        if (settingRes.data !== null && settingRes.data !== undefined) {
+            const val = String(settingRes.data).replace(/"/g, '');
             tutorialsEnabled = val === 'true';
         }
     } catch (e) {
-        console.error("Failed to fetch tutorials setting", e);
+        console.error("Failed to parse tutorials setting", e);
     }
 
     // Detect if we are on a subdomain to adjust links
     const hostname = headers().get('host') || '';
     const isSubdomain = store.slug && hostname.startsWith(store.slug);
 
-    // Check for status issues (Except for super admins if we had that flag, 
-    // but here we check if the store itself is restricted)
-    const isRestricted = fullStore && ['banned', 'maintenance', 'unpaid'].includes(fullStore.status);
+    // Check for status issues
+    const isRestricted = store && ['banned', 'maintenance', 'unpaid'].includes(store.status);
 
     if (isRestricted) {
         const { StatusPage } = await import('@/components/store-status/StatusPage');
@@ -123,9 +120,9 @@ export default async function Layout({
                 tutorialsEnabled={tutorialsEnabled}
             >
                 <StatusPage
-                    type={fullStore.status as 'banned' | 'maintenance' | 'unpaid'}
+                    type={store.status as 'banned' | 'maintenance' | 'unpaid'}
                     isAdminView={true}
-                    reason={fullStore.status_reason}
+                    reason={store.status_reason}
                 />
             </DashboardLayout>
         );

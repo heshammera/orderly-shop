@@ -1,13 +1,12 @@
-import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import ThemePreviewManager from '@/components/ThemeEngine/ThemePreviewManager';
 import { Metadata } from 'next';
+import { cache } from 'react';
 
 export const revalidate = 60; // Cache for 60 seconds to reduce server load
 
-function getAdminClient() {
+const getAdminClient = cache(() => {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!url || !key) {
@@ -15,18 +14,14 @@ function getAdminClient() {
         return null;
     }
     return createClient(url, key);
-}
+});
 
 export async function generateMetadata({ params }: { params: { storeSlug: string } }): Promise<Metadata> {
     try {
-        const cookieStore = cookies();
-        const supabase = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            { cookies: { get(name: string) { return cookieStore.get(name)?.value } } }
-        );
+        const supabaseAdmin = getAdminClient();
+        if (!supabaseAdmin) return { title: 'Store' };
 
-        const { data: store } = await supabase
+        const { data: store } = await supabaseAdmin
             .from('stores')
             .select('name, description, logo_url')
             .eq('slug', params.storeSlug)
@@ -65,19 +60,6 @@ export default async function StorePage({ params }: { params: { storeSlug: strin
     if (!supabaseAdmin) {
         return notFound();
     }
-
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                get(name: string) {
-                    return cookieStore.get(name)?.value
-                },
-            },
-        }
-    );
 
     // Fetch Store
     const { data: store, error: storeError } = await supabaseAdmin
@@ -163,7 +145,7 @@ export default async function StorePage({ params }: { params: { storeSlug: strin
             .eq('status', 'active')
             .limit(50),
         // Fetch Active Theme and Overrides
-        supabase
+        supabaseAdmin
             .from('store_themes')
             .select(`
                 id,
