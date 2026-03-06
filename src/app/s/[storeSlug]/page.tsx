@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: { params: { storeSlug: string
     const storeDesc = typeof store.description === 'string' ? store.description : store.description?.en || store.description?.ar || 'Welcome to our store';
 
     return {
-        title: `${storeName} | Social Commerce Hub`,
+        title: { absolute: storeName },
         description: storeDesc,
         openGraph: {
             title: storeName,

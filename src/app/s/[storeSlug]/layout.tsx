@@ -30,7 +30,10 @@ export async function generateMetadata({ params }: { params: { storeSlug: string
     const description = desc?.en || desc?.ar || '';
 
     return {
-        title: title,
+        title: {
+            template: `%s | ${title}`,
+            default: title,
+        },
         description: description,
         icons: store.logo_url ? [store.logo_url] : [],
     };
