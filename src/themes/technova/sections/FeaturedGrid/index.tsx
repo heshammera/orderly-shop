@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import InlineEditableText from '@/components/ThemeEngine/InlineEditableText';
 import { QuickViewModal } from '@/components/store/QuickViewModal';
 import { Eye, ShoppingCart } from 'lucide-react';
-import React, { useState } from 'react';
+
 
 interface ProductSnippet {
     id: string;
