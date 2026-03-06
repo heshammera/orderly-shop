@@ -6,7 +6,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Mail, Phone, Instagram, Twitter, Facebook, Contact } from 'lucide-react';
+import { Loader2, Mail, Phone, Instagram, Twitter, Facebook, Contact, MessageSquare } from 'lucide-react';
 
 interface StoreData {
     id: string;
@@ -40,9 +40,10 @@ interface StoreData {
 interface ContactTabProps {
     store: StoreData;
     onSave: (data: Partial<StoreData>) => Promise<void>;
+    hideHeader?: boolean;
 }
 
-export function ContactTab({ store, onSave }: ContactTabProps) {
+export function ContactTab({ store, onSave, hideHeader }: ContactTabProps) {
     const { language } = useLanguage();
     const { toast } = useToast();
 
@@ -105,14 +106,17 @@ export function ContactTab({ store, onSave }: ContactTabProps) {
 
     return (
         <div className="space-y-8">
-
             {/* Public Store Contact Info */}
             <form onSubmit={handleContactSave} className="space-y-6">
                 <div className="space-y-4">
-                    <h3 className="font-medium flex items-center gap-2">
-                        <Contact className="w-4 h-4" />
-                        {language === 'ar' ? 'معلومات التواصل للمتجر' : 'Store Contact Info'}
-                    </h3>
+                    {!hideHeader && (
+                        <div className="flex items-center gap-2 mb-4">
+                            <MessageSquare className="w-5 h-5 text-primary" />
+                            <h3 className="text-lg font-semibold text-foreground">
+                                {language === 'ar' ? 'التواصل العام (يظهر للعملاء)' : 'Public Contact (Visible to Customers)'}
+                            </h3>
+                        </div>
+                    )}
                     <p className="text-sm text-muted-foreground mb-4">
                         {language === 'ar'
                             ? 'هذه البيانات ستظهر للعملاء في تذييل وأعلى المتجر (الفوتر والهيدر)'
@@ -160,7 +164,8 @@ export function ContactTab({ store, onSave }: ContactTabProps) {
                 </div>
             </form>
 
-            <hr className="border-border" />            <form onSubmit={handleSocialSave} className="space-y-6">
+            <hr className="border-border" />
+            <form onSubmit={handleSocialSave} className="space-y-6">
                 <div className="space-y-4">
                     <h3 className="font-medium">
                         {language === 'ar' ? 'روابط التواصل الاجتماعي' : 'Social Media Links'}

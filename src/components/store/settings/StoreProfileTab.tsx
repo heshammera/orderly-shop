@@ -27,9 +27,10 @@ interface StoreData {
 interface StoreProfileTabProps {
     store: StoreData;
     onSave: (data: Partial<StoreData>) => Promise<void>;
+    hideHeader?: boolean;
 }
 
-export function StoreProfileTab({ store, onSave }: StoreProfileTabProps) {
+export function StoreProfileTab({ store, onSave, hideHeader }: StoreProfileTabProps) {
     const { language } = useLanguage();
     const supabase = createClient();
     const [loading, setLoading] = useState(false);
@@ -131,19 +132,6 @@ export function StoreProfileTab({ store, onSave }: StoreProfileTabProps) {
                             className="hidden"
                             id="logo-upload"
                         />
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => document.getElementById('logo-upload')?.click()}
-                            disabled={uploadingLogo}
-                        >
-                            {uploadingLogo ? (
-                                <Loader2 className="w-4 h-4 animate-spin me-2" />
-                            ) : (
-                                <Upload className="w-4 h-4 me-2" />
-                            )}
-                            {language === 'ar' ? 'رفع شعار' : 'Upload Logo'}
-                        </Button>
                         <p className="text-xs text-muted-foreground mt-2">
                             {language === 'ar'
                                 ? 'يُنصح بصورة مربعة بحجم 512×512 بكسل'
@@ -230,6 +218,6 @@ export function StoreProfileTab({ store, onSave }: StoreProfileTabProps) {
                     {language === 'ar' ? 'حفظ التغييرات' : 'Save Changes'}
                 </Button>
             </div>
-        </form>
+        </form >
     );
 }

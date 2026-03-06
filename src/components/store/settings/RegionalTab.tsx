@@ -5,7 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Globe } from 'lucide-react';
 
 interface StoreData {
     id: string;
@@ -23,6 +23,7 @@ interface StoreData {
 interface RegionalTabProps {
     store: StoreData;
     onSave: (data: Partial<StoreData>) => Promise<void>;
+    hideHeader?: boolean;
 }
 
 const currencies = [
@@ -51,7 +52,7 @@ const timezones = [
     { value: 'America/New_York', labelAr: 'نيويورك (UTC-5)', labelEn: 'New York (UTC-5)' },
 ];
 
-export function RegionalTab({ store, onSave }: RegionalTabProps) {
+export function RegionalTab({ store, onSave, hideHeader }: RegionalTabProps) {
     const { language } = useLanguage();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
@@ -74,6 +75,22 @@ export function RegionalTab({ store, onSave }: RegionalTabProps) {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
+            {!hideHeader && (
+                <div className="flex justify-between items-center bg-primary/5 p-4 rounded-lg border border-primary/20">
+                    <div className="flex items-center gap-3">
+                        <Globe className="w-5 h-5 text-primary" />
+                        <div>
+                            <h3 className="font-semibold text-primary">
+                                {language === 'ar' ? 'الإعدادات الإقليمية' : 'Regional Settings'}
+                            </h3>
+                            <p className="text-sm text-primary/80">
+                                {language === 'ar' ? 'قم بتحديد المنطقة الزمنية والعملة' : 'Configure timezone and currency'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="grid gap-6 md:grid-cols-2">
                 {/* Currency */}
                 <div className="space-y-2">

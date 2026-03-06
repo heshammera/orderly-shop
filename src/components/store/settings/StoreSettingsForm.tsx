@@ -3,12 +3,10 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { StoreProfileTab } from './StoreProfileTab';
-import { ContactTab } from './ContactTab';
-import { RegionalTab } from './RegionalTab';
-import { SeoTab } from './SeoTab';
+import { GeneralTab } from './GeneralTab';
 import { ShippingTab } from './ShippingTab';
 import { DomainsTab } from './DomainsTab';
+import { SeoTab } from './SeoTab';
 import { CopyrightRemovalTab } from './CopyrightRemovalTab';
 import { PagesTab } from './PagesTab';
 import { SecurityTab } from './SecurityTab';
@@ -75,33 +73,18 @@ export function StoreSettingsForm({ store: initialStore }: StoreSettingsFormProp
 
     const tabs = [
         {
-            value: 'profile',
-            label: language === 'ar' ? 'الملف الشخصي' : 'Profile',
+            value: 'general',
+            label: language === 'ar' ? 'الأساسيات' : 'General',
             icon: Store,
         },
         {
-            value: 'contact',
-            label: language === 'ar' ? 'التواصل' : 'Contact',
-            icon: Phone,
-        },
-        {
-            value: 'regional',
-            label: language === 'ar' ? 'الإعدادات الإقليمية' : 'Regional',
-            icon: Globe,
-        },
-        {
-            value: 'shipping',
-            label: language === 'ar' ? 'الشحن' : 'Shipping',
+            value: 'operations',
+            label: language === 'ar' ? 'التشغيل' : 'Operations',
             icon: Truck,
         },
         {
-            value: 'seo',
-            label: language === 'ar' ? 'SEO' : 'SEO',
-            icon: Search,
-        },
-        {
-            value: 'domains',
-            label: language === 'ar' ? 'النطاقات' : 'Domains',
+            value: 'tech',
+            label: language === 'ar' ? 'التقنية والتسويق' : 'Tech & Marketing',
             icon: Link,
         },
         {
@@ -127,7 +110,7 @@ export function StoreSettingsForm({ store: initialStore }: StoreSettingsFormProp
     ];
 
     return (
-        <Tabs defaultValue="profile" className="space-y-6">
+        <Tabs defaultValue="general" className="space-y-6">
             <TabsList className="flex flex-wrap h-auto p-2 gap-2 w-full lg:w-auto bg-muted/50">
                 {tabs.map((tab) => (
                     <TabsTrigger key={tab.value} value={tab.value} className="gap-2">
@@ -137,184 +120,149 @@ export function StoreSettingsForm({ store: initialStore }: StoreSettingsFormProp
                 ))}
             </TabsList>
 
-            <TabsContent value="profile">
+            <TabsContent value="general">
                 <Card>
                     <CardHeader>
                         <CardTitle>
-                            {language === 'ar' ? 'الملف الشخصي للمتجر' : 'Store Profile'}
+                            {language === 'ar' ? 'إعدادات المتجر الأساسية' : 'General Store Settings'}
                         </CardTitle>
                         <CardDescription>
                             {language === 'ar'
-                                ? 'اسم المتجر والوصف والشعار'
-                                : 'Store name, description, and logo'}
+                                ? 'البيانات الشخصية، معلومات التواصل، والإعدادات الإقليمية'
+                                : 'Profile data, contact information, and regional settings'}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <StoreProfileTab store={initialStore} onSave={handleSave} />
+                        <GeneralTab store={initialStore} onSave={handleSave} />
                     </CardContent>
                 </Card>
             </TabsContent>
 
-            <TabsContent value="contact">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>
-                            {language === 'ar' ? 'معلومات التواصل' : 'Contact Information'}
-                        </CardTitle>
-                        <CardDescription>
-                            {language === 'ar'
-                                ? 'البريد الإلكتروني ورقم الهاتف وروابط التواصل الاجتماعي'
-                                : 'Email, phone, and social media links'}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <ContactTab store={initialStore} onSave={handleSave} />
-                    </CardContent>
-                </Card>
+            <TabsContent value="operations">
+                <div className="space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>
+                                {language === 'ar' ? 'إعدادات الشحن' : 'Shipping Settings'}
+                            </CardTitle>
+                            <CardDescription>
+                                {language === 'ar'
+                                    ? 'تخصيص تكاليف الشحن (ثابت أو حسب المنطقة)'
+                                    : 'Customize shipping costs (Fixed or Per Region)'}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <ShippingTab store={initialStore} onSave={handleSave} />
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>
+                                {language === 'ar' ? 'الصفحات التعريفية' : 'Informational Pages'}
+                            </CardTitle>
+                            <CardDescription>
+                                {language === 'ar'
+                                    ? 'إضافة وتعديل صفحات مثل "من نحن" و"سياسة الخصوصية"'
+                                    : 'Add and edit pages like "About Us" and "Privacy Policy"'}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <PagesTab store={initialStore} onSave={handleSave} />
+                        </CardContent>
+                    </Card>
+                </div>
             </TabsContent>
 
-            <TabsContent value="regional">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>
-                            {language === 'ar' ? 'الإعدادات الإقليمية' : 'Regional Settings'}
-                        </CardTitle>
-                        <CardDescription>
-                            {language === 'ar'
-                                ? 'العملة والمنطقة الزمنية'
-                                : 'Currency and timezone'}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <RegionalTab store={initialStore} onSave={handleSave} />
-                    </CardContent>
-                </Card>
-            </TabsContent>
+            <TabsContent value="tech">
+                <div className="space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>
+                                {language === 'ar' ? 'تهيئة محركات البحث (SEO)' : 'SEO Settings'}
+                            </CardTitle>
+                            <CardDescription>
+                                {language === 'ar'
+                                    ? 'تحسين ظهور متجرك في منصات البحث'
+                                    : 'Optimize your store visibility on search engines'}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <SeoTab store={initialStore} onSave={handleSave} />
+                        </CardContent>
+                    </Card>
 
-            <TabsContent value="shipping">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>
-                            {language === 'ar' ? 'إعدادات الشحن' : 'Shipping Settings'}
-                        </CardTitle>
-                        <CardDescription>
-                            {language === 'ar'
-                                ? 'تخصيص تكاليف الشحن (ثابت أو حسب المنطقة)'
-                                : 'Customize shipping costs (Fixed or Per Region)'}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <ShippingTab store={initialStore} onSave={handleSave} />
-                    </CardContent>
-                </Card>
-            </TabsContent>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>
+                                {language === 'ar' ? 'ربط النطاق (Domain)' : 'Domain Binding'}
+                            </CardTitle>
+                            <CardDescription>
+                                {language === 'ar'
+                                    ? 'إدارة النطاق الخاص بمتجرك'
+                                    : 'Manage your custom domain'}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <DomainsTab store={initialStore} onSave={handleSave} />
+                        </CardContent>
+                    </Card>
 
-            <TabsContent value="seo">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>
-                            {language === 'ar' ? 'تحسين محركات البحث' : 'Search Engine Optimization'}
-                        </CardTitle>
-                        <CardDescription>
-                            {language === 'ar'
-                                ? 'عنوان ووصف المتجر لمحركات البحث'
-                                : 'Store title and description for search engines'}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <SeoTab store={initialStore} onSave={handleSave} />
-                    </CardContent>
-                </Card>
-            </TabsContent>
-            <TabsContent value="domains">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>
-                            {language === 'ar' ? 'إعدادات النطاق' : 'Domain Settings'}
-                        </CardTitle>
-                        <CardDescription>
-                            {language === 'ar'
-                                ? 'إدارة النطاق الفرعي والنطاق المخصص'
-                                : 'Manage your subdomain and custom domain'}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <DomainsTab store={initialStore} onSave={handleSave} />
-                    </CardContent>
-                </Card>
-            </TabsContent>
-
-            <TabsContent value="integrations">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>
-                            {language === 'ar' ? 'التكاملات والبيكسلات' : 'Integrations & Pixels'}
-                        </CardTitle>
-                        <CardDescription>
-                            {language === 'ar'
-                                ? 'إدارة Facebook Pixel، TikTok، Google Analytics، وGoogle Sheets'
-                                : 'Manage Facebook Pixel, TikTok, Google Analytics, and Google Sheets'}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <IntegrationsManager storeId={initialStore.id} />
-                    </CardContent>
-                </Card>
-            </TabsContent>
-
-            <TabsContent value="pages">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            {language === 'ar' ? 'الصفحات القانونية' : 'Legal Pages'}
-                        </CardTitle>
-                        <CardDescription>
-                            {language === 'ar'
-                                ? 'إدارة صفحات من نحن، سياسة الخصوصية، وشروط الخدمة.'
-                                : 'Manage About Us, Privacy Policy, and Terms of Service pages.'}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <PagesTab store={initialStore} onSave={handleSave} />
-                    </CardContent>
-                </Card>
-            </TabsContent>
-
-            <TabsContent value="copyright">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <ShieldCheck className="w-5 h-5" />
-                            {language === 'ar' ? 'العلامة التجارية الكاملة (إزالة الحقوق)' : 'Full White-labeling (Remove Copyright)'}
-                        </CardTitle>
-                        <CardDescription>
-                            {language === 'ar'
-                                ? 'اجعل المتجر خاصاً بك بنسبة 100٪ بدون ذكر منصة Orderly'
-                                : 'Make your store 100% yours without mentioning the Orderly platform'}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <CopyrightRemovalTab store={initialStore} />
-                    </CardContent>
-                </Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>
+                                {language === 'ar' ? 'التكاملات والربط' : 'Integrations'}
+                            </CardTitle>
+                            <CardDescription>
+                                {language === 'ar'
+                                    ? 'ربط المتجر بالخدمات الخارجية (مثل Google Sheets)'
+                                    : 'Connect store with external services (e.g., Google Sheets)'}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <IntegrationsManager
+                                storeId={initialStore.id}
+                            />
+                        </CardContent>
+                    </Card>
+                </div>
             </TabsContent>
 
             <TabsContent value="security">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            {language === 'ar' ? 'الأمان وكلمة المرور' : 'Security & Password'}
-                        </CardTitle>
-                        <CardDescription>
-                            {language === 'ar'
-                                ? 'تغيير كلمة المرور الخاصة بحسابك.'
-                                : 'Change your account password.'}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <SecurityTab store={initialStore} />
-                    </CardContent>
-                </Card>
+                <div className="space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>
+                                {language === 'ar' ? 'الأمان وحماية الحساب' : 'Security & Account Protection'}
+                            </CardTitle>
+                            <CardDescription>
+                                {language === 'ar'
+                                    ? 'إدارة كلمات المرور وتوثيق معلومات التواصل'
+                                    : 'Manage passwords and verify contact information'}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <SecurityTab store={initialStore} />
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <ShieldCheck className="w-5 h-5" />
+                                {language === 'ar' ? 'العلامة التجارية الكاملة (إزالة الحقوق)' : 'Full White-labeling (Remove Copyright)'}
+                            </CardTitle>
+                            <CardDescription>
+                                {language === 'ar'
+                                    ? 'اجعل المتجر خاصاً بك بنسبة 100٪ بدون ذكر منصة Orderly'
+                                    : 'Make your store 100% yours without mentioning the Orderly platform'}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <CopyrightRemovalTab store={initialStore} />
+                        </CardContent>
+                    </Card>
+                </div>
             </TabsContent>
         </Tabs>
     );
