@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import InlineEditableText from '@/components/ThemeEngine/InlineEditableText';
 import { QuickViewModal } from '@/components/store/QuickViewModal';
 import { Eye, ShoppingCart } from 'lucide-react';

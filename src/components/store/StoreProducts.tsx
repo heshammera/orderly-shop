@@ -263,8 +263,11 @@ export function StoreProducts({ store, initialCategories, initialProducts }: Sto
                         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                             {filteredProducts.map((product) => (
                                 <div key={product.id} className="relative group">
-                                    <Link href={`/s/${store.slug}/p/${product.id}`} className="block h-full">
+                                    <div onClick={() => router.push(`/s/${store.slug}/p/${product.id}`)} className="block h-full cursor-pointer">
                                         <Card className="overflow-hidden hover:shadow-lg transition-all h-full flex flex-col border border-gray-100">
+                                            <Link href={`/s/${store.slug}/p/${product.id}`} className="sr-only">
+                                                {product.name[language] || product.name.ar}
+                                            </Link>
                                             <CardContent className="p-0 flex flex-col h-full">
                                                 <div className="aspect-square bg-muted relative overflow-hidden flex-shrink-0">
                                                     {product.images.length > 0 ? (
@@ -323,7 +326,7 @@ export function StoreProducts({ store, initialCategories, initialProducts }: Sto
                                                 </div>
                                             </CardContent>
                                         </Card>
-                                    </Link>
+                                    </div>
                                 </div>
                             ))}
                         </div>

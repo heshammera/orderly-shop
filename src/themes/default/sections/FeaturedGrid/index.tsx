@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import InlineEditableText from '@/components/ThemeEngine/InlineEditableText';
 import { QuickViewModal } from '@/components/store/QuickViewModal';
 import { Eye } from 'lucide-react';
@@ -58,6 +59,7 @@ function GridTileImage({ src, alt, label, onQuickView }: any) {
 }
 
 function GridItem({ item, size, onQuickView }: { item: ProductSnippet, size: 'full' | 'half' | 'single' | 'double', onQuickView: () => void }) {
+    const router = useRouter();
     const sizeClasses: Record<string, string> = {
         'full': 'md:col-span-4 md:row-span-2',
         'half': 'md:col-span-2 md:row-span-1',
@@ -74,11 +76,11 @@ function GridItem({ item, size, onQuickView }: { item: ProductSnippet, size: 'fu
             w-full transition-shadow hover:shadow-lg rounded-lg
           `}
         >
-            <Link
-                className="relative block aspect-square md:aspect-auto h-full w-full min-h-[300px]"
-                href={item.href || `/product/${item.handle}`}
-                prefetch={true}
+            <div
+                className="relative block aspect-square md:aspect-auto h-full w-full min-h-[300px] cursor-pointer"
+                onClick={(e) => { e.preventDefault(); router.push(item.href || `/product/${item.handle}`); }}
             >
+                <Link href={item.href || `/product/${item.handle}`} className="sr-only" prefetch={true} aria-hidden="true">{item.title}</Link>
                 <GridTileImage
                     src={item.image}
                     alt={item.title}
@@ -93,7 +95,7 @@ function GridItem({ item, size, onQuickView }: { item: ProductSnippet, size: 'fu
                         onQuickView();
                     }}
                 />
-            </Link>
+            </div>
         </div>
     );
 }

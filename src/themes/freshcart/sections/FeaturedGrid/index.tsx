@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import InlineEditableText from '@/components/ThemeEngine/InlineEditableText';
 import { QuickViewModal } from '@/components/store/QuickViewModal';
 import { Eye } from 'lucide-react';
@@ -66,6 +67,7 @@ function GridTileImage({ src, alt, label, onQuickView }: any) {
 }
 
 function GridItem({ item, size, onQuickView }: { item: ProductSnippet, size: 'full' | 'half', onQuickView: () => void }) {
+    const router = useRouter();
     return (
         <div
             className={`
@@ -73,11 +75,11 @@ function GridItem({ item, size, onQuickView }: { item: ProductSnippet, size: 'fu
             w-full
           `}
         >
-            <Link
-                className="relative block aspect-square h-full w-full"
-                href={item.href || `/product/${item.handle}`}
-                prefetch={true}
+            <div
+                className="relative block aspect-square h-full w-full cursor-pointer"
+                onClick={(e) => { e.preventDefault(); router.push(item.href || `/product/${item.handle}`); }}
             >
+                <Link href={item.href || `/product/${item.handle}`} className="sr-only" prefetch={true} aria-hidden="true">{item.title}</Link>
                 <GridTileImage
                     src={item.image}
                     alt={item.title}
@@ -86,7 +88,7 @@ function GridItem({ item, size, onQuickView }: { item: ProductSnippet, size: 'fu
                         amount: item.price,
                     }}
                 />
-            </Link>
+            </div>
         </div>
     );
 }
