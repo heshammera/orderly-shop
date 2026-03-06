@@ -194,9 +194,9 @@ export function HeroSection() {
                                 </div>
 
                                 {/* Body mock */}
-                                <div className={cn("flex gap-6 h-full flex-1", isRtl && "flex-row-reverse")}>
+                                <div className={cn("flex gap-4 md:gap-6 h-full flex-1", isRtl && "flex-row-reverse")}>
                                     {/* Sidebar */}
-                                    <div className={cn("w-[40px] md:w-[160px] h-full flex flex-col gap-2", isRtl ? "border-l border-border/50 pl-4" : "border-r border-border/50 pr-4")}>
+                                    <div className={cn("hidden sm:flex w-[40px] md:w-[160px] h-full flex-col gap-2", isRtl ? "border-l border-border/50 pl-4" : "border-r border-border/50 pr-4")}>
                                         {dashboard.sidebar.map((item, i) => {
                                             const Icon = sidebarIcons[i];
                                             return (
@@ -208,20 +208,20 @@ export function HeroSection() {
                                         })}
                                     </div>
                                     {/* Main content */}
-                                    <div className="flex-1 flex flex-col gap-5">
+                                    <div className="flex-1 flex flex-col gap-5 overflow-hidden">
                                         {/* Stats Cards */}
-                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4">
                                             {dashboard.stats.map((stat, i) => {
                                                 const Icon = statIcons[i];
                                                 return (
-                                                    <div key={i} className={cn("bg-background border border-border/50 shadow-sm rounded-xl p-4 flex flex-col gap-2", i > 0 ? "hidden sm:flex" : "flex")}>
+                                                    <div key={i} className={cn("bg-background border border-border/50 shadow-sm rounded-xl p-3 md:p-4 flex-col gap-2", i > 1 ? "hidden sm:flex" : "flex")}>
                                                         <div className="flex justify-between items-center text-muted-foreground/80">
-                                                            <span className="text-xs font-semibold">{stat.title}</span>
-                                                            <Icon className="w-4 h-4" />
+                                                            <span className="text-[10px] md:text-xs font-semibold">{stat.title}</span>
+                                                            <Icon className="w-3 h-3 md:w-4 md:h-4" />
                                                         </div>
-                                                        <div className="text-xl font-bold text-foreground">{stat.value}</div>
-                                                        <div className={cn("flex items-center text-[10px] text-emerald-500 font-medium", isRtl && "flex-row-reverse justify-end gap-1")}>
-                                                            <TrendingUp className={cn("w-3 h-3", isRtl ? "ml-1" : "mr-1")} />
+                                                        <div className="text-base md:text-xl font-bold text-foreground">{stat.value}</div>
+                                                        <div className={cn("flex items-center text-[8px] md:text-[10px] text-emerald-500 font-medium", isRtl && "flex-row-reverse justify-end gap-1")}>
+                                                            <TrendingUp className={cn("w-2 h-2 md:w-3 md:h-3", isRtl ? "ml-1" : "mr-1")} />
                                                             {stat.trend} {dashboard.trendSuffix}
                                                         </div>
                                                     </div>
@@ -230,11 +230,11 @@ export function HeroSection() {
                                         </div>
 
                                         {/* Chart & Recent */}
-                                        <div className={cn("flex gap-4 flex-1", isRtl && "flex-row-reverse")}>
+                                        <div className={cn("flex gap-3 md:gap-4 flex-1 overflow-hidden", isRtl && "flex-row-reverse")}>
                                             {/* Chart Area */}
-                                            <div className="flex-[2] bg-background border border-border/50 shadow-sm rounded-xl p-4 flex flex-col">
-                                                <div className="font-semibold text-xs mb-4 text-foreground/80">{dashboard.chartTitle}</div>
-                                                <div className="flex-1 flex items-end gap-2 relative">
+                                            <div className="flex-[2] bg-background border border-border/50 shadow-sm rounded-xl p-3 md:p-4 flex flex-col min-w-0">
+                                                <div className="font-semibold text-[10px] md:text-xs mb-4 text-foreground/80 truncate">{dashboard.chartTitle}</div>
+                                                <div className="flex-1 flex items-end gap-1 md:gap-2 relative">
                                                     {/* Y-axis lines */}
                                                     <div className="absolute inset-0 flex flex-col justify-between border-y border-border/30 z-0">
                                                         <div className="w-full h-px border-b border-dashed border-border/50"></div>
@@ -244,8 +244,8 @@ export function HeroSection() {
 
                                                     {/* Bars */}
                                                     {[40, 70, 45, 90, 65, 85, 100, 60, 45, 80, 50, 75].map((h, i) => (
-                                                        <div key={i} className="flex-1 bg-primary/20 hover:bg-primary/50 transition-colors z-10 rounded-t-sm relative group cursor-pointer" style={{ height: `${h}%` }}>
-                                                            <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-foreground text-background text-[9px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap hidden sm:block">
+                                                        <div key={i} className={cn("flex-1 bg-primary/20 hover:bg-primary/50 transition-colors z-10 rounded-t-sm relative group cursor-pointer", i > 7 ? "hidden sm:block" : "block")} style={{ height: `${h}%` }}>
+                                                            <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-foreground text-background text-[9px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap hidden md:block">
                                                                 ${(h * 120).toFixed(0)}
                                                             </div>
                                                         </div>
@@ -254,20 +254,20 @@ export function HeroSection() {
                                             </div>
 
                                             {/* Recent Activity */}
-                                            <div className="flex-[1] bg-background border border-border/50 shadow-sm rounded-xl p-4 flex-col gap-3 overflow-hidden hidden md:flex">
-                                                <div className="font-semibold text-xs mb-1 text-foreground/80">{dashboard.recentTitle}</div>
+                                            <div className="flex-[1] bg-background border border-border/50 shadow-sm rounded-xl p-3 md:p-4 flex-col gap-3 overflow-hidden hidden lg:flex">
+                                                <div className="font-semibold text-xs mb-1 text-foreground/80 truncate">{dashboard.recentTitle}</div>
                                                 {dashboard.recentSales.map((activity, i) => (
                                                     <div key={i} className="flex justify-between items-center">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-primary/20 to-accent/20 flex items-center justify-center text-[8px] font-bold text-primary">
+                                                        <div className="flex items-center gap-2 min-w-0 pr-2">
+                                                            <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-primary/20 to-accent/20 flex shrink-0 items-center justify-center text-[8px] font-bold text-primary">
                                                                 {activity.name.charAt(0)}
                                                             </div>
-                                                            <div className="flex flex-col">
-                                                                <span className="text-[10px] font-semibold text-foreground/80 leading-tight">{activity.name}</span>
-                                                                <span className="text-[9px] text-muted-foreground/60 leading-tight">{activity.time}</span>
+                                                            <div className="flex flex-col min-w-0">
+                                                                <span className="text-[10px] font-semibold text-foreground/80 leading-tight truncate">{activity.name}</span>
+                                                                <span className="text-[9px] text-muted-foreground/60 leading-tight truncate">{activity.time}</span>
                                                             </div>
                                                         </div>
-                                                        <div className="text-[10px] font-bold text-emerald-500">
+                                                        <div className="text-[10px] font-bold text-emerald-500 shrink-0">
                                                             {activity.amount}
                                                         </div>
                                                     </div>

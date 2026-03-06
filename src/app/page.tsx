@@ -9,6 +9,7 @@ import { PricingSection } from '@/components/landing/PricingSection';
 import { FAQSection } from '@/components/landing/FAQSection';
 import { FinalCTA } from '@/components/landing/FinalCTA';
 import { Footer } from '@/components/landing/Footer';
+import { ScrollToTop } from '@/components/landing/ScrollToTop';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { TutorialsSection } from '@/components/landing/TutorialsSection';
@@ -40,6 +41,7 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen font-sans bg-slate-50">
+      <Header />
       <main>
         <HeroSection />
         <SocialProofSection />
@@ -48,11 +50,11 @@ export default async function Home() {
         <HowItWorksSection />
         <AdvancedCapabilities />
         <PricingSection />
-        <FAQSection />
         {tutorialsEnabled && <TutorialsSection />}
         <FinalCTA />
       </main>
       <Footer />
+      <ScrollToTop />
     </div>
   );
 }

@@ -130,12 +130,12 @@ export function PlatformDemo() {
                                     >
                                         {activeModule === 0 && (
                                             <div className="space-y-4 h-full">
-                                                <div className="flex gap-4">
-                                                    {[1, 2, 3].map(i => <div key={i} className="h-24 flex-1 bg-card border border-border/50 shadow-sm rounded-xl p-4"><div className="w-1/2 h-4 bg-muted mb-2 rounded" /><div className="w-1/3 h-6 bg-primary/30 rounded" /></div>)}
+                                                <div className="flex gap-2 sm:gap-4">
+                                                    {[1, 2, 3].map(i => <div key={i} className="h-16 sm:h-24 flex-1 bg-card border border-border/50 shadow-sm rounded-xl p-2 sm:p-4"><div className="w-1/2 h-2 sm:h-4 bg-muted mb-2 rounded" /><div className="w-1/3 h-4 sm:h-6 bg-primary/30 rounded" /></div>)}
                                                 </div>
-                                                <div className="h-48 w-full bg-card border border-border/50 shadow-sm rounded-xl relative overflow-hidden">
-                                                    <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-primary/20 to-transparent"></div>
-                                                    <svg className="absolute w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
+                                                <div className="flex-1 min-h-[120px] w-full bg-card border border-border/50 shadow-sm rounded-xl relative overflow-hidden">
+                                                    <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-primary/20 to-transparent"></div>
+                                                    <svg className="absolute w-full h-full inset-0" preserveAspectRatio="none" viewBox="0 0 100 100">
                                                         <path d="M0,100 L0,50 Q25,30 50,60 T100,40 L100,100 Z" fill="hsl(var(--primary)/0.1)" stroke="hsl(var(--primary))" strokeWidth="2" />
                                                     </svg>
                                                 </div>

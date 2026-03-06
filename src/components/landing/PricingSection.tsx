@@ -195,7 +195,7 @@ export function PricingSection() {
                                 </div>
 
                                 {/* Features */}
-                                <ul className="space-y-4 mb-8 flex-1">
+                                <ul className="space-y-3 mb-8 flex-1">
                                     {featuresDict.map((feature: any) => {
                                         const value = plan.feature_values?.[feature.id];
                                         let isAvailable = false;
@@ -214,10 +214,10 @@ export function PricingSection() {
 
                                         return (
                                             <li key={feature.id} className="flex items-start gap-3">
-                                                <div className={cn("mt-0.5 w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0", isAvailable ? 'bg-primary/10' : 'bg-muted/50')}>
-                                                    {isAvailable ? <Check className="h-3.5 w-3.5 text-primary" /> : <X className="h-3.5 w-3.5 text-muted-foreground" />}
+                                                <div className={cn("mt-0.5 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center flex-shrink-0", isAvailable ? 'bg-primary/10' : 'bg-muted/50')}>
+                                                    {isAvailable ? <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary" /> : <X className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground" />}
                                                 </div>
-                                                <span className={cn("text-sm leading-relaxed", isAvailable ? 'text-foreground font-medium' : 'text-muted-foreground line-through opacity-70')}>
+                                                <span className={cn("text-xs sm:text-sm leading-relaxed", isAvailable ? 'text-foreground font-medium' : 'text-muted-foreground line-through opacity-70')}>
                                                     {language === 'ar' ? feature.name_ar : feature.name_en} {displayValue && isAvailable && <span className="font-bold text-primary ml-1">({displayValue})</span>}
                                                 </span>
                                             </li>
@@ -230,14 +230,14 @@ export function PricingSection() {
                                     onClick={() => setShowJoinDialog(true)}
                                     size="lg"
                                     className={cn(
-                                        'w-full py-6 text-lg font-bold transition-all shadow-none group',
+                                        'w-full py-5 sm:py-6 text-base sm:text-lg font-bold transition-all shadow-none group',
                                         isPopular
                                             ? 'gradient-primary text-white hover:scale-[1.02] shadow-primary/25 shadow-xl'
                                             : 'bg-muted text-foreground hover:bg-primary hover:text-primary-foreground'
                                     )}
                                 >
-                                    {t.pricing.cta}
-                                    <ArrowIcon className={cn("inline-block w-5 h-5 ml-2 transition-transform", rtl ? "mr-2 ml-0 group-hover:-translate-x-1" : "group-hover:translate-x-1")} />
+                                    <span className="truncate">{t.pricing.cta}</span>
+                                    <ArrowIcon className={cn("inline-block w-4 h-4 sm:w-5 sm:h-5 sm:ml-2 flex-shrink-0 transition-transform", rtl ? "mr-1 sm:mr-2 ml-0 group-hover:-translate-x-1" : "ml-1 sm:ml-2 group-hover:translate-x-1")} />
                                 </Button>
                             </motion.div>
                         );
