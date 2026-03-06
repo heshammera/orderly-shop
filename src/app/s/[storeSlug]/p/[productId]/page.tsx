@@ -4,40 +4,45 @@ import { notFound } from 'next/navigation';
 import ThemePreviewManager from '@/components/ThemeEngine/ThemePreviewManager';
 import { Metadata } from 'next';
 
-export const revalidate = 0;
+export const revalidate = 60; // Cache for 60 seconds to reduce server load
 
 export async function generateMetadata({ params }: { params: { storeSlug: string, productId: string } }): Promise<Metadata> {
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        { cookies: { get(name: string) { return cookieStore.get(name)?.value } } }
-    );
-
-    const { data: product } = await supabase
-        .from('products')
-        .select('name, description, images')
-        .eq('id', params.productId)
-        .single();
-
-    if (!product) return {};
-
-    const name = typeof product.name === 'string' ? JSON.parse(product.name) : product.name;
-    const desc = typeof product.description === 'string' ? JSON.parse(product.description) : product.description;
-    let images: string[] = [];
     try {
-        images = typeof product.images === 'string' ? (JSON.parse(product.images) as string[]) : (Array.isArray(product.images) ? (product.images as string[]) : []);
-    } catch {
-        images = [];
-    }
+        const cookieStore = cookies();
+        const supabase = createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            { cookies: { get(name: string) { return cookieStore.get(name)?.value } } }
+        );
 
-    return {
-        title: name?.en || name?.ar || 'Product',
-        description: desc?.en || desc?.ar || '',
-        openGraph: {
-            images: images.length > 0 ? [images[0]] : [],
-        },
-    };
+        const { data: product } = await supabase
+            .from('products')
+            .select('name, description, images')
+            .eq('id', params.productId)
+            .single();
+
+        if (!product) return {};
+
+        const name = typeof product.name === 'string' ? JSON.parse(product.name) : product.name;
+        const desc = typeof product.description === 'string' ? JSON.parse(product.description) : product.description;
+        let images: string[] = [];
+        try {
+            images = typeof product.images === 'string' ? (JSON.parse(product.images) as string[]) : (Array.isArray(product.images) ? (product.images as string[]) : []);
+        } catch {
+            images = [];
+        }
+
+        return {
+            title: name?.en || name?.ar || 'Product',
+            description: desc?.en || desc?.ar || '',
+            openGraph: {
+                images: images.length > 0 ? [images[0]] : [],
+            },
+        };
+    } catch (e) {
+        console.error('[ProductPage] generateMetadata error:', e);
+        return {};
+    }
 }
 
 export default async function ProductPage({ params }: { params: { storeSlug: string, productId: string } }) {
@@ -65,8 +70,8 @@ export default async function ProductPage({ params }: { params: { storeSlug: str
         return notFound();
     }
 
-    // Parallel Fetch Product, Variants, Upsells
-    const [productRes, variantsRes, upsellRes] = await Promise.all([
+    // Fetch ALL data in parallel to reduce total request time
+    const [productRes, variantsRes, upsellRes, headerCategoriesRes, activeThemeRes] = await Promise.all([
         supabase
             .from('products')
             .select('*')
@@ -85,6 +90,24 @@ export default async function ProductPage({ params }: { params: { storeSlug: str
             .eq('product_id', params.productId)
             .eq('is_active', true)
             .order('min_quantity'),
+        supabase
+            .from('categories')
+            .select('id, name')
+            .eq('store_id', store.id)
+            .eq('status', 'active')
+            .eq('show_in_header', true)
+            .order('sort_order'),
+        supabase
+            .from('store_themes')
+            .select(`
+                id,
+                global_tokens,
+                store_theme_templates (page_type, settings_data),
+                theme_versions (themes (folder_name))
+            `)
+            .eq('store_id', store.id)
+            .eq('is_active', true)
+            .maybeSingle(),
     ]);
 
     if (!productRes.data) {
@@ -133,16 +156,7 @@ export default async function ProductPage({ params }: { params: { storeSlug: str
         badge: typeof u.badge === 'string' ? JSON.parse(u.badge) : u.badge || { ar: '', en: '' },
     })) || [];
 
-    // Fetch categories with show_in_header = true
-    const { data: headerCategoriesData } = await supabase
-        .from('categories')
-        .select('id, name')
-        .eq('store_id', store.id)
-        .eq('status', 'active')
-        .eq('show_in_header', true)
-        .order('sort_order');
-
-    const parsedHeaderCategories = headerCategoriesData?.map(c => ({
+    const parsedHeaderCategories = headerCategoriesRes.data?.map(c => ({
         ...c,
         name: typeof c.name === 'string' ? JSON.parse(c.name) : c.name,
     })) || [];
@@ -162,19 +176,8 @@ export default async function ProductPage({ params }: { params: { storeSlug: str
         headerCategories: parsedHeaderCategories
     };
 
-    // Fetch Active Theme and Overrides for 'product' and 'home' templates
-    const { data: activeTheme } = await supabase
-        .from('store_themes')
-        .select(`
-            id,
-            global_tokens,
-            store_theme_templates (page_type, settings_data),
-            theme_versions (themes (folder_name))
-        `)
-        .eq('store_id', store.id)
-        .eq('is_active', true)
-        .maybeSingle();
-
+    // Process theme data
+    const activeTheme = activeThemeRes.data;
     const homeOverride = activeTheme?.store_theme_templates?.find((o: any) => o.page_type === 'home')?.settings_data;
     const themeName = (activeTheme?.theme_versions as any)?.themes?.folder_name || 'default';
     const productOverride = activeTheme?.store_theme_templates?.find((o: any) => o.page_type === 'product')?.settings_data;
@@ -232,3 +235,4 @@ export default async function ProductPage({ params }: { params: { storeSlug: str
         </main>
     );
 }
+

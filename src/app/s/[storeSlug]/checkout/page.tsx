@@ -5,7 +5,7 @@ import { CheckoutPage } from '@/components/store/CheckoutPage';
 import ThemePreviewManager from '@/components/ThemeEngine/ThemePreviewManager';
 import { Metadata } from 'next';
 
-export const revalidate = 0;
+export const revalidate = 60; // Cache for 60 seconds to reduce server load
 
 export async function generateMetadata({ params }: { params: { storeSlug: string } }): Promise<Metadata> {
     return {
@@ -40,16 +40,29 @@ export default async function Page({ params }: { params: { storeSlug: string } }
         return notFound();
     }
 
-    // Fetch categories with show_in_header = true
-    const { data: headerCategoriesData } = await supabase
-        .from('categories')
-        .select('id, name')
-        .eq('store_id', store.id)
-        .eq('status', 'active')
-        .eq('show_in_header', true)
-        .order('sort_order');
+    // Fetch all data in parallel to reduce total request time
+    const [headerCategoriesRes, activeThemeRes] = await Promise.all([
+        supabase
+            .from('categories')
+            .select('id, name')
+            .eq('store_id', store.id)
+            .eq('status', 'active')
+            .eq('show_in_header', true)
+            .order('sort_order'),
+        supabase
+            .from('store_themes')
+            .select(`
+                id,
+                global_tokens,
+                store_theme_templates (page_type, settings_data),
+                theme_versions (themes (folder_name))
+            `)
+            .eq('store_id', store.id)
+            .eq('is_active', true)
+            .maybeSingle(),
+    ]);
 
-    const parsedHeaderCategories = headerCategoriesData?.map(c => ({
+    const parsedHeaderCategories = headerCategoriesRes.data?.map(c => ({
         ...c,
         name: typeof c.name === 'string' ? JSON.parse(c.name) : c.name,
     })) || [];
@@ -61,17 +74,7 @@ export default async function Page({ params }: { params: { storeSlug: string } }
         description: typeof store.description === 'string' ? JSON.parse(store.description) : store.description,
     };
 
-    const { data: activeTheme } = await supabase
-        .from('store_themes')
-        .select(`
-            id,
-            global_tokens,
-            store_theme_templates (page_type, settings_data),
-            theme_versions (themes (folder_name))
-        `)
-        .eq('store_id', store.id)
-        .eq('is_active', true)
-        .maybeSingle();
+    const activeTheme = activeThemeRes.data;
 
     const homeOverride = activeTheme?.store_theme_templates?.find((o: any) => o.page_type === 'home')?.settings_data;
     const themeName = (activeTheme?.theme_versions as any)?.themes?.folder_name || 'default';

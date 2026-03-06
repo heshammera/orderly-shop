@@ -5,51 +5,66 @@ import { notFound } from 'next/navigation';
 import ThemePreviewManager from '@/components/ThemeEngine/ThemePreviewManager';
 import { Metadata } from 'next';
 
-export const revalidate = 0;
+export const revalidate = 60; // Cache for 60 seconds to reduce server load
+
+function getAdminClient() {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) {
+        console.error('[StorePage] Missing SUPABASE_SERVICE_ROLE_KEY or SUPABASE_URL');
+        return null;
+    }
+    return createClient(url, key);
+}
 
 export async function generateMetadata({ params }: { params: { storeSlug: string } }): Promise<Metadata> {
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        { cookies: { get(name: string) { return cookieStore.get(name)?.value } } }
-    );
+    try {
+        const cookieStore = cookies();
+        const supabase = createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            { cookies: { get(name: string) { return cookieStore.get(name)?.value } } }
+        );
 
-    const { data: store } = await supabase
-        .from('stores')
-        .select('name, description, logo_url')
-        .eq('slug', params.storeSlug)
-        .single();
+        const { data: store } = await supabase
+            .from('stores')
+            .select('name, description, logo_url')
+            .eq('slug', params.storeSlug)
+            .single();
 
-    if (!store) return { title: 'Store Not Found' };
+        if (!store) return { title: 'Store Not Found' };
 
-    const storeName = typeof store.name === 'string' ? store.name : store.name?.en || store.name?.ar || 'Store';
-    const storeDesc = typeof store.description === 'string' ? store.description : store.description?.en || store.description?.ar || 'Welcome to our store';
+        const storeName = typeof store.name === 'string' ? store.name : store.name?.en || store.name?.ar || 'Store';
+        const storeDesc = typeof store.description === 'string' ? store.description : store.description?.en || store.description?.ar || 'Welcome to our store';
 
-    return {
-        title: { absolute: storeName },
-        description: storeDesc,
-        openGraph: {
-            title: storeName,
+        return {
+            title: { absolute: storeName },
             description: storeDesc,
-            images: store.logo_url ? [store.logo_url] : [],
-            type: 'website',
-        },
-        twitter: {
-            card: 'summary_large_image',
-            title: storeName,
-            description: storeDesc,
-            images: store.logo_url ? [store.logo_url] : [],
-        },
-    };
+            openGraph: {
+                title: storeName,
+                description: storeDesc,
+                images: store.logo_url ? [store.logo_url] : [],
+                type: 'website',
+            },
+            twitter: {
+                card: 'summary_large_image',
+                title: storeName,
+                description: storeDesc,
+                images: store.logo_url ? [store.logo_url] : [],
+            },
+        };
+    } catch (e) {
+        console.error('[StorePage] generateMetadata error:', e);
+        return { title: 'Store' };
+    }
 }
 
 export default async function StorePage({ params }: { params: { storeSlug: string } }) {
     // Use admin client to fetch store even if pending
-    const supabaseAdmin = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabaseAdmin = getAdminClient();
+    if (!supabaseAdmin) {
+        return notFound();
+    }
 
     const cookieStore = cookies();
     const supabase = createServerClient(
@@ -65,7 +80,6 @@ export default async function StorePage({ params }: { params: { storeSlug: strin
     );
 
     // Fetch Store
-    // console.log(`[StorePage] Fetching store for slug: ${params.storeSlug}`);
     const { data: store, error: storeError } = await supabaseAdmin
         .from('stores')
         .select('id, name, logo_url, description, currency, settings, status, slug, has_removed_copyright')
@@ -131,24 +145,42 @@ export default async function StorePage({ params }: { params: { storeSlug: strin
         );
     }
 
-    // Fetch categories with show_in_header = true
-    const { data: headerCategories } = await supabaseAdmin
-        .from('categories')
-        .select('id, name')
-        .eq('store_id', store.id)
-        .eq('status', 'active')
-        .eq('show_in_header', true)
-        .order('sort_order');
+    // Fetch all data in parallel to reduce total request time
+    const [headerCategoriesRes, storeProductsRes, activeThemeRes] = await Promise.all([
+        // Fetch categories with show_in_header = true
+        supabaseAdmin
+            .from('categories')
+            .select('id, name')
+            .eq('store_id', store.id)
+            .eq('status', 'active')
+            .eq('show_in_header', true)
+            .order('sort_order'),
+        // Fetch store products
+        supabaseAdmin
+            .from('products')
+            .select('id, name, price, sale_price, images, category_id:product_categories(category_id)')
+            .eq('store_id', store.id)
+            .eq('status', 'active')
+            .limit(50),
+        // Fetch Active Theme and Overrides
+        supabase
+            .from('store_themes')
+            .select(`
+                id,
+                global_tokens,
+                store_theme_templates (page_type, settings_data),
+                theme_versions (
+                    themes (
+                        folder_name
+                    )
+                )
+            `)
+            .eq('store_id', store.id)
+            .eq('is_active', true)
+            .maybeSingle(),
+    ]);
 
-    // Fetch store products to be used by Theme Sections
-    const { data: storeProducts } = await supabaseAdmin
-        .from('products')
-        .select('id, name, price, sale_price, images, category_id:product_categories(category_id)')
-        .eq('store_id', store.id)
-        .eq('status', 'active')
-        .limit(50);
-
-    const parsedHeaderCategories = headerCategories?.map(c => ({
+    const parsedHeaderCategories = headerCategoriesRes.data?.map(c => ({
         ...c,
         name: typeof c.name === 'string' ? JSON.parse(c.name) : c.name,
     })) || [];
@@ -163,30 +195,14 @@ export default async function StorePage({ params }: { params: { storeSlug: strin
     const storeContext = {
         store: parsedStore,
         headerCategories: parsedHeaderCategories,
-        products: storeProducts || [],
+        products: storeProductsRes.data || [],
     };
 
-    // Fetch Active Theme and Overrides
-    const { data: activeTheme, error: themeError } = await supabase
-        .from('store_themes')
-        .select(`
-            id,
-            global_tokens,
-            store_theme_templates (page_type, settings_data),
-            theme_versions (
-                themes (
-                    folder_name
-                )
-            )
-        `)
-        .eq('store_id', store.id)
-        .eq('is_active', true)
-        .maybeSingle();
-
-    if (themeError) {
-        console.error('[StorePage] Error fetching active theme:', themeError);
+    if (activeThemeRes.error) {
+        console.error('[StorePage] Error fetching active theme:', activeThemeRes.error);
     }
 
+    const activeTheme = activeThemeRes.data;
     const homeOverride = activeTheme?.store_theme_templates?.find((o: any) => o.page_type === 'home')?.settings_data;
 
     // Safely type-cast the deeply nested relation to get folder_name
@@ -232,4 +248,5 @@ export default async function StorePage({ params }: { params: { storeSlug: strin
         </main>
     );
 }
+
 

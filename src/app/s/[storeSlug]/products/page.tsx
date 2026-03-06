@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import ThemePreviewManager from '@/components/ThemeEngine/ThemePreviewManager';
 import { Metadata } from 'next';
 
-export const revalidate = 0;
+export const revalidate = 60; // Cache for 60 seconds to reduce server load
 
 export async function generateMetadata({ params }: { params: { storeSlug: string } }): Promise<Metadata> {
     return {
@@ -39,8 +39,8 @@ export default async function ProductsPage({ params }: { params: { storeSlug: st
         return notFound();
     }
 
-    // Parallel Fetch Categories and Initial Products (All)
-    const [categoriesRes, productsRes] = await Promise.all([
+    // Fetch all data in parallel to reduce total request time
+    const [categoriesRes, productsRes, headerCategoriesRes, activeThemeRes] = await Promise.all([
         supabase
             .from('categories')
             .select('id, name, parent_id')
@@ -53,7 +53,25 @@ export default async function ProductsPage({ params }: { params: { storeSlug: st
             .eq('store_id', store.id)
             .eq('status', 'active')
             .order('created_at', { ascending: false })
-            .limit(50), // Optimization: Limit initial fetch for SSR, client can load more or filter
+            .limit(50),
+        supabase
+            .from('categories')
+            .select('id, name')
+            .eq('store_id', store.id)
+            .eq('status', 'active')
+            .eq('show_in_header', true)
+            .order('sort_order'),
+        supabase
+            .from('store_themes')
+            .select(`
+                id,
+                global_tokens,
+                store_theme_templates (page_type, settings_data),
+                theme_versions (themes (folder_name))
+            `)
+            .eq('store_id', store.id)
+            .eq('is_active', true)
+            .maybeSingle(),
     ]);
 
     const categories = categoriesRes.data?.map(c => ({
@@ -67,16 +85,7 @@ export default async function ProductsPage({ params }: { params: { storeSlug: st
         images: typeof p.images === 'string' ? JSON.parse(p.images) : (Array.isArray(p.images) ? (p.images as string[]) : []),
     })) || [];
 
-    // Fetch categories with show_in_header = true
-    const { data: headerCategoriesData } = await supabase
-        .from('categories')
-        .select('id, name')
-        .eq('store_id', store.id)
-        .eq('status', 'active')
-        .eq('show_in_header', true)
-        .order('sort_order');
-
-    const parsedHeaderCategories = headerCategoriesData?.map(c => ({
+    const parsedHeaderCategories = headerCategoriesRes.data?.map(c => ({
         ...c,
         name: typeof c.name === 'string' ? JSON.parse(c.name) : c.name,
     })) || [];
@@ -88,18 +97,7 @@ export default async function ProductsPage({ params }: { params: { storeSlug: st
         description: typeof store.description === 'string' ? JSON.parse(store.description) : store.description,
     };
 
-    const { data: activeTheme } = await supabase
-        .from('store_themes')
-        .select(`
-            id,
-            global_tokens,
-            store_theme_templates (page_type, settings_data),
-            theme_versions (themes (folder_name))
-        `)
-        .eq('store_id', store.id)
-        .eq('is_active', true)
-        .maybeSingle();
-
+    const activeTheme = activeThemeRes.data;
     const homeOverride = activeTheme?.store_theme_templates?.find((o: any) => o.page_type === 'home')?.settings_data;
     const themeName = (activeTheme?.theme_versions as any)?.themes?.folder_name || 'default';
 
@@ -164,3 +162,4 @@ export default async function ProductsPage({ params }: { params: { storeSlug: st
         </main>
     );
 }
+
