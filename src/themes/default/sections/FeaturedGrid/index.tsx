@@ -44,16 +44,25 @@ function GridTileImage({ src, alt, label }: any) {
     )
 }
 
-function GridItem({ item, size }: { item: ProductSnippet, size: 'full' | 'half' }) {
+function GridItem({ item, size }: { item: ProductSnippet, size: 'full' | 'half' | 'single' | 'double' }) {
+    const sizeClasses: Record<string, string> = {
+        'full': 'md:col-span-4 md:row-span-2',
+        'half': 'md:col-span-2 md:row-span-1',
+        'single': 'md:col-span-1 md:row-span-1',
+        'double': 'md:col-span-1 md:row-span-1',
+    };
+
+    const labelPosition = (size === 'full' || size === 'single' || size === 'double') ? 'center' : 'bottom';
+
     return (
         <div
             className={`
-            ${size === "full" ? "md:col-span-4 md:row-span-2" : "md:col-span-2 md:row-span-1"}
+            ${sizeClasses[size] || "md:col-span-2 md:row-span-1"}
             w-full transition-shadow hover:shadow-lg rounded-lg
           `}
         >
             <Link
-                className="relative block aspect-square h-full w-full"
+                className="relative block aspect-square md:aspect-auto h-full w-full min-h-[300px]"
                 href={item.href || `/product/${item.handle}`}
                 prefetch={true}
             >
@@ -61,7 +70,7 @@ function GridItem({ item, size }: { item: ProductSnippet, size: 'full' | 'half' 
                     src={item.image}
                     alt={item.title}
                     label={{
-                        position: size === "full" ? "center" : "bottom",
+                        position: labelPosition,
                         title: item.title,
                         amount: item.price,
                     }}
@@ -134,6 +143,15 @@ export default function FeaturedGrid({ settings, blocks, storeContext, sectionId
 
     if (!products || products.length === 0) return null;
 
+    let containerClasses = "grid gap-4 h-auto ";
+    if (products.length === 1) {
+        containerClasses += "grid-cols-1 md:grid-cols-1 md:grid-rows-1 min-h-[40vh] md:h-[min(50vh,500px)]";
+    } else if (products.length === 2) {
+        containerClasses += "grid-cols-1 md:grid-cols-2 md:grid-rows-1 min-h-[40vh] md:h-[min(50vh,500px)]";
+    } else {
+        containerClasses += "grid-cols-1 md:grid-cols-6 md:grid-rows-2 h-auto md:h-[min(60vh,600px)]";
+    }
+
     return (
         <div className="mx-auto w-full max-w-(--breakpoint-2xl) py-12 px-4">
             {settings.heading && (
@@ -158,10 +176,23 @@ export default function FeaturedGrid({ settings, blocks, storeContext, sectionId
                 </div>
             )}
 
-            <div className={`grid gap-4 md:grid-rows-2 h-auto md:h-[min(60vh,600px)] ${products.length === 1 ? 'md:grid-cols-4' : products.length === 2 ? 'md:grid-cols-4' : 'md:grid-cols-6'}`}>
-                {products[0] && <GridItem size={products.length === 1 ? 'half' : 'full'} item={products[0]} />}
-                {products[1] && <GridItem size="half" item={products[1]} />}
-                {products[2] && <GridItem size="half" item={products[2]} />}
+            <div className={containerClasses}>
+                {products.length === 1 && (
+                    <GridItem size="single" item={products[0]} />
+                )}
+                {products.length === 2 && (
+                    <>
+                        <GridItem size="double" item={products[0]} />
+                        <GridItem size="double" item={products[1]} />
+                    </>
+                )}
+                {products.length >= 3 && (
+                    <>
+                        {products[0] && <GridItem size="full" item={products[0]} />}
+                        {products[1] && <GridItem size="half" item={products[1]} />}
+                        {products[2] && <GridItem size="half" item={products[2]} />}
+                    </>
+                )}
             </div>
         </div>
     );
