@@ -10,6 +10,14 @@ export async function middleware(request: NextRequest) {
     // Examples: "localhost:3000" -> "localhost", "[::1]:3000" -> "::1"
     const hostname = host.replace(/:\d+$/, '').replace(/^\[(.+)\]$/, '$1').toLowerCase().trim();
 
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+        console.error('[Middleware] Missing Supabase environment variables');
+        return NextResponse.next();
+    }
+
     console.log(`[Middleware Entry] Host: ${JSON.stringify(host)}, Cleaned Hostname: ${JSON.stringify(hostname)}, Path: ${pathname}`);
 
     // 2. DEFINE MAIN DOMAIN
@@ -126,8 +134,8 @@ export async function middleware(request: NextRequest) {
             }
 
             const supabase = createServerClient(
-                process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+                supabaseUrl,
+                supabaseAnonKey,
                 {
                     cookies: {
                         getAll() { return request.cookies.getAll() },
@@ -143,7 +151,11 @@ export async function middleware(request: NextRequest) {
                 query = query.eq('owner_id', user.id);
             }
 
-            const { data: store } = await query.maybeSingle();
+            const { data: store, error: storeError } = await query.maybeSingle();
+
+            if (storeError) {
+                console.error(`[Middleware] Store status query error: ${storeError.message}`);
+            }
 
             if (store) {
                 if (store.status === 'pending_plan' && !pathname.startsWith('/select-plan')) {
@@ -286,14 +298,9 @@ export async function middleware(request: NextRequest) {
 
         console.log(`[Middleware] Dashboard/Editor request on subdomain: ${subdomain}`);
 
-        // We need to resolve the subdomain (slug) to a store ID
+        // Resolution Logic
         try {
-            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-            const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-            // Use RPC to fetch store ID by slug (Bypasses RLS for routing purposes)
             const fetchUrl = `${supabaseUrl}/rest/v1/rpc/get_store_id_by_slug`;
-
             const res = await fetch(fetchUrl, {
                 method: 'POST',
                 headers: {
