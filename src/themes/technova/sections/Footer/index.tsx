@@ -2,6 +2,14 @@ import React from 'react';
 import Link from 'next/link';
 import InlineEditableText from '@/components/ThemeEngine/InlineEditableText';
 
+interface FooterBlock {
+    type: string;
+    settings: {
+        label?: string;
+        url?: string;
+    };
+}
+
 interface FooterProps {
     settings: {
         about_heading?: string;
@@ -12,10 +20,28 @@ interface FooterProps {
         contact_phone?: string;
         copyright?: string;
     };
+    blocks?: FooterBlock[];
     sectionId?: string;
+    storeContext?: any;
 }
 
-export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps) {
+export default function Footer({ settings, blocks = [], sectionId = 'footer_1', storeContext }: FooterProps) {
+    const storeName = storeContext?.store?.name?.ar || storeContext?.store?.name?.en || 'TechNova';
+    const publicContact = storeContext?.store?.settings?.public_contact || {};
+
+    const displayEmail = settings.contact_email || publicContact.email || 'support@technova.com';
+    const displayPhone = settings.contact_phone || publicContact.phone || '+966 000 000 000';
+    const displayAbout = settings.about_text || storeContext?.store?.description?.ar || storeContext?.store?.description?.en || 'وجهتك الأولى لأحدث التقنيات والأجهزة الإلكترونية بأفضل الأسعار.';
+
+    const defaultLinks = [
+        { settings: { label: 'الرئيسية', url: '/' } },
+        { settings: { label: 'المنتجات', url: '/products' } },
+        { settings: { label: 'من نحن', url: '#' } },
+        { settings: { label: 'تواصل معنا', url: '#' } },
+    ];
+
+    const displayLinks = blocks.length > 0 ? blocks : defaultLinks;
+
     return (
         <footer className="pb-6 pt-16 text-sm" style={{ background: '#060610', borderTop: '1px solid rgba(0,212,255,0.1)' }}>
             <div className="container mx-auto px-4">
@@ -23,12 +49,14 @@ export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-12">
                     {/* About */}
                     <div className="flex flex-col gap-4">
-                        <span className="text-xl font-black text-white">Tech<span style={{ color: '#00d4ff' }}>Nova</span></span>
+                        <span className="text-xl font-black text-white">
+                            {storeName}
+                        </span>
                         <InlineEditableText
                             as="p"
                             sectionId={sectionId}
                             settingId="about_text"
-                            value={settings.about_text || 'وجهتك الأولى لأحدث التقنيات والأجهزة الإلكترونية بأفضل الأسعار.'}
+                            value={displayAbout}
                             className="text-gray-500 leading-relaxed max-w-sm"
                         />
                         {/* Social Icons */}
@@ -51,11 +79,11 @@ export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps
                             className="text-lg font-bold text-white"
                         />
                         <ul className="flex flex-col gap-3 text-gray-500">
-                            {['الرئيسية', 'المنتجات', 'من نحن', 'تواصل معنا'].map((label, i) => (
+                            {displayLinks.map((link, i) => (
                                 <li key={i}>
-                                    <Link href="#" className="hover:text-cyan-400 transition-colors flex items-center gap-2">
+                                    <Link href={link.settings.url || '#'} className="hover:text-cyan-400 transition-colors flex items-center gap-2">
                                         <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#00d4ff' }}></span>
-                                        {label}
+                                        {link.settings.label}
                                     </Link>
                                 </li>
                             ))}
@@ -76,13 +104,13 @@ export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps
                                 <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(0,212,255,0.1)' }}>
                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00d4ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
                                 </div>
-                                <InlineEditableText as="span" sectionId={sectionId} settingId="contact_email" value={settings.contact_email || 'support@technova.com'} />
+                                <InlineEditableText as="span" sectionId={sectionId} settingId="contact_email" value={displayEmail} />
                             </li>
                             <li className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(0,212,255,0.1)' }}>
                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00d4ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
                                 </div>
-                                <InlineEditableText as="span" sectionId={sectionId} settingId="contact_phone" value={settings.contact_phone || '+966 000 000 000'} />
+                                <InlineEditableText as="span" sectionId={sectionId} settingId="contact_phone" value={displayPhone} />
                             </li>
                         </ul>
                     </div>
@@ -94,7 +122,7 @@ export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps
                         as="p"
                         sectionId={sectionId}
                         settingId="copyright"
-                        value={settings.copyright || 'جميع الحقوق محفوظة © 2026 TechNova'}
+                        value={settings.copyright || `جميع الحقوق محفوظة © ${new Date().getFullYear()} ${storeName}`}
                     />
                 </div>
 

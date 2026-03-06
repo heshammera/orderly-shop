@@ -30,7 +30,7 @@ export default async function ProductsPage({ params }: { params: { storeSlug: st
     // Fetch Store
     const { data: store, error: storeError } = await supabase
         .from('stores')
-        .select('id, currency, slug')
+        .select('id, name, logo_url, description, currency, settings, slug')
         .eq('slug', params.storeSlug)
         .eq('status', 'active')
         .single();
@@ -66,6 +66,27 @@ export default async function ProductsPage({ params }: { params: { storeSlug: st
         name: typeof p.name === 'string' ? JSON.parse(p.name) : p.name,
         images: typeof p.images === 'string' ? JSON.parse(p.images) : (Array.isArray(p.images) ? (p.images as string[]) : []),
     })) || [];
+
+    // Fetch categories with show_in_header = true
+    const { data: headerCategoriesData } = await supabase
+        .from('categories')
+        .select('id, name')
+        .eq('store_id', store.id)
+        .eq('status', 'active')
+        .eq('show_in_header', true)
+        .order('sort_order');
+
+    const parsedHeaderCategories = headerCategoriesData?.map(c => ({
+        ...c,
+        name: typeof c.name === 'string' ? JSON.parse(c.name) : c.name,
+    })) || [];
+
+    // Parse JSON fields safely
+    const parsedStore = {
+        ...store,
+        name: typeof store.name === 'string' ? JSON.parse(store.name) : store.name,
+        description: typeof store.description === 'string' ? JSON.parse(store.description) : store.description,
+    };
 
     const { data: activeTheme } = await supabase
         .from('store_themes')
@@ -122,9 +143,10 @@ export default async function ProductsPage({ params }: { params: { storeSlug: st
     const initialTokens = activeTheme?.global_tokens ? activeTheme.global_tokens : DEFAULT_GLOBAL_TOKENS;
 
     const storeContext = {
-        store,
+        store: parsedStore,
+        headerCategories: parsedHeaderCategories,
         productsContext: {
-            store,
+            store: parsedStore,
             initialCategories: categories,
             initialProducts: products
         }

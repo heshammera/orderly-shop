@@ -57,7 +57,7 @@ export default async function ProductPage({ params }: { params: { storeSlug: str
     // Fetch Store by Slug to get details + settings
     const { data: store, error: storeError } = await supabase
         .from('stores')
-        .select('id, currency, settings, slug')
+        .select('id, name, logo_url, description, currency, settings, slug')
         .eq('slug', params.storeSlug)
         .single();
 
@@ -133,11 +133,33 @@ export default async function ProductPage({ params }: { params: { storeSlug: str
         badge: typeof u.badge === 'string' ? JSON.parse(u.badge) : u.badge || { ar: '', en: '' },
     })) || [];
 
+    // Fetch categories with show_in_header = true
+    const { data: headerCategoriesData } = await supabase
+        .from('categories')
+        .select('id, name')
+        .eq('store_id', store.id)
+        .eq('status', 'active')
+        .eq('show_in_header', true)
+        .order('sort_order');
+
+    const parsedHeaderCategories = headerCategoriesData?.map(c => ({
+        ...c,
+        name: typeof c.name === 'string' ? JSON.parse(c.name) : c.name,
+    })) || [];
+
+    // Parse JSON fields safely
+    const parsedStore = {
+        ...store,
+        name: typeof store.name === 'string' ? JSON.parse(store.name) : store.name,
+        description: typeof store.description === 'string' ? JSON.parse(store.description) : store.description,
+    };
+
     const storeContext = {
         product,
         variants,
         upsellOffers,
-        store
+        store: parsedStore,
+        headerCategories: parsedHeaderCategories
     };
 
     // Fetch Active Theme and Overrides for 'product' and 'home' templates

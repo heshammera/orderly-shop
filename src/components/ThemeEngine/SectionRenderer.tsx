@@ -73,9 +73,9 @@ export default function SectionRenderer({ pageData, storeContext, themeName = 'd
                 if (sectionContent.type === 'footer' && storeContext?.store?.settings?.public_contact) {
                     const publicContact = storeContext.store.settings.public_contact;
                     resolvedSettings = {
-                        contact_email: publicContact.email || resolvedSettings.contact_email,
-                        contact_phone: publicContact.phone || resolvedSettings.contact_phone,
                         ...resolvedSettings,
+                        contact_email: resolvedSettings.contact_email || publicContact.email,
+                        contact_phone: resolvedSettings.contact_phone || publicContact.phone,
                     };
                 }
 

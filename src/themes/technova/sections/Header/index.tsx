@@ -18,17 +18,25 @@ interface HeaderProps {
     };
     blocks?: HeaderLink[];
     sectionId?: string;
+    storeContext?: any;
 }
 
-export default function Header({ settings, blocks = [], sectionId = 'header_1' }: HeaderProps) {
+export default function Header({ settings, blocks = [], sectionId = 'header_1', storeContext }: HeaderProps) {
     const defaultLinks = [
         { settings: { label: 'الرئيسية', url: '/' } },
-        { settings: { label: 'الأجهزة الذكية', url: '/smart-devices' } },
-        { settings: { label: 'الحواسب', url: '/computing' } },
-        { settings: { label: 'ملحقات', url: '/accessories' } },
     ];
 
-    const displayLinks = blocks.length > 0 ? blocks : defaultLinks;
+    // If no blocks, try to use headerCategories from storeContext
+    const categoriesAsLinks = storeContext?.headerCategories?.map((cat: any) => ({
+        settings: {
+            label: cat.name.ar || cat.name.en || cat.name,
+            url: `/products?category=${cat.id}`
+        }
+    })) || [];
+
+    const displayLinks = blocks.length > 0
+        ? blocks
+        : (categoriesAsLinks.length > 0 ? [...defaultLinks, ...categoriesAsLinks] : defaultLinks);
 
     return (
         <header className="w-full bg-[#050b15] sticky top-0 z-50 border-b border-cyan-900/30">
