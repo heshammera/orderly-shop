@@ -6,14 +6,16 @@ import { createClient } from '@/lib/supabase/client';
 // import { ProductCard } from '@/components/store/ProductCard'; // Removed unused import
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye, ShoppingCart } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import Image from 'next/image';
+import { QuickViewModal } from '@/components/store/QuickViewModal';
 
 export function ProductGrid({ data, storeId, storeCurrency, storeSlug, isEditable = false, onUpdate }: { data: ComponentSchema, storeId: string, storeCurrency?: string, storeSlug?: string, isEditable?: boolean, onUpdate?: (id: string, content: any) => void }) {
     const { settings, content, id } = data;
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [quickViewProduct, setQuickViewProduct] = useState<string | null>(null);
     const supabase = createClient();
     const { language, t } = useLanguage();
 
@@ -155,31 +157,43 @@ export function ProductGrid({ data, storeId, storeCurrency, storeSlug, isEditabl
 
                         if (gridStyle === 'minimal') {
                             return (
-                                <Link
-                                    key={product.id}
-                                    href={`/s/${storeSlug || storeId}/p/${product.id}`}
-                                    className="group cursor-pointer block"
-                                >
-                                    <div className="aspect-[4/5] relative overflow-hidden rounded-2xl bg-gray-50 mb-4 shadow-sm group-hover:shadow-md transition-shadow">
-                                        <Image
-                                            src={image}
-                                            alt={name}
-                                            fill
-                                            className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                        />
-                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
-                                    </div>
-                                    <h3 className="font-semibold text-lg text-gray-900 tracking-tight group-hover:text-primary transition-colors">{name}</h3>
-                                    <p className="text-gray-500 font-medium mt-1">{price}</p>
-                                </Link>
+                                <div key={product.id} className="group relative">
+                                    <Link
+                                        href={`/s/${storeSlug || storeId}/p/${product.id}`}
+                                        className="cursor-pointer block"
+                                    >
+                                        <div className="aspect-[4/5] relative overflow-hidden rounded-2xl bg-gray-50 mb-4 shadow-sm group-hover:shadow-md transition-shadow">
+                                            <Image
+                                                src={image}
+                                                alt={name}
+                                                fill
+                                                className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                            />
+                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 pointer-events-none" />
+
+                                            {/* Quick View & Add Overlay */}
+                                            <div className="absolute inset-x-0 bottom-4 flex justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-4 group-hover:translate-y-0 pointer-events-none z-10">
+                                                <button
+                                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setQuickViewProduct(product.id); }}
+                                                    className="pointer-events-auto bg-white/90 backdrop-blur-md rounded-full w-10 h-10 flex items-center justify-center text-gray-800 shadow-md hover:bg-primary hover:text-white transition-colors"
+                                                    title={language === 'ar' ? 'معاينة سريعة' : 'Quick View'}
+                                                >
+                                                    <Eye className="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <h3 className="font-semibold text-lg text-gray-900 tracking-tight group-hover:text-primary transition-colors">{name}</h3>
+                                        <p className="text-gray-500 font-medium mt-1">{price}</p>
+                                    </Link>
+                                </div>
                             );
                         }
 
                         // Default 'cards'
                         return (
                             <div key={product.id} className="group relative flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                                <Link href={`/s/${storeSlug || storeId}/p/${product.id}`} className="block aspect-[4/5] relative overflow-hidden bg-gray-50">
+                                <Link href={`/s/${storeSlug || storeId}/p/${product.id}`} className="block aspect-[4/5] relative overflow-hidden bg-gray-50 flex-shrink-0">
                                     <Image
                                         src={image}
                                         alt={name}
@@ -187,16 +201,33 @@ export function ProductGrid({ data, storeId, storeCurrency, storeSlug, isEditabl
                                         className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                     />
-                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 pointer-events-none" />
+
+                                    {/* Quick View Overlay */}
+                                    <div className="absolute inset-x-0 top-4 flex justify-end px-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10">
+                                        <button
+                                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setQuickViewProduct(product.id); }}
+                                            className="pointer-events-auto bg-white/90 backdrop-blur-md rounded-full w-9 h-9 flex items-center justify-center text-gray-600 shadow-sm hover:bg-primary hover:text-white hover:scale-105 transition-all"
+                                            title={language === 'ar' ? 'معاينة سريعة' : 'Quick View'}
+                                        >
+                                            <Eye className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 </Link>
-                                <div className="p-5 sm:p-6 flex flex-col flex-1">
-                                    <Link href={`/s/${storeSlug || storeId}/p/${product.id}`} className="block mb-2">
-                                        <h3 className="font-bold text-xl text-gray-900 line-clamp-2 hover:text-primary transition-colors tracking-tight">{name}</h3>
+                                <div className="p-5 flex flex-col flex-1">
+                                    <Link href={`/s/${storeSlug || storeId}/p/${product.id}`} className="block mb-1">
+                                        <h3 className="font-bold text-lg text-gray-900 line-clamp-1 hover:text-primary transition-colors tracking-tight">{name}</h3>
                                     </Link>
-                                    <p className="text-primary font-extrabold text-lg mt-auto mb-4">{price}</p>
-                                    <Button className="w-full font-semibold rounded-xl bg-gray-900 text-white hover:bg-primary hover:text-primary-foreground transition-colors shadow-none hover:shadow-lg" asChild>
-                                        <Link href={`/s/${storeSlug || storeId}/p/${product.id}`}>{(t as any).store?.viewDetails || 'View Details'}</Link>
-                                    </Button>
+                                    <div className="flex items-center justify-between mt-auto pt-4">
+                                        <p className="text-primary font-black text-lg">{price}</p>
+                                        <button
+                                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setQuickViewProduct(product.id); }}
+                                            className="bg-gray-100 hover:bg-primary text-gray-800 hover:text-white p-2.5 rounded-full transition-colors"
+                                            title={language === 'ar' ? 'أضف للسلة' : 'Add to Cart'}
+                                        >
+                                            <ShoppingCart className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         );
@@ -206,6 +237,15 @@ export function ProductGrid({ data, storeId, storeCurrency, storeSlug, isEditabl
                 <div className="text-center py-12 border-2 border-dashed rounded-xl">
                     <p className="text-muted-foreground">{(t as any).store?.noProducts || 'No products found in this collection.'}</p>
                 </div>
+            )}
+
+            {quickViewProduct && (
+                <QuickViewModal
+                    isOpen={!!quickViewProduct}
+                    onOpenChange={(open) => !open && setQuickViewProduct(null)}
+                    productId={quickViewProduct}
+                    storeId={storeSlug || storeId}
+                />
             )}
         </section>
     );
