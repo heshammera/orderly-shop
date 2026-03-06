@@ -18,9 +18,15 @@ export async function GET() {
         const { data: landingSetting } = await supabase.rpc('get_setting', { setting_key: 'tutorials_enabled_landing' });
         const { data: dashboardSetting } = await supabase.rpc('get_setting', { setting_key: 'tutorials_enabled_dashboard' });
 
+        const parseSetting = (val: any) => {
+            if (val === null || val === undefined) return true;
+            const strVal = String(val).replace(/"/g, '');
+            return strVal === 'true';
+        };
+
         return NextResponse.json({
-            tutorials_enabled_landing: landingSetting === 'true' || landingSetting === true,
-            tutorials_enabled_dashboard: dashboardSetting === 'true' || dashboardSetting === true,
+            tutorials_enabled_landing: parseSetting(landingSetting),
+            tutorials_enabled_dashboard: parseSetting(dashboardSetting),
         });
     } catch (error: any) {
         console.error('Error fetching tutorial settings:', error);

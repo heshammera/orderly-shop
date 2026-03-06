@@ -32,8 +32,9 @@ export default async function Home() {
   let tutorialsEnabled = true;
   try {
     const { data: settingData } = await supabase.rpc('get_setting', { setting_key: 'tutorials_enabled_landing' });
-    if (settingData) {
-      tutorialsEnabled = settingData === 'true' || settingData === true;
+    if (settingData !== null && settingData !== undefined) {
+      const val = String(settingData).replace(/"/g, '');
+      tutorialsEnabled = val === 'true';
     }
   } catch (e) {
     console.error("Failed to fetch tutorials setting", e);
