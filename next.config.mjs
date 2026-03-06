@@ -14,6 +14,7 @@ const nextConfig = {
     eslint: {
         ignoreDuringBuilds: true,
     },
+    output: 'standalone',
 };
 
 import withPWAInit from "@ducanh2912/next-pwa";
