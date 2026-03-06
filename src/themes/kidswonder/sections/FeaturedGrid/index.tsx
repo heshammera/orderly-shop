@@ -1,6 +1,8 @@
-import React from 'react';
 import Link from 'next/link';
 import InlineEditableText from '@/components/ThemeEngine/InlineEditableText';
+import { QuickViewModal } from '@/components/store/QuickViewModal';
+import { Eye } from 'lucide-react';
+import React, { useState } from 'react';
 
 // Helper interface
 interface ProductSnippet {
@@ -28,10 +30,22 @@ interface FeaturedGridProps {
 }
 
 // Dummy GridTileImage snippet (will be extracted properly later)
-function GridTileImage({ src, alt, label, colorClass }: any) {
+function GridTileImage({ src, alt, label, colorClass, onQuickView }: any) {
     return (
         <div className={`relative h-full w-full bg-white overflow-hidden group border-4 ${colorClass} rounded-[2.5rem] shadow-xl transition-all duration-500 hover:scale-[1.02] hover:-rotate-1`}>
             <img src={src} alt={alt} className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110" />
+
+            {/* Quick View Button Overlay */}
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-10">
+                <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); onQuickView && onQuickView(); }}
+                    className="pointer-events-auto bg-white/90 backdrop-blur-md rounded-full w-12 h-12 flex items-center justify-center text-gray-800 shadow-xl hover:bg-primary hover:text-white hover:scale-110 transition-all"
+                    title="Quick View"
+                >
+                    <Eye className="w-6 h-6" />
+                </button>
+            </div>
+
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
             {label && (
                 <div className="absolute top-6 left-6">
@@ -51,7 +65,7 @@ function GridTileImage({ src, alt, label, colorClass }: any) {
     )
 }
 
-function GridItem({ item, size, index }: { item: ProductSnippet, size: 'full' | 'half', index: number }) {
+function GridItem({ item, size, index, onQuickView }: { item: ProductSnippet, size: 'full' | 'half', index: number, onQuickView: () => void }) {
     const colors = ['border-[#ff6b6b]', 'border-[#ffbe0b]', 'border-[#00b4d8]', 'border-[#ffafcc]', 'border-[#cdb4db]'];
     const colorClass = colors[index % colors.length];
 
@@ -75,6 +89,10 @@ function GridItem({ item, size, index }: { item: ProductSnippet, size: 'full' | 
                         title: item.title,
                         amount: item.price,
                     }}
+                    onQuickView={(e: React.MouseEvent) => {
+                        if (e) { e.preventDefault(); e.stopPropagation(); }
+                        onQuickView && onQuickView();
+                    }}
                 />
             </Link>
         </div>
@@ -82,6 +100,7 @@ function GridItem({ item, size, index }: { item: ProductSnippet, size: 'full' | 
 }
 
 export default function FeaturedGrid({ settings, blocks, storeContext, sectionId = 'featured_grid_1' }: FeaturedGridProps) {
+    const [quickViewProduct, setQuickViewProduct] = useState<string | null>(null);
     const storeIdentifier = storeContext?.store?.slug || storeContext?.storeData?.slug || storeContext?.slug || storeContext?.id || '';
     const baseUrl = storeIdentifier ? `/s/${storeIdentifier}/p` : '/product';
     const currency = storeContext?.store?.currency || storeContext?.storeData?.currency || storeContext?.currency || 'SAR';
@@ -170,9 +189,9 @@ export default function FeaturedGrid({ settings, blocks, storeContext, sectionId
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-6 gap-10 h-auto md:h-[min(90vh,900px)]">
-                    {products[0] && <GridItem index={0} size="full" item={products[0]} />}
-                    {products[1] && <GridItem index={1} size="half" item={products[1]} />}
-                    {products[2] && <GridItem index={2} size="half" item={products[2]} />}
+                    {products[0] && <GridItem index={0} size="full" item={products[0]} onQuickView={() => setQuickViewProduct(products[0].id)} />}
+                    {products[1] && <GridItem index={1} size="half" item={products[1]} onQuickView={() => setQuickViewProduct(products[1].id)} />}
+                    {products[2] && <GridItem index={2} size="half" item={products[2]} onQuickView={() => setQuickViewProduct(products[2].id)} />}
                 </div>
             </div>
         </section>

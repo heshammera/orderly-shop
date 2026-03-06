@@ -9,8 +9,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Loader2, Search, SlidersHorizontal, X } from 'lucide-react';
+import { Loader2, Search, SlidersHorizontal, X, Eye, ShoppingCart } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { QuickViewModal } from '@/components/store/QuickViewModal';
 
 interface Product {
     id: string;
@@ -50,6 +51,7 @@ export function StoreProducts({ store, initialCategories, initialProducts }: Sto
     const [loading, setLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterOpen, setFilterOpen] = useState(false);
+    const [quickViewProduct, setQuickViewProduct] = useState<string | null>(null);
 
     const selectedCategory = searchParams.get('category');
 
@@ -260,52 +262,83 @@ export function StoreProducts({ store, initialCategories, initialProducts }: Sto
                     ) : (
                         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                             {filteredProducts.map((product) => (
-                                <Link key={product.id} href={`/s/${store.slug}/p/${product.id}`}>
-                                    <Card className="group overflow-hidden hover:shadow-lg transition-shadow h-full">
-                                        <CardContent className="p-0">
-                                            <div className="aspect-square bg-muted relative overflow-hidden">
-                                                {product.images.length > 0 ? (
-                                                    <img
-                                                        src={product.images[0]}
-                                                        alt={product.name[language] || product.name.ar}
-                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                                    />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center bg-primary/5">
-                                                        <span className="text-4xl font-bold text-primary/20">
-                                                            {(product.name[language] || product.name.ar).charAt(0)}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                {product.compare_at_price && product.compare_at_price > product.price && (
-                                                    <Badge className="absolute top-2 start-2 bg-destructive">
-                                                        {language === 'ar' ? 'تخفيض' : 'Sale'}
-                                                    </Badge>
-                                                )}
-                                            </div>
-                                            <div className="p-4">
-                                                <h3 className="font-medium text-sm mb-2 line-clamp-2">
-                                                    {product.name[language] || product.name.ar}
-                                                </h3>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-bold text-primary">
-                                                        {formatPrice(product.price)}
-                                                    </span>
-                                                    {product.compare_at_price && product.compare_at_price > product.price && (
-                                                        <span className="text-sm text-muted-foreground line-through">
-                                                            {formatPrice(product.compare_at_price)}
-                                                        </span>
+                                <div key={product.id} className="relative group">
+                                    <Link href={`/s/${store.slug}/p/${product.id}`} className="block h-full">
+                                        <Card className="overflow-hidden hover:shadow-lg transition-all h-full flex flex-col border border-gray-100">
+                                            <CardContent className="p-0 flex flex-col h-full">
+                                                <div className="aspect-square bg-muted relative overflow-hidden flex-shrink-0">
+                                                    {product.images.length > 0 ? (
+                                                        <img
+                                                            src={product.images[0]}
+                                                            alt={product.name[language] || product.name.ar}
+                                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center bg-primary/5">
+                                                            <span className="text-4xl font-bold text-primary/20">
+                                                                {(product.name[language] || product.name.ar).charAt(0)}
+                                                            </span>
+                                                        </div>
                                                     )}
+                                                    {product.compare_at_price && product.compare_at_price > product.price && (
+                                                        <Badge className="absolute top-2 start-2 bg-destructive border-none shadow-sm">
+                                                            {language === 'ar' ? 'تخفيض' : 'Sale'}
+                                                        </Badge>
+                                                    )}
+
+                                                    {/* Quick View Button Overlay */}
+                                                    <div className="absolute inset-x-0 bottom-4 flex justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-4 group-hover:translate-y-0 pointer-events-none z-10">
+                                                        <button
+                                                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setQuickViewProduct(product.id); }}
+                                                            className="pointer-events-auto bg-white/90 backdrop-blur-md rounded-full w-10 h-10 flex items-center justify-center text-gray-800 shadow-md hover:bg-primary hover:text-white transition-colors"
+                                                            title={language === 'ar' ? 'معاينة سريعة' : 'Quick View'}
+                                                        >
+                                                            <Eye className="w-5 h-5" />
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                </Link>
+                                                <div className="p-4 flex flex-col flex-grow">
+                                                    <h3 className="font-medium text-sm mb-2 line-clamp-2 hover:text-primary transition-colors">
+                                                        {product.name[language] || product.name.ar}
+                                                    </h3>
+                                                    <div className="flex items-center justify-between mt-auto">
+                                                        <div className="flex flex-col">
+                                                            <span className="font-bold text-primary font-mono text-lg">
+                                                                {formatPrice(product.price)}
+                                                            </span>
+                                                            {product.compare_at_price && product.compare_at_price > product.price && (
+                                                                <span className="text-xs text-muted-foreground line-through font-mono">
+                                                                    {formatPrice(product.compare_at_price)}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <button
+                                                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setQuickViewProduct(product.id); }}
+                                                            className="bg-gray-100 hover:bg-primary text-gray-800 hover:text-white p-2.5 rounded-full transition-colors flex-shrink-0"
+                                                            title={language === 'ar' ? 'أضف للسلة' : 'Add to Cart'}
+                                                        >
+                                                            <ShoppingCart className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    </Link>
+                                </div>
                             ))}
                         </div>
                     )}
                 </div>
             </div>
+
+            {quickViewProduct && (
+                <QuickViewModal
+                    isOpen={!!quickViewProduct}
+                    onOpenChange={(open) => !open && setQuickViewProduct(null)}
+                    productId={quickViewProduct}
+                    storeId={store.slug}
+                />
+            )}
         </div>
     );
 }

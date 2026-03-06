@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import InlineEditableText from '@/components/ThemeEngine/InlineEditableText';
+import { QuickViewModal } from '@/components/store/QuickViewModal';
+import { Eye } from 'lucide-react';
 
 // Helper interface
 interface ProductSnippet {
@@ -27,14 +29,25 @@ interface FeaturedGridProps {
     sectionId?: string; // ID for inline editing
 }
 
-// Dummy GridTileImage snippet (will be extracted properly later)
-function GridTileImage({ src, alt, label }: any) {
+function GridTileImage({ src, alt, label, onQuickView }: any) {
     return (
         <div className="relative h-full w-full bg-muted overflow-hidden group rounded-lg">
             <img src={src} alt={alt} className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105" />
+
+            {/* Quick View Button Overlay */}
+            <div className="absolute inset-x-0 bottom-24 flex justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-4 group-hover:translate-y-0 pointer-events-none z-10">
+                <button
+                    onClick={onQuickView}
+                    className="pointer-events-auto bg-white/90 backdrop-blur-md rounded-full w-10 h-10 flex items-center justify-center text-gray-800 shadow-md hover:bg-primary hover:text-white transition-colors"
+                    title="Quick View"
+                >
+                    <Eye className="w-5 h-5" />
+                </button>
+            </div>
+
             {label && (
-                <div className={`absolute ${label.position === 'center' ? 'inset-0 flex items-center justify-center' : 'bottom-0 w-full'} p-4`}>
-                    <div className="bg-background/80 backdrop-blur-md text-foreground p-4 rounded-xl shadow-md flex items-center gap-4">
+                <div className={`absolute ${label.position === 'center' ? 'inset-0 flex items-center justify-center pointer-events-none' : 'bottom-0 w-full pointer-events-none'} p-4`}>
+                    <div className="bg-background/80 backdrop-blur-md text-foreground p-4 rounded-xl shadow-md flex items-center gap-4 pointer-events-auto">
                         <h3 className="font-semibold text-sm leading-none">{label.title}</h3>
                         <span className="bg-primary text-primary-foreground px-2 py-1 rounded-full text-xs font-bold">{label.amount}</span>
                     </div>
@@ -44,7 +57,7 @@ function GridTileImage({ src, alt, label }: any) {
     )
 }
 
-function GridItem({ item, size }: { item: ProductSnippet, size: 'full' | 'half' | 'single' | 'double' }) {
+function GridItem({ item, size, onQuickView }: { item: ProductSnippet, size: 'full' | 'half' | 'single' | 'double', onQuickView: () => void }) {
     const sizeClasses: Record<string, string> = {
         'full': 'md:col-span-4 md:row-span-2',
         'half': 'md:col-span-2 md:row-span-1',
@@ -74,6 +87,11 @@ function GridItem({ item, size }: { item: ProductSnippet, size: 'full' | 'half' 
                         title: item.title,
                         amount: item.price,
                     }}
+                    onQuickView={(e: React.MouseEvent) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onQuickView();
+                    }}
                 />
             </Link>
         </div>
@@ -81,6 +99,7 @@ function GridItem({ item, size }: { item: ProductSnippet, size: 'full' | 'half' 
 }
 
 export default function FeaturedGrid({ settings, blocks, storeContext, sectionId = 'featured_grid_1' }: FeaturedGridProps) {
+    const [quickViewProduct, setQuickViewProduct] = useState<string | null>(null);
     const storeIdentifier = storeContext?.store?.slug || storeContext?.storeData?.slug || storeContext?.slug || storeContext?.id || '';
     const baseUrl = storeIdentifier ? `/s/${storeIdentifier}/p` : '/product';
     const currency = storeContext?.store?.currency || storeContext?.storeData?.currency || storeContext?.currency || 'SAR';
@@ -178,22 +197,31 @@ export default function FeaturedGrid({ settings, blocks, storeContext, sectionId
 
             <div className={containerClasses}>
                 {products.length === 1 && (
-                    <GridItem size="single" item={products[0]} />
+                    <GridItem size="single" item={products[0]} onQuickView={() => setQuickViewProduct(products[0].id)} />
                 )}
                 {products.length === 2 && (
                     <>
-                        <GridItem size="double" item={products[0]} />
-                        <GridItem size="double" item={products[1]} />
+                        <GridItem size="double" item={products[0]} onQuickView={() => setQuickViewProduct(products[0].id)} />
+                        <GridItem size="double" item={products[1]} onQuickView={() => setQuickViewProduct(products[1].id)} />
                     </>
                 )}
                 {products.length >= 3 && (
                     <>
-                        {products[0] && <GridItem size="full" item={products[0]} />}
-                        {products[1] && <GridItem size="half" item={products[1]} />}
-                        {products[2] && <GridItem size="half" item={products[2]} />}
+                        {products[0] && <GridItem size="full" item={products[0]} onQuickView={() => setQuickViewProduct(products[0].id)} />}
+                        {products[1] && <GridItem size="half" item={products[1]} onQuickView={() => setQuickViewProduct(products[1].id)} />}
+                        {products[2] && <GridItem size="half" item={products[2]} onQuickView={() => setQuickViewProduct(products[2].id)} />}
                     </>
                 )}
             </div>
+
+            {quickViewProduct && (
+                <QuickViewModal
+                    isOpen={!!quickViewProduct}
+                    onOpenChange={(open) => !open && setQuickViewProduct(null)}
+                    productId={quickViewProduct}
+                    storeId={storeIdentifier}
+                />
+            )}
         </div>
     );
 }
