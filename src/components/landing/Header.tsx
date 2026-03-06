@@ -7,7 +7,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 
@@ -17,6 +17,8 @@ export function Header() {
   const { language, setLanguage, t, dir } = useLanguage();
   const { user, signOut } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const isHomePage = pathname === '/' || pathname === '/ar' || pathname === '/en';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -45,7 +47,7 @@ export function Header() {
       transition={{ duration: 0.5, ease: 'easeOut' }}
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-        isScrolled ? "glass border-b border-border/50 py-3 shadow-soft" : "bg-transparent py-5"
+        (isScrolled || !isHomePage) ? "glass border-b border-border/50 py-3 shadow-soft" : "bg-transparent py-5"
       )}
     >
       <div className="container mx-auto px-4">
@@ -55,7 +57,7 @@ export function Header() {
             <Image src="/logo.png" alt="Orderly Logo" width={40} height={40} className="w-10 h-10 object-contain rounded-md" />
             <span className={cn(
               "text-2xl font-black tracking-tight transition-colors duration-300",
-              isScrolled ? "text-foreground" : "text-foreground"
+              (isScrolled || !isHomePage) ? "text-foreground" : "text-foreground"
             )}>
               Orderly
             </span>
@@ -63,19 +65,19 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-8">
-            <Link href="/#features" className={cn("text-sm font-medium transition-colors hover:text-primary", isScrolled ? "text-muted-foreground" : "text-foreground/80")}>
+            <Link href="/#features" className={cn("text-sm font-medium transition-colors hover:text-primary", (isScrolled || !isHomePage) ? "text-slate-600" : "text-foreground/80")}>
               {t.nav.features}
             </Link>
-            <Link href="/#how-it-works" className={cn("text-sm font-medium transition-colors hover:text-primary", isScrolled ? "text-muted-foreground" : "text-foreground/80")}>
+            <Link href="/#how-it-works" className={cn("text-sm font-medium transition-colors hover:text-primary", (isScrolled || !isHomePage) ? "text-slate-600" : "text-foreground/80")}>
               {language === 'ar' ? 'كيف يعمل' : 'How it works'}
             </Link>
-            <Link href="/tutorials" className={cn("text-sm font-medium transition-colors hover:text-primary", isScrolled ? "text-muted-foreground" : "text-foreground/80")}>
+            <Link href="/tutorials" className={cn("text-sm font-medium transition-colors hover:text-primary", (isScrolled || !isHomePage) ? "text-primary font-bold" : "text-foreground/80")}>
               {language === 'ar' ? 'الشروحات' : 'Tutorials'}
             </Link>
-            <Link href="/#pricing" className={cn("text-sm font-medium transition-colors hover:text-primary", isScrolled ? "text-muted-foreground" : "text-foreground/80")}>
+            <Link href="/#pricing" className={cn("text-sm font-medium transition-colors hover:text-primary", (isScrolled || !isHomePage) ? "text-slate-600" : "text-foreground/80")}>
               {t.nav.pricing}
             </Link>
-            <Link href="/#faq" className={cn("text-sm font-medium transition-colors hover:text-primary", isScrolled ? "text-muted-foreground" : "text-foreground/80")}>
+            <Link href="/#faq" className={cn("text-sm font-medium transition-colors hover:text-primary", (isScrolled || !isHomePage) ? "text-slate-600" : "text-foreground/80")}>
               {language === 'ar' ? 'الأسئلة الشائعة' : 'FAQ'}
             </Link>
           </nav>
@@ -86,7 +88,7 @@ export function Header() {
               variant="ghost"
               size="sm"
               onClick={toggleLanguage}
-              className={cn("gap-2", isScrolled ? "text-muted-foreground hover:text-foreground" : "text-foreground/80 hover:text-foreground")}
+              className={cn("gap-2", (isScrolled || !isHomePage) ? "text-slate-600 hover:text-foreground" : "text-foreground/80 hover:text-foreground")}
             >
               <Globe className="h-4 w-4" />
               <span className="font-medium text-xs uppercase">{language === 'ar' ? 'EN' : 'AR'}</span>
@@ -126,13 +128,12 @@ export function Header() {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
           <div className="flex lg:hidden items-center gap-2 z-50">
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleLanguage}
-              className={cn(isScrolled ? "" : "text-foreground")}
+              className={cn((isScrolled || !isHomePage) ? "text-slate-600" : "text-foreground")}
             >
               <Globe className="h-5 w-5" />
             </Button>
@@ -140,7 +141,7 @@ export function Header() {
               variant="ghost"
               size="icon"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className={cn(isScrolled ? "" : "text-foreground")}
+              className={cn((isScrolled || !isHomePage) ? "text-slate-600" : "text-foreground")}
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>

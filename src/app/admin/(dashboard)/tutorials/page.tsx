@@ -9,8 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Loader2, Edit, Trash2, Video, Settings, FolderTree, GripVertical } from 'lucide-react';
+import { Plus, Loader2, Edit, Trash2, Video, Settings, FolderTree, GripVertical, Star } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 import { VideoPlayer } from '@/components/tutorials/VideoPlayer';
 
 interface Tutorial {
@@ -207,6 +208,27 @@ export default function AdminTutorialsPage() {
         }
     };
 
+    const toggleFeatured = async (tutorial: Tutorial) => {
+        try {
+            const newStatus = !tutorial.is_featured;
+            const res = await fetch('/api/admin/tutorials', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: tutorial.id,
+                    is_featured: newStatus
+                })
+            });
+
+            if (!res.ok) throw new Error(await res.text());
+
+            setTutorials(prev => prev.map(t => t.id === tutorial.id ? { ...t, is_featured: newStatus } : t));
+            toast({ title: language === 'ar' ? 'تم تحديث حالة التمييز' : 'Featured status updated' });
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: error.message });
+        }
+    };
+
     const saveCategory = async () => {
         setSaving(true);
         try {
@@ -342,6 +364,14 @@ export default function AdminTutorialsPage() {
                             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                                 <Button size="icon" variant="secondary" onClick={() => openEditTutorial(t)}>
                                     <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                    size="icon"
+                                    variant={t.is_featured ? "default" : "secondary"}
+                                    className={t.is_featured ? "bg-amber-500 hover:bg-amber-600 text-white" : ""}
+                                    onClick={() => toggleFeatured(t)}
+                                >
+                                    <Star className={cn("w-4 h-4", t.is_featured && "fill-current")} />
                                 </Button>
                                 <Button size="icon" variant="destructive" onClick={() => deleteTutorial(t.id)}>
                                     <Trash2 className="w-4 h-4" />
