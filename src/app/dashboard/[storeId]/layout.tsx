@@ -2,6 +2,41 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { notFound, redirect } from 'next/navigation';
 import { createServerClient } from '@supabase/ssr';
 import { cookies, headers } from 'next/headers';
+import { Metadata } from 'next';
+
+export async function generateMetadata({ params }: { params: { storeId: string } }): Promise<Metadata> {
+    const cookieStore = cookies();
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                get(name: string) {
+                    return cookieStore.get(name)?.value
+                },
+            },
+        }
+    );
+
+    const { data: store } = await supabase
+        .from('stores')
+        .select('name, logo_url')
+        .eq('id', params.storeId)
+        .single();
+
+    if (!store) return { title: 'Dashboard' };
+
+    const nameObj = typeof store.name === 'string' ? JSON.parse(store.name) : store.name;
+    const storeName = nameObj?.ar || nameObj?.en || 'Store Dashboard';
+
+    return {
+        title: {
+            template: `%s | ${storeName}`,
+            default: `${storeName}`,
+        },
+        icons: store.logo_url ? [store.logo_url] : [],
+    };
+}
 
 export default async function Layout({
     children,
