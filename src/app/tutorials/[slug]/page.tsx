@@ -47,6 +47,22 @@ export default async function PublicTutorialStandalonePage({ params }: Props) {
         { cookies: { get(name: string) { return cookieStore.get(name)?.value; } } }
     );
 
+    // Fetch tutorials visibility setting
+    let tutorialsEnabled = true;
+    try {
+        const { data: settingData } = await supabase.rpc('get_setting', { setting_key: 'tutorials_enabled_landing' });
+        if (settingData !== null && settingData !== undefined) {
+            const val = String(settingData).replace(/"/g, '');
+            tutorialsEnabled = val === 'true';
+        }
+    } catch (e) {
+        console.error("Failed to fetch tutorials setting", e);
+    }
+
+    if (!tutorialsEnabled) {
+        notFound();
+    }
+
     // Fetch specific tutorial
     const { data: tutorial, error } = await supabase
         .from('tutorials')
@@ -85,7 +101,7 @@ export default async function PublicTutorialStandalonePage({ params }: Props) {
 
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col font-sans" dir="rtl">
-            <Header />
+            <Header tutorialsEnabled={tutorialsEnabled} />
 
             <main className="flex-1 pt-24 pb-20">
                 <div className="max-w-6xl mx-auto px-4 md:px-8">

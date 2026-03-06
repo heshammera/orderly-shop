@@ -11,7 +11,11 @@ import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 
-export function Header() {
+interface HeaderProps {
+  tutorialsEnabled?: boolean;
+}
+
+export function Header({ tutorialsEnabled = true }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { language, setLanguage, t, dir } = useLanguage();
@@ -71,9 +75,11 @@ export function Header() {
             <Link href="/#how-it-works" className={cn("text-sm font-medium transition-colors hover:text-primary", (isScrolled || !isHomePage) ? "text-slate-600" : "text-foreground/80")}>
               {language === 'ar' ? 'كيف يعمل' : 'How it works'}
             </Link>
-            <Link href="/tutorials" className={cn("text-sm font-medium transition-colors hover:text-primary", (isScrolled || !isHomePage) ? "text-primary font-bold" : "text-foreground/80")}>
-              {language === 'ar' ? 'الشروحات' : 'Tutorials'}
-            </Link>
+            {tutorialsEnabled && (
+              <Link href="/tutorials" className={cn("text-sm font-medium transition-colors hover:text-primary", (isScrolled || !isHomePage) ? "text-primary font-bold" : "text-foreground/80")}>
+                {language === 'ar' ? 'الشروحات' : 'Tutorials'}
+              </Link>
+            )}
             <Link href="/#pricing" className={cn("text-sm font-medium transition-colors hover:text-primary", (isScrolled || !isHomePage) ? "text-slate-600" : "text-foreground/80")}>
               {t.nav.pricing}
             </Link>
@@ -176,6 +182,16 @@ export function Header() {
                 {language === 'ar' ? 'كيف يعمل' : 'How it works'}
                 <ChevronRight className={cn("h-5 w-5 text-muted-foreground", dir === 'rtl' && "rotate-180")} />
               </Link>
+              {tutorialsEnabled && (
+                <Link
+                  href="/tutorials"
+                  className="flex items-center justify-between border-b border-border pb-4 hover:text-primary transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {language === 'ar' ? 'الشروحات' : 'Tutorials'}
+                  <ChevronRight className={cn("h-5 w-5 text-muted-foreground", dir === 'rtl' && "rotate-180")} />
+                </Link>
+              )}
               <Link
                 href="/#pricing"
                 className="flex items-center justify-between border-b border-border pb-4 hover:text-primary transition-colors"
