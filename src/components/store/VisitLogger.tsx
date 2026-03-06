@@ -27,7 +27,7 @@ export function VisitLogger({ storeId }: VisitLoggerProps) {
                 await supabase.from('store_visits').insert({
                     store_id: storeId,
                     visitor_id: visitorId,
-                    page_url: window.location.pathname,
+                    page_path: window.location.pathname,
                     referrer: document.referrer,
                     user_agent: window.navigator.userAgent
                 });
