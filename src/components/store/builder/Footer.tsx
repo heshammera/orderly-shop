@@ -223,7 +223,7 @@ export function Footer({ data, isEditable = false, onUpdate, store }: { data: Co
                             {language === 'ar' ? 'تواصل معنا' : 'Contact Us'}
                         </h3>
                         <div className="space-y-3 text-base" style={{ color: textColor }}>
-                            {(store?.contact_email || content.email || isEditable) && (
+                            {(store?.settings?.public_contact?.email || content.email || isEditable) && (
                                 <div className="flex items-center gap-4 group">
                                     <div className={`p-2 rounded-full transition-colors ${isDark ? 'bg-white/10 group-hover:bg-white/20' : 'bg-gray-100 group-hover:bg-gray-200'}`}>
                                         <Mail className={`w-5 h-5 ${isDark ? 'text-white' : 'text-gray-600'}`} />
@@ -236,11 +236,11 @@ export function Footer({ data, isEditable = false, onUpdate, store }: { data: Co
                                         dir="ltr"
                                         style={{ textAlign: language === 'ar' ? 'right' : 'left', color: linkColor }}
                                     >
-                                        {store?.contact_email || content.email || 'hello@store.com'}
+                                        {store?.settings?.public_contact?.email || content.email || 'hello@store.com'}
                                     </span>
                                 </div>
                             )}
-                            {(store?.contact_phone || content.phone || isEditable) && (
+                            {(store?.settings?.public_contact?.phone || content.phone || isEditable) && (
                                 <div className="flex items-center gap-4 group">
                                     <div className={`p-2 rounded-full transition-colors ${isDark ? 'bg-white/10 group-hover:bg-white/20' : 'bg-gray-100 group-hover:bg-gray-200'}`}>
                                         <Phone className={`w-5 h-5 ${isDark ? 'text-white' : 'text-gray-600'}`} />
@@ -253,7 +253,7 @@ export function Footer({ data, isEditable = false, onUpdate, store }: { data: Co
                                         dir="ltr"
                                         style={{ textAlign: language === 'ar' ? 'right' : 'left', color: linkColor }}
                                     >
-                                        {store?.contact_phone || content.phone || '+1 234 567 890'}
+                                        {store?.settings?.public_contact?.phone || content.phone || '+1 234 567 890'}
                                     </span>
                                 </div>
                             )}

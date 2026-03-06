@@ -1,12 +1,29 @@
 "use client";
 
-import React from 'react';
-import { APITypes, PlyrProps, usePlyr } from 'plyr-react';
+import React, { useEffect, useState } from 'react';
+import { Plyr, APITypes, PlyrProps } from 'plyr-react';
+import 'plyr-react/plyr.css';
 
 const CustomPlyrPlayer = React.forwardRef<APITypes, PlyrProps>((props, ref) => {
-    const { source, options = null } = props;
-    const raptorRef = usePlyr(ref, { options, source });
-    return <video ref={raptorRef as React.LegacyRef<HTMLVideoElement>} className="plyr-react plyr" />;
+    const { source, options, ...rest } = props;
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted || !source) return null;
+
+    return (
+        <Plyr
+            ref={ref}
+            source={source}
+            options={options}
+            {...rest}
+        />
+    );
 });
+
+CustomPlyrPlayer.displayName = 'CustomPlyrPlayer';
 
 export default CustomPlyrPlayer;

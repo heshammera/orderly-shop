@@ -1,32 +1,18 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { getAdminSessionToken } from '@/lib/admin-auth';
 
 // Get tutorial settings
 export async function GET() {
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                get(name: string) {
-                    return cookieStore.get(name)?.value;
-                },
-            },
-        }
-    );
-
     try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+        const token = await getAdminSessionToken();
+        if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const { data: roleData } = await supabase.rpc('get_user_role', { user_id: user.id });
-        if (roleData !== 'admin') {
-            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-        }
+        const supabase = createAdminClient();
+        const { data: validation, error: valError } = await supabase.rpc('validate_super_admin_session', { p_token: token });
+        if (valError || !validation?.valid) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         // Fetch settings
         const { data: landingSetting } = await supabase.rpc('get_setting', { setting_key: 'tutorials_enabled_landing' });
@@ -44,29 +30,13 @@ export async function GET() {
 
 // Update settings
 export async function PATCH(req: Request) {
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                get(name: string) {
-                    return cookieStore.get(name)?.value;
-                },
-            },
-        }
-    );
-
     try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+        const token = await getAdminSessionToken();
+        if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const { data: roleData } = await supabase.rpc('get_user_role', { user_id: user.id });
-        if (roleData !== 'admin') {
-            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-        }
+        const supabase = createAdminClient();
+        const { data: validation, error: valError } = await supabase.rpc('validate_super_admin_session', { p_token: token });
+        if (valError || !validation?.valid) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         const updates = await req.json();
 

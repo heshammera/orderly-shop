@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { parseVideoUrl } from '@/lib/videoUtils';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { getAdminSessionToken } from '@/lib/admin-auth';
 
 // Get Tutorials
 export async function GET(req: Request) {
@@ -51,18 +53,13 @@ export async function GET(req: Request) {
 
 // Create Tutorial
 export async function POST(req: Request) {
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        { cookies: { get(name: string) { return cookieStore.get(name)?.value; } } }
-    );
-
     try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        const { data: roleData } = await supabase.rpc('get_user_role', { user_id: user.id });
-        if (roleData !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        const token = await getAdminSessionToken();
+        if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+        const supabase = createAdminClient();
+        const { data: validation, error: valError } = await supabase.rpc('validate_super_admin_session', { p_token: token });
+        if (valError || !validation?.valid) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         const body = await req.json();
 
@@ -100,17 +97,13 @@ export async function POST(req: Request) {
 // Update Tutorial
 export async function PUT(req: Request) {
     const cookieStore = cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        { cookies: { get(name: string) { return cookieStore.get(name)?.value; } } }
-    );
-
     try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        const { data: roleData } = await supabase.rpc('get_user_role', { user_id: user.id });
-        if (roleData !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        const token = await getAdminSessionToken();
+        if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+        const supabase = createAdminClient();
+        const { data: validation, error: valError } = await supabase.rpc('validate_super_admin_session', { p_token: token });
+        if (valError || !validation?.valid) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         const body = await req.json();
         const { id, ...updates } = body;
@@ -148,17 +141,13 @@ export async function DELETE(req: Request) {
     if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 });
 
     const cookieStore = cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        { cookies: { get(name: string) { return cookieStore.get(name)?.value; } } }
-    );
-
     try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        const { data: roleData } = await supabase.rpc('get_user_role', { user_id: user.id });
-        if (roleData !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        const token = await getAdminSessionToken();
+        if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+        const supabase = createAdminClient();
+        const { data: validation, error: valError } = await supabase.rpc('validate_super_admin_session', { p_token: token });
+        if (valError || !validation?.valid) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         const { error } = await supabase
             .from('tutorials')
