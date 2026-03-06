@@ -68,7 +68,7 @@ export default async function StorePage({ params }: { params: { storeSlug: strin
     // console.log(`[StorePage] Fetching store for slug: ${params.storeSlug}`);
     const { data: store, error: storeError } = await supabaseAdmin
         .from('stores')
-        .select('id, name, logo_url, currency, status, slug, has_removed_copyright')
+        .select('id, name, logo_url, description, currency, settings, status, slug, has_removed_copyright')
         .eq('slug', params.storeSlug)
         .single();
 
@@ -153,8 +153,15 @@ export default async function StorePage({ params }: { params: { storeSlug: strin
         name: typeof c.name === 'string' ? JSON.parse(c.name) : c.name,
     })) || [];
 
-    const storeWithCategories = {
+    // Parse JSON fields safely
+    const parsedStore = {
         ...store,
+        name: typeof store.name === 'string' ? JSON.parse(store.name) : store.name,
+        description: typeof store.description === 'string' ? JSON.parse(store.description) : store.description,
+    };
+
+    const storeContext = {
+        store: parsedStore,
         headerCategories: parsedHeaderCategories,
         products: storeProducts || [],
     };
@@ -219,7 +226,7 @@ export default async function StorePage({ params }: { params: { storeSlug: strin
                 initialPageData={initialPageData}
                 initialTokens={initialTokens}
                 isRTL={true}
-                storeContext={storeWithCategories}
+                storeContext={storeContext}
                 themeName={themeName}
             />
         </main>
