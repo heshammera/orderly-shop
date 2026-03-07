@@ -13,6 +13,7 @@ import { QuickOrderForm } from '@/components/store/QuickOrderForm';
 import { cn } from '@/lib/utils';
 import { useCart } from '@/contexts/CartContext';
 import { trackViewContent, trackAddToCart } from '@/lib/pixelTracker';
+import { ProductReviews } from './products/ProductReviews';
 
 // Define types here or import shared types
 type DiscountType = 'fixed' | 'percentage';
@@ -953,6 +954,15 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
                         store={store}
                     />
                 </div>
+            </div>
+
+            {/* Product Reviews Section */}
+            <div className="w-full mt-6">
+                <ProductReviews
+                    storeSlug={store.slug}
+                    productId={product.id}
+                    productName={productName}
+                />
             </div>
         </div>
     );

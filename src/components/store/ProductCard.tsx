@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Eye, Loader2 } from 'lucide-react';
+import { ShoppingCart, Eye, Loader2, Star } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { toast } from 'sonner';
 import { QuickViewModal } from './QuickViewModal';
@@ -79,6 +79,14 @@ export function ProductCard({ product, storeId }: ProductCardProps) {
                     <Link href={`/s/${storeId}/p/${product.id}`} className="hover:underline">
                         <h3 className="font-semibold text-sm md:text-base line-clamp-1 mb-1">{name}</h3>
                     </Link>
+
+                    {Number(product.average_rating) > 0 && (
+                        <div className="flex items-center gap-1 mb-2 mt-1">
+                            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                            <span className="text-xs font-medium">{Number(product.average_rating).toFixed(1)}</span>
+                            <span className="text-[10px] text-muted-foreground ms-1">({product.reviews_count || 0})</span>
+                        </div>
+                    )}
 
                     <div className="flex items-center justify-between mt-auto pt-4 gap-2">
                         <div className="flex flex-col">

@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { syncOrderToGoogleSheets } from '@/lib/integrations/google-sheets-sync';
+import { createNotification } from '@/lib/notifications';
 
 export async function POST(request: NextRequest) {
     try {
@@ -137,6 +138,19 @@ export async function POST(request: NextRequest) {
         if (itemError) {
             console.error('Order items creation error:', itemError);
             return NextResponse.json({ error: 'Failed to create order items: ' + itemError.message }, { status: 500 });
+        }
+
+        // Create an order notification for the merchant
+        try {
+            await createNotification(supabase, {
+                store_id,
+                title: 'طلب جديد (طلب سريع)',
+                message: `تم استلام طلب جديد السريع (${orderData.order_number}) بقيمة ${total} ${currency}`,
+                type: 'order',
+                link: `/dashboard/${store_id}/orders?search=${orderData.order_number}`
+            });
+        } catch (notifError) {
+            console.error('Failed to create notification:', notifError);
         }
 
         // 4. Trigger Google Sheets Sync

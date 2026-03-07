@@ -16,7 +16,8 @@ import {
     Wallet,
     DollarSign,
     FileText,
-    PlayCircle
+    PlayCircle,
+    MessageSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -53,6 +54,11 @@ export function AdminSidebar() {
             icon: Store,
             label: language === 'ar' ? 'المتاجر' : 'Stores',
             href: '/admin/stores',
+        },
+        {
+            icon: MessageSquare,
+            label: language === 'ar' ? 'الدعم والمحادثات' : 'Support & Chats',
+            href: '/admin/support',
         },
         {
             icon: Users,

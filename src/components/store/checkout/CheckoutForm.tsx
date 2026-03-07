@@ -1,6 +1,8 @@
 
+import { useEffect, useRef } from 'react';
 import { useCheckout } from '@/contexts/CheckoutContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCart } from '@/contexts/CartContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,11 +18,48 @@ const DEFAULT_FORM_FIELDS = (COMPONENT_DEFAULTS.CheckoutForm.settings as any).fo
 export function CheckoutForm({ data }: { data: ComponentSchema }) {
     const { settings, content } = data;
     const { language } = useLanguage();
+    const { items, cartTotal } = useCart();
     const {
         formData, setFormData,
         selectedGovernorate, setSelectedGovernorate,
         store, formatPrice, shippingCost
     } = useCheckout();
+
+    const abandonedCartIdRef = useRef<string | null>(null);
+
+    // Abandoned Cart Auto-Save
+    useEffect(() => {
+        // Only trigger if we have basic contact info
+        if (!formData.name && !formData.phone) return;
+        if (!items || items.length === 0) return;
+
+        const timeoutId = setTimeout(async () => {
+            try {
+                const res = await fetch(`/api/store/${store.slug}/abandoned-cart`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        cartId: abandonedCartIdRef.current,
+                        customer_name: formData.name,
+                        customer_phone: formData.phone,
+                        cart_items: items,
+                        total_price: cartTotal + shippingCost,
+                    })
+                });
+
+                if (res.ok) {
+                    const resData = await res.json();
+                    if (resData.cartId) {
+                        abandonedCartIdRef.current = resData.cartId;
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to save abandoned cart', error);
+            }
+        }, 2000); // 2 seconds debounce
+
+        return () => clearTimeout(timeoutId);
+    }, [formData.name, formData.phone, items, cartTotal, shippingCost, store.slug]);
 
     const shippingSettings = store.settings?.shipping || { type: 'fixed', fixed_price: 0 };
     const title = typeof content.title === 'string' ? content.title : (content.title?.[language] || 'Customer Information');

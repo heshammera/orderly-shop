@@ -77,7 +77,7 @@ function GridItem({ item, size, onQuickView }: { item: ProductSnippet, size: 'fu
           `}
         >
             <div
-                className="relative block aspect-square md:aspect-auto h-full w-full min-h-[300px] cursor-pointer"
+                className="relative block h-full w-full min-h-[200px] md:min-h-0 cursor-pointer"
                 onClick={(e) => { e.preventDefault(); router.push(item.href || `/product/${item.handle}`); }}
             >
                 <Link href={item.href || `/product/${item.handle}`} className="sr-only" prefetch={true} aria-hidden="true">{item.title}</Link>

@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { syncOrderToGoogleSheets } from '@/lib/integrations/google-sheets-sync';
+import { createNotification } from '@/lib/notifications';
 
 export async function POST(request: NextRequest) {
     try {
@@ -170,6 +171,21 @@ export async function POST(request: NextRequest) {
         if (itemsError) {
             console.error('Order items creation error:', itemsError);
             return NextResponse.json({ error: 'Failed to create order items: ' + itemsError.message }, { status: 500 });
+        }
+
+        // Create an order notification for the merchant
+        try {
+            await createNotification(supabase, {
+                store_id,
+                title: language === 'ar' ? 'طلب جديد' : 'New Order',
+                message: language === 'ar'
+                    ? `تم استلام طلب جديد (${orderData.order_number}) بقيمة ${total} ${currency}`
+                    : `New order received (${orderData.order_number}) for ${total} ${currency}`,
+                type: 'order',
+                link: `/dashboard/${store_id}/orders?search=${orderData.order_number}`
+            });
+        } catch (notifError) {
+            console.error('Failed to create notification:', notifError);
         }
 
         // 4. Increment Coupon Usage

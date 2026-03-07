@@ -32,9 +32,11 @@ import {
     Award,
     ShoppingBag,
     PlayCircle,
+    MessageSquare,
 } from 'lucide-react';
 import { useStoreRole } from '@/hooks/useStoreRole';
 import { StoreSwitcher } from './StoreSwitcher';
+import { NotificationBell } from './NotificationBell';
 
 interface DashboardLayoutProps {
     children: React.ReactNode;
@@ -131,6 +133,12 @@ export function DashboardLayout({
             icon: Package,
             label: t.dashboard.products,
             href: `/dashboard/${storeId}/products`,
+            show: isEditor,
+        },
+        {
+            icon: MessageSquare,
+            label: language === 'ar' ? 'التقييمات والمراجعات' : 'Product Reviews',
+            href: `/dashboard/${storeId}/reviews`,
             show: isEditor,
         },
         {
@@ -377,6 +385,8 @@ export function DashboardLayout({
                     </a>
                 )}
 
+                <NotificationBell storeId={storeId} />
+
                 <Button variant="ghost" size="icon" onClick={toggleLanguage}>
                     <Globe className="w-5 h-5" />
                 </Button>
@@ -398,6 +408,9 @@ export function DashboardLayout({
                             </Button>
                         </a>
                     )}
+
+                    <NotificationBell storeId={storeId} />
+
                     <Button variant="ghost" size="icon" onClick={toggleLanguage}>
                         <Globe className="w-5 h-5" />
                     </Button>
