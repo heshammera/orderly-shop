@@ -5,6 +5,7 @@ import { Providers } from "@/components/providers";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { SupportChatWidget } from "@/components/chat/SupportChatWidget";
+import { PlatformTracker } from "@/components/tracking/PlatformTracker";
 
 const tajawal = Tajawal({
   subsets: ["arabic", "latin"],
@@ -54,6 +55,7 @@ export default function RootLayout({
           <Toaster />
           <Sonner />
           <SupportChatWidget />
+          <PlatformTracker />
         </Providers>
       </body>
     </html>
