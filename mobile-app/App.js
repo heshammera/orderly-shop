@@ -19,6 +19,11 @@ export default function App() {
     const responseListener = useRef();
 
     useEffect(() => {
+        // Enforce a strict max timeout for the splash screen in case Promises hang
+        const failsafeTimeout = setTimeout(() => {
+            setIsAppReady(true);
+        }, 3500);
+
         // 1. Initial Auth Check
         async function checkInitialSession() {
             try {
@@ -28,13 +33,17 @@ export default function App() {
                 let stores = [];
 
                 if (session?.user) {
-                    const { data, error: storeError } = await supabase
-                        .from('store_members')
-                        .select('role, stores(id, name, slug)')
-                        .eq('user_id', session.user.id);
+                    try {
+                        const { data, error: storeError } = await supabase
+                            .from('store_members')
+                            .select('role, stores(id, name, slug)')
+                            .eq('user_id', session.user.id);
 
-                    if (storeError) throw storeError;
-                    stores = data?.map(s => ({ ...s.stores, role: s.role })) || [];
+                        if (storeError) console.warn('Store members error:', storeError);
+                        stores = data?.map(s => ({ ...s.stores, role: s.role })) || [];
+                    } catch (e) {
+                        console.warn('Failed to parse stores:', e);
+                    }
                 }
 
                 setAuthState({
@@ -46,6 +55,7 @@ export default function App() {
                 console.warn('[App] Error in initial session check:', err);
                 setAuthState({ user: null, session: null, stores: [] });
             } finally {
+                clearTimeout(failsafeTimeout);
                 // Small delay for branding, ALWAYS fires even if network fails
                 setTimeout(() => setIsAppReady(true), 1500);
             }
@@ -57,11 +67,15 @@ export default function App() {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
             let stores = [];
             if (session?.user) {
-                const { data } = await supabase
-                    .from('store_members')
-                    .select('role, stores(id, name, slug)')
-                    .eq('user_id', session.user.id);
-                stores = data?.map(s => ({ ...s.stores, role: s.role })) || [];
+                try {
+                    const { data } = await supabase
+                        .from('store_members')
+                        .select('role, stores(id, name, slug)')
+                        .eq('user_id', session.user.id);
+                    stores = data?.map(s => ({ ...s.stores, role: s.role })) || [];
+                } catch (e) {
+                    console.warn(e);
+                }
             }
 
             setAuthState({
