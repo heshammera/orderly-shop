@@ -59,16 +59,16 @@ export function SecurityTab({ store }: SecurityTabProps) {
 
     const [currentEmail, setCurrentEmail] = useState(user?.email || store.contact_email || '');
     const [currentPhone, setCurrentPhone] = useState(user?.phone || store.contact_phone || '');
-    const [emailVerified, setEmailVerified] = useState(!!user?.email_confirmed_at || store.contact_email_verified || false);
-    const [phoneVerified, setPhoneVerified] = useState(!!user?.phone_confirmed_at || store.contact_phone_verified || false);
+    const [emailVerified, setEmailVerified] = useState(!!(user?.email && user?.email_confirmed_at) || store.contact_email_verified || false);
+    const [phoneVerified, setPhoneVerified] = useState(!!(user?.phone && user?.phone_confirmed_at) || store.contact_phone_verified || false);
 
     // Sync state if user object updates
     useEffect(() => {
         if (user) {
             if (user.email) setCurrentEmail(user.email);
             if (user.phone) setCurrentPhone(user.phone);
-            if (user.email_confirmed_at) setEmailVerified(true);
-            if (user.phone_confirmed_at) setPhoneVerified(true);
+            if (user.email && user.email_confirmed_at) setEmailVerified(true);
+            if (user.phone && user.phone_confirmed_at) setPhoneVerified(true);
         }
     }, [user]);
 
