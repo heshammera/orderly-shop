@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { CheckCircle2, X, Loader2, ArrowRight } from 'lucide-react';
+import { CheckCircle2, X, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ComponentSchema } from '@/lib/store-builder/types';
 import { ProductRecommendations } from './ProductRecommendations';
@@ -27,7 +27,7 @@ export function OrderSummary({ data }: { data: ComponentSchema }) {
         subtotal, shippingCost, discount, total,
         loading, store,
         customerPoints, redeemPoints, setRedeemPoints, pointsDiscount, pointsToRedeem,
-        handlePlaceOrder, currentStep, setCurrentStep
+        handlePlaceOrder
     } = useCheckout();
 
     const formatPrice = (price: number) => {
@@ -56,8 +56,8 @@ export function OrderSummary({ data }: { data: ComponentSchema }) {
                             <div className="relative w-16 h-16 rounded-md overflow-hidden flex-shrink-0 border border-slate-100 shadow-sm">
                                 {item.productImage ? (
                                     <img
-                                        src={item.productImage}
-                                        alt={typeof item.productName === 'string' ? item.productName : item.productName[language]}
+                                        src={Array.isArray(item.productImage) ? item.productImage[0] : item.productImage}
+                                        alt={typeof item.productName === 'string' ? item.productName : item.productName[language] || ''}
                                         className="w-full h-full object-cover"
                                     />
                                 ) : (
@@ -204,12 +204,7 @@ export function OrderSummary({ data }: { data: ComponentSchema }) {
                                 form.reportValidity();
                                 return;
                             }
-
-                            if (currentStep < 3) {
-                                setCurrentStep(currentStep + 1);
-                            } else {
-                                handlePlaceOrder(e);
-                            }
+                            handlePlaceOrder(e);
                         }}
                         size="lg"
                         className="w-full text-lg h-14 font-bold shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
@@ -219,13 +214,8 @@ export function OrderSummary({ data }: { data: ComponentSchema }) {
                             <Loader2 className="w-6 h-6 animate-spin" />
                         ) : (
                             <div className="flex items-center gap-2">
-                                <span>
-                                    {currentStep < 3
-                                        ? (language === 'ar' ? 'المتابعة' : 'Continue')
-                                        : (content.buttonText || (language === 'ar' ? 'إتمام الشراء الآن' : 'Complete Purchase'))
-                                    }
-                                </span>
-                                {currentStep < 3 ? <ArrowRight className="w-5 h-5 rtl:rotate-180" /> : <CheckCircle2 className="w-5 h-5" />}
+                                <span>{content.buttonText || (language === 'ar' ? 'إتمام الشراء الآن' : 'Complete Purchase')}</span>
+                                <CheckCircle2 className="w-5 h-5" />
                             </div>
                         )}
                     </Button>

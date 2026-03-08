@@ -9,7 +9,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { governorates } from '@/lib/governorates';
 import { ComponentSchema, COMPONENT_DEFAULTS } from '@/lib/store-builder/types';
-import { ProgressBar } from '@/components/store/checkout/ProgressBar';
 import { PaymentMethods } from '@/components/store/checkout/PaymentMethods';
 import { cn } from '@/lib/utils';
 
@@ -26,8 +25,7 @@ export function CheckoutForm({ data }: { data: ComponentSchema }) {
     const {
         formData, setFormData,
         selectedGovernorate, setSelectedGovernorate,
-        store, formatPrice, shippingCost,
-        currentStep
+        store, formatPrice, shippingCost
     } = useCheckout();
 
     const abandonedCartIdRef = useRef<string | null>(null);
@@ -70,9 +68,15 @@ export function CheckoutForm({ data }: { data: ComponentSchema }) {
     const title = typeof content.title === 'string' ? content.title : (content.title?.[language] || 'Customer Information');
 
     // Use Theme Engine checkoutFields if available, otherwise fall back to legacy formFields
-    const formFields: any[] = settings.checkoutFields && settings.checkoutFields.length > 0
-        ? settings.checkoutFields
-        : (settings.formFields || DEFAULT_FORM_FIELDS);
+    // IMPORTANT: Make sure we always have an array of fields to render.
+    let formFields: any[] = [];
+    if (settings && Array.isArray(settings.checkoutFields) && settings.checkoutFields.length > 0) {
+        formFields = settings.checkoutFields;
+    } else if (settings && Array.isArray(settings.formFields) && settings.formFields.length > 0) {
+        formFields = settings.formFields;
+    } else {
+        formFields = DEFAULT_FORM_FIELDS || [];
+    }
 
     // Filter visible fields and sort by order
     const visibleFields = [...formFields]
@@ -299,11 +303,7 @@ export function CheckoutForm({ data }: { data: ComponentSchema }) {
     };
 
     // If using Theme Engine fields, we just render them all sequentially.
-    const isThemeEngine = settings.checkoutFields && settings.checkoutFields.length > 0;
-
-    // Split fields for steps
-    const contactFields = visibleFields.filter(f => ['name', 'phone', 'alt_phone', 'email'].includes(f.id || f.field_id));
-    const shippingFields = visibleFields.filter(f => !contactFields.includes(f));
+    const isThemeEngine = settings && settings.checkoutFields && settings.checkoutFields.length > 0;
 
     return (
         <Card className="border-none shadow-sm overflow-hidden bg-white ring-1 ring-slate-200">
@@ -314,36 +314,17 @@ export function CheckoutForm({ data }: { data: ComponentSchema }) {
                 </CardTitle>
             </CardHeader>
             <CardContent className="p-6 sm:p-8">
-                <ProgressBar />
-
                 <form id="checkout-form" onSubmit={(e) => e.preventDefault()} className="space-y-8">
-                    {/* Step 1: Contact Info */}
-                    <div className={cn("space-y-6", currentStep !== 1 && "hidden")}>
-                        <div className="flex items-center gap-2 text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">
-                            <span className="flex items-center justify-center w-5 h-5 bg-slate-100 rounded text-[10px] text-slate-500">1</span>
-                            {language === 'ar' ? 'بيانات التواصل' : 'Contact Information'}
-                        </div>
-                        {contactFields.length > 0 && (
-                            <>
-                                <div className="grid sm:grid-cols-2 gap-5">
-                                    {contactFields.slice(0, 2).map(renderField)}
-                                </div>
-                                {contactFields.slice(2).map(renderField)}
-                            </>
-                        )}
+                    {/* All Fields */}
+                    <div className="space-y-6">
+                        {visibleFields.map(renderField)}
                     </div>
 
-                    {/* Step 2: Shipping Info */}
-                    <div className={cn("space-y-6", currentStep !== 2 && "hidden")}>
-                        <div className="flex items-center gap-2 text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">
-                            <span className="flex items-center justify-center w-5 h-5 bg-slate-100 rounded text-[10px] text-slate-500">2</span>
-                            {language === 'ar' ? 'تفاصيل الشحن' : 'Shipping Details'}
-                        </div>
-                        {shippingFields.map(renderField)}
-                    </div>
-
-                    {/* Step 3: Payment */}
-                    <div className={cn(currentStep !== 3 && "hidden")}>
+                    {/* Payment */}
+                    <div className="pt-6 border-t border-slate-100">
+                        <h3 className="text-lg font-bold text-slate-900 mb-4">
+                            {language === 'ar' ? 'طريقة الدفع' : 'Payment Method'}
+                        </h3>
                         <PaymentMethods />
                     </div>
                 </form>
