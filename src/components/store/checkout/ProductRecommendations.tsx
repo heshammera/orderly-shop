@@ -15,6 +15,20 @@ export function ProductRecommendations() {
     const { store, formatPrice } = useCheckout();
     const { toast } = useToast();
 
+    const getImageUrl = (imageVal: any) => {
+        if (!imageVal) return '';
+        if (typeof imageVal === 'string') {
+            try {
+                const parsed = JSON.parse(imageVal);
+                if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
+            } catch (e) {
+                return imageVal;
+            }
+        }
+        if (Array.isArray(imageVal) && imageVal.length > 0) return imageVal[0];
+        return String(imageVal);
+    };
+
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -32,7 +46,9 @@ export function ProductRecommendations() {
                 .eq('status', 'active');
 
             if (cartProductIds.length > 0) {
-                query = query.not('id', 'in', `(${cartProductIds.join(',')})`);
+                cartProductIds.forEach(id => {
+                    query = query.neq('id', id);
+                });
             }
 
             const { data } = await query.limit(3).order('created_at', { ascending: false });
@@ -57,7 +73,7 @@ export function ProductRecommendations() {
         addToCart({
             productId: product.id,
             productName: product.name,
-            productImage: product.images?.[0] || '',
+            productImage: getImageUrl(product.images),
             basePrice: product.price,
             unitPrice: product.price,
             quantity: 1,
@@ -82,8 +98,8 @@ export function ProductRecommendations() {
                 {products.map(product => (
                     <div key={product.id} className="flex gap-3 items-center p-2 rounded-lg border border-slate-100 bg-white shadow-sm hover:border-primary/20 transition-all">
                         <div className="w-12 h-12 rounded bg-slate-50 overflow-hidden flex-shrink-0">
-                            {product.images?.[0] && (
-                                <img src={product.images[0]} alt="" className="w-full h-full object-cover" />
+                            {product.images && getImageUrl(product.images) && (
+                                <img src={getImageUrl(product.images)} alt="" className="w-full h-full object-cover" />
                             )}
                         </div>
                         <div className="flex-grow min-w-0">
