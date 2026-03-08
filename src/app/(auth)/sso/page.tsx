@@ -46,19 +46,25 @@ export default function SSOPage() {
                 setStatus('Success! Redirecting...');
 
                 // 4. Redirect to the target path 
-                // IMPORTANT: We use a short delay (750ms) before window.location.replace.
-                // Mobile WebViews have a known race condition where client-side document.cookie
-                // writes might not instantly sync to the WebView's internal HTTP cookie jar 
-                // for the immediately following request. This delay guarantees the cookies 
-                // are attached when hitting the protected Next.js layout.
+                // IMPORTANT: We use a longer delay (2000ms) before navigating.
+                // Mobile WebViews (especially on Android) have a known race condition where 
+                // client-side document.cookie writes might take over a second to sync to the 
+                // WebView's internal HTTP cookie jar. If we redirect too fast, the Next.js 
+                // middleware running on the server won't see the cookies and will bounce 
+                // the user back to /login.
+
+                // Clear the Next.js client-side router cache so the next navigation forces a fresh server request
+                router.refresh();
+
                 setTimeout(() => {
-                    window.location.replace(returnTo);
-                }, 750);
+                    // Use href instead of replace to ensure the WebView treats it as a standard navigation
+                    window.location.href = returnTo;
+                }, 2000);
 
             } catch (err) {
                 console.error('SSO Error:', err);
                 setStatus('Authentication failed. Please login manually.');
-                setTimeout(() => window.location.replace('/login'), 2000);
+                setTimeout(() => window.location.href = '/login', 2500);
             }
         };
 
