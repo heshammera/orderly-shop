@@ -37,15 +37,24 @@ export default function LoginScreen({ onLoginSuccess }) {
             return;
         }
 
+        setLoading(true);
+
         try {
+            console.log('[LoginScreen] Attempting login for:', email);
             const { user, session, stores } = await AuthService.login(email, password);
+            console.log('[LoginScreen] Login success, user:', user?.id);
 
             if (useBiometrics && isBiometricSupported) {
-                await AuthService.enableBiometrics(email, password);
+                try {
+                    await AuthService.enableBiometrics(email, password);
+                } catch (bioErr) {
+                    console.warn('[LoginScreen] Failed to enable biometrics:', bioErr);
+                }
             }
 
             onLoginSuccess(user, session, stores);
         } catch (error) {
+            console.error('[LoginScreen] Login error:', error);
             Alert.alert('خطأ في الدخول', error.message || 'فشل تسجيل الدخول');
         } finally {
             setLoading(false);
