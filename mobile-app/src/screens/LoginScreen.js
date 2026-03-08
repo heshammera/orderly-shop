@@ -63,14 +63,32 @@ export default function LoginScreen({ onLoginSuccess }) {
 
     const handleBiometricLogin = async () => {
         try {
+            console.log('[LoginScreen] Starting biometric authentication...');
             const result = await AuthService.loginWithBiometrics();
             if (result) {
+                console.log('[LoginScreen] Biometric login success, returning session');
+                setLoading(true); // Show loader while bridging to SSO
                 const { user, session, stores } = result;
+
+                if (useBiometrics && isBiometricSupported) {
+                    try {
+                        const credentialsStr = await SecureStore.getItemAsync('user_auth_credentials');
+                        if (credentialsStr) {
+                            const { email, password } = JSON.parse(credentialsStr);
+                            await AuthService.enableBiometrics(email, password);
+                        }
+                    } catch (e) {
+                        console.warn('[LoginScreen] Re-enabling biometrics on bio-login failed:', e);
+                    }
+                }
+
                 onLoginSuccess(user, session, stores);
             }
         } catch (error) {
-            // Error handled in service or user cancelled
-            console.log('Biometric Login failed or cancelled');
+            console.error('[LoginScreen] Biometric Login failed:', error);
+            Alert.alert('خطأ في البصمة', error.message || 'فشل التحقق من البصمة أو تم الإلغاء');
+        } finally {
+            setLoading(false);
         }
     };
 
