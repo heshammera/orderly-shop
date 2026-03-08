@@ -1,12 +1,15 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
+const BASE_URL = 'https://orderlyshops.com';
+
 // Configure how notifications behave when the app is in the foreground
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
         shouldShowAlert: true,
         shouldPlaySound: true,
         shouldSetBadge: true,
+        priority: Notifications.AndroidImportance.MAX,
     }),
 });
 
@@ -32,28 +35,34 @@ export const PushNotificationHandler = {
         }
 
         if (finalStatus !== 'granted') {
-            return null; // Permission not granted
+            console.log('Notification permission not granted');
+            return null;
         }
 
         try {
-            // Use your Firebase/Expo project ID here if relying on EAS
-            token = (await Notifications.getExpoPushTokenAsync()).data;
+            const expoTokenResponse = await Notifications.getExpoPushTokenAsync();
+            token = expoTokenResponse.data;
+            console.log('Successfully generated Expo push token');
         } catch (e) {
-            console.log(e);
+            console.log('Push notification setup: Project ID missing or network issue. Skipping token registration.');
         }
 
         return token;
     },
 
     async savePushTokenToServer(storeId, token) {
-        if (!token || !storeId) return;
+        if (!token || !storeId || storeId === '00000000-0000-0000-0000-000000000000') return;
 
         try {
-            await fetch('https://your-domain.com/api/mobile/push-token', {
+            const response = await fetch(`${BASE_URL}/api/mobile/push-token`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token, storeId }),
             });
+            const data = await response.json();
+            if (data.success) {
+                console.log('Push token saved to server for store:', storeId);
+            }
         } catch (error) {
             console.error('Failed to save push token:', error);
         }

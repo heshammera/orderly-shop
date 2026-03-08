@@ -1,49 +1,47 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import * as SplashScreenApi from 'expo-splash-screen';
+import { LogIn } from 'lucide-react-native';
 
-// Keep the splash screen visible while we fetch resources
 SplashScreenApi.preventAutoHideAsync().catch(() => { });
 
 export function SplashScreen({ onFinish }) {
     const fadeAnim = useRef(new Animated.Value(0)).current;
-    const scaleAnim = useRef(new Animated.Value(0.9)).current;
+    const scaleAnim = useRef(new Animated.Value(0.95)).current;
 
     useEffect(() => {
-        // Simple animation
         Animated.parallel([
             Animated.timing(fadeAnim, {
                 toValue: 1,
-                duration: 1000,
+                duration: 800,
                 useNativeDriver: true,
             }),
             Animated.spring(scaleAnim, {
                 toValue: 1,
-                friction: 4,
+                friction: 6,
                 useNativeDriver: true,
             })
         ]).start(() => {
-            // Once animation is done, wait a bit and hide the native splash
             setTimeout(() => {
                 SplashScreenApi.hideAsync().catch(() => { });
                 if (onFinish) onFinish();
-            }, 1000);
+            }, 800);
         });
     }, [fadeAnim, scaleAnim, onFinish]);
 
     return (
         <View style={styles.container}>
             <Animated.View
-                style={{
+                style={[styles.content, {
                     opacity: fadeAnim,
                     transform: [{ scale: scaleAnim }]
-                }}
+                }]}
             >
-                {/* Normally we'd use an Image source here for the logo */}
-                <View style={styles.logoPlaceholder}>
-                    <Text style={styles.logoText}>Store App</Text>
+                <View style={styles.logoContainer}>
+                    <LogIn color="#0f172a" size={60} />
                 </View>
-                <Text style={styles.subtitle}>Welcome back!</Text>
+                <Text style={styles.logoText}>أوردرلي</Text>
+                <Text style={styles.subtitle}>بوابتك لإدارة التجارة الاجتماعية</Text>
             </Animated.View>
         </View>
     );
@@ -54,27 +52,35 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#ffffff',
+        backgroundColor: '#fff',
     },
-    logoPlaceholder: {
-        width: 120,
-        height: 120,
-        borderRadius: 20,
-        backgroundColor: '#f3f4f6',
+    content: {
+        alignItems: 'center',
+    },
+    logoContainer: {
+        width: 100,
+        height: 100,
+        borderRadius: 24,
+        backgroundColor: '#f8fafc',
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 20,
-        borderWidth: 1,
-        borderColor: '#e5e7eb',
+        elevation: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
     },
     logoText: {
-        fontSize: 20,
+        fontSize: 32,
         fontWeight: 'bold',
-        color: '#111827',
+        color: '#0f172a',
+        letterSpacing: 1,
     },
     subtitle: {
-        fontSize: 16,
-        color: '#6b7280',
+        fontSize: 14,
+        color: '#64748b',
+        marginTop: 8,
         textAlign: 'center',
     }
 });

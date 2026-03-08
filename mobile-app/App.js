@@ -9,28 +9,65 @@ import { BottomTabNavigator } from './src/navigation/BottomTabNavigator';
 import { PushNotificationHandler } from './src/services/PushNotificationHandler';
 import { DeepLinkHandler } from './src/utils/DeepLinkHandler';
 import { SplashScreen } from './src/screens/SplashScreen';
+import { supabase } from './src/config/supabase';
+import { UserContext } from './src/contexts/UserContext';
 
 export default function App() {
     const [isAppReady, setIsAppReady] = useState(false);
+    const [authState, setAuthState] = useState({ user: null, session: null, stores: [] });
     const notificationListener = useRef();
     const responseListener = useRef();
 
     useEffect(() => {
-        async function setupApp() {
-            try {
-                // Initialize push notifications
-                const token = await PushNotificationHandler.registerForPushNotificationsAsync();
-                if (token) {
-                    console.log('Push token:', token);
-                    // Temporarily using generic store UUID. In production, pass the current viewed store or login ID.
-                    PushNotificationHandler.savePushTokenToServer('00000000-0000-0000-0000-000000000000', token);
-                }
+        // 1. Initial Auth Check
+        async function checkInitialSession() {
+            const { data: { session } } = await supabase.auth.getSession();
+            let stores = [];
 
-                // Listen for notifications
+            if (session?.user) {
+                const { data } = await supabase
+                    .from('store_members')
+                    .select('role, stores(id, name, slug)')
+                    .eq('user_id', session.user.id);
+                stores = data?.map(s => ({ ...s.stores, role: s.role })) || [];
+            }
+
+            setAuthState({
+                user: session?.user ?? null,
+                session: session ?? null,
+                stores
+            });
+            // Small delay for branding
+            setTimeout(() => setIsAppReady(true), 1500);
+        }
+
+        checkInitialSession();
+
+        // 2. Auth Listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+            let stores = [];
+            if (session?.user) {
+                const { data } = await supabase
+                    .from('store_members')
+                    .select('role, stores(id, name, slug)')
+                    .eq('user_id', session.user.id);
+                stores = data?.map(s => ({ ...s.stores, role: s.role })) || [];
+            }
+
+            setAuthState({
+                user: session?.user ?? null,
+                session: session ?? null,
+                stores
+            });
+        });
+
+        // 3. Notification Setup
+        async function setupNotifications() {
+            try {
+                await PushNotificationHandler.registerForPushNotificationsAsync();
                 notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
                     console.log('Notification received:', notification);
                 });
-
                 responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
                     console.log('User interacted with notification:', response);
                 });
@@ -39,9 +76,10 @@ export default function App() {
             }
         }
 
-        setupApp();
+        setupNotifications();
 
         return () => {
+            subscription.unsubscribe();
             if (notificationListener.current) {
                 Notifications.removeNotificationSubscription(notificationListener.current);
             }
@@ -51,18 +89,19 @@ export default function App() {
         };
     }, []);
 
-    // Show custom flash screen while the app holds its first load
     if (!isAppReady) {
-        return <SplashScreen onFinish={() => setIsAppReady(true)} />;
+        return <SplashScreen onFinish={() => { }} />;
     }
 
     return (
-        <SafeAreaView style={styles.container}>
-            <StatusBar style="auto" />
-            <NavigationContainer linking={DeepLinkHandler}>
-                <BottomTabNavigator />
-            </NavigationContainer>
-        </SafeAreaView>
+        <UserContext.Provider value={{ ...authState, setUser: (user, session, stores) => setAuthState({ user, session, stores: stores || [] }) }}>
+            <SafeAreaView style={styles.container}>
+                <StatusBar style="auto" />
+                <NavigationContainer linking={DeepLinkHandler}>
+                    <BottomTabNavigator />
+                </NavigationContainer>
+            </SafeAreaView>
+        </UserContext.Provider>
     );
 }
 

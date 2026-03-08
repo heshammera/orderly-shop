@@ -1,13 +1,13 @@
 {
     "expo": {
-        "name": "StoreHub Mobile",
-        "slug": "storehub-mobile",
+        "name": "Orderly Shops",
+        "slug": "orderly-shops",
         "version": "1.0.0",
         "orientation": "portrait",
         "icon": "./assets/icon.png",
         "userInterfaceStyle": "light",
         "splash": {
-            "image": "./assets/splash.png",
+            "image": "./assets/splash-icon.png",
             "resizeMode": "contain",
             "backgroundColor": "#ffffff"
         },
@@ -20,37 +20,14 @@
         },
         "android": {
             "adaptiveIcon": {
-                "foregroundImage": "./assets/adaptive-icon.png",
+                "foregroundImage": "./assets/android-icon-foreground.png",
                 "backgroundColor": "#ffffff"
             },
-            "package": "com.storehub.mobile",
-            "intentFilters": [
-                {
-                    "action": "VIEW",
-                    "data": [
-                        {
-                            "scheme": "storehub"
-                        }
-                    ],
-                    "category": [
-                        "BROWSABLE",
-                        "DEFAULT"
-                    ]
-                }
-            ]
+            "package": "com.storehub.mobile"
         },
         "web": {
             "favicon": "./assets/favicon.png"
         },
-        "scheme": "storehub",
-        "plugins": [
-            [
-                "expo-notifications",
-                {
-                    "icon": "./assets/icon.png",
-                    "color": "#ffffff"
-                }
-            ]
-        ]
+        "scheme": "storehub"
     }
 }

@@ -12,24 +12,28 @@ export default function SSOPage() {
 
     useEffect(() => {
         const handleSSO = async () => {
-            // 1. Parse hash from URL
-            const hash = window.location.hash.substring(1); // remove #
-            const params = new URLSearchParams(hash);
+            // 1. Parse hash from URL (contains access/refresh tokens)
+            const hash = window.location.hash.substring(1);
+            const hashParams = new URLSearchParams(hash);
 
-            const accessToken = params.get('access_token');
-            const refreshToken = params.get('refresh_token');
+            // 2. Parse search params (contains optional return path)
+            const searchParams = new URLSearchParams(window.location.search);
+            const returnTo = searchParams.get('return') || '/dashboard';
+
+            const accessToken = hashParams.get('access_token');
+            const refreshToken = hashParams.get('refresh_token');
 
             if (!accessToken || !refreshToken) {
                 console.error('SSO: Missing tokens');
                 setStatus('Invalid SSO link. Redirecting to login...');
-                setTimeout(() => router.push('/login'), 2000);
+                setTimeout(() => window.location.replace('/login'), 2000);
                 return;
             }
 
             setStatus('Authenticating...');
 
             try {
-                // 2. Set session in this domain's context
+                // 3. Set session in this domain's context
                 const { error } = await supabase.auth.setSession({
                     access_token: accessToken,
                     refresh_token: refreshToken,
@@ -41,19 +45,26 @@ export default function SSOPage() {
 
                 setStatus('Success! Redirecting...');
 
-                // 3. Clear hash and redirect to dashboard
-                // Use replace to avoid back-button loops
-                router.replace('/dashboard');
+                // 4. Redirect to the target path 
+                // IMPORTANT: We use a short delay (750ms) before window.location.replace.
+                // Mobile WebViews have a known race condition where client-side document.cookie
+                // writes might not instantly sync to the WebView's internal HTTP cookie jar 
+                // for the immediately following request. This delay guarantees the cookies 
+                // are attached when hitting the protected Next.js layout.
+                setTimeout(() => {
+                    window.location.replace(returnTo);
+                }, 750);
 
             } catch (err) {
                 console.error('SSO Error:', err);
                 setStatus('Authentication failed. Please login manually.');
-                setTimeout(() => router.push('/login'), 2000);
+                setTimeout(() => window.location.replace('/login'), 2000);
             }
         };
 
         handleSSO();
-    }, [router, supabase]);
+    }, [supabase]);
+
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-background">
