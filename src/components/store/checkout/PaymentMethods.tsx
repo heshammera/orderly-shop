@@ -14,19 +14,22 @@ export function PaymentMethods() {
             id: 'cod',
             title: language === 'ar' ? 'الدفع عند الاستلام' : 'Cash on Delivery',
             description: language === 'ar' ? 'ادفع نقداً عند استلام طلبك' : 'Pay in cash when you receive your order',
-            icon: Wallet
+            icon: Wallet,
+            disabled: false
         },
         {
             id: 'bank_transfer',
             title: language === 'ar' ? 'تحويل بنكي' : 'Bank Transfer',
-            description: language === 'ar' ? 'تحويل مباشر لحساب المؤسسة' : 'Direct transfer to our bank account',
-            icon: Building2
+            description: language === 'ar' ? 'تحويل مباشر لحساب المؤسسة (قريباً)' : 'Direct transfer to our bank account (Coming Soon)',
+            icon: Building2,
+            disabled: true
         },
         {
             id: 'online',
             title: language === 'ar' ? 'البطاقة الائتمانية / مدى' : 'Credit Card / Mada',
-            description: language === 'ar' ? 'دفع إلكتروني آمن' : 'Secure online payment',
-            icon: CreditCard
+            description: language === 'ar' ? 'دفع إلكتروني آمن (قريباً)' : 'Secure online payment (Coming Soon)',
+            icon: CreditCard,
+            disabled: true
         }
     ];
 
@@ -48,17 +51,19 @@ export function PaymentMethods() {
                                 value={method.id}
                                 id={`payment-${method.id}`}
                                 className="peer sr-only"
+                                disabled={method.disabled}
                             />
                             <Label
                                 htmlFor={`payment-${method.id}`}
                                 className={cn(
-                                    "flex items-center gap-4 p-4 border rounded-xl cursor-pointer hover:bg-slate-50 transition-all",
-                                    isSelected ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-slate-200 bg-white"
+                                    "flex items-center gap-4 p-4 border rounded-xl transition-all",
+                                    method.disabled ? "opacity-50 cursor-not-allowed bg-slate-50 border-slate-100" : "cursor-pointer hover:bg-slate-50",
+                                    isSelected && !method.disabled ? "border-primary bg-primary/5 ring-1 ring-primary" : (!method.disabled ? "border-slate-200 bg-white" : "")
                                 )}
                             >
                                 <div className={cn(
                                     "flex items-center justify-center w-10 h-10 rounded-full",
-                                    isSelected ? "bg-primary text-primary-foreground" : "bg-slate-100 text-slate-500"
+                                    isSelected && !method.disabled ? "bg-primary text-primary-foreground" : "bg-slate-100 text-slate-500"
                                 )}>
                                     <Icon className="w-5 h-5" />
                                 </div>

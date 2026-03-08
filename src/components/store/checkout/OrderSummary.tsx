@@ -39,6 +39,20 @@ export function OrderSummary({ data }: { data: ComponentSchema }) {
 
     const title = typeof content.title === 'string' ? content.title : (content.title?.[language] || 'Order Summary');
 
+    const getImageUrl = (imageVal: any) => {
+        if (!imageVal) return '';
+        if (typeof imageVal === 'string') {
+            try {
+                const parsed = JSON.parse(imageVal);
+                if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
+            } catch (e) {
+                return imageVal;
+            }
+        }
+        if (Array.isArray(imageVal) && imageVal.length > 0) return imageVal[0];
+        return String(imageVal);
+    };
+
     return (
         <Card className={cn("border-none shadow-lg overflow-hidden bg-white ring-1 ring-slate-200", settings.sticky && "sticky top-24")}>
             <CardHeader className="border-b bg-slate-50/50 py-4">
@@ -54,9 +68,9 @@ export function OrderSummary({ data }: { data: ComponentSchema }) {
                         <div key={idx} className="flex gap-4 items-start pb-4 border-b border-slate-100 last:border-0 last:pb-0">
                             {/* Product Image */}
                             <div className="relative w-16 h-16 rounded-md overflow-hidden flex-shrink-0 border border-slate-100 shadow-sm">
-                                {item.productImage ? (
+                                {item.productImage && getImageUrl(item.productImage) ? (
                                     <img
-                                        src={Array.isArray(item.productImage) ? item.productImage[0] : item.productImage}
+                                        src={getImageUrl(item.productImage)}
                                         alt={typeof item.productName === 'string' ? item.productName : item.productName[language] || ''}
                                         className="w-full h-full object-cover"
                                     />

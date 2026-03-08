@@ -50,6 +50,20 @@ export function CartDrawer({ store }: CartDrawerProps) {
         return item.productName[language] || item.productName.ar;
     };
 
+    const getImageUrl = (imageVal: any) => {
+        if (!imageVal) return '';
+        if (typeof imageVal === 'string') {
+            try {
+                const parsed = JSON.parse(imageVal);
+                if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
+            } catch (e) {
+                return imageVal;
+            }
+        }
+        if (Array.isArray(imageVal) && imageVal.length > 0) return imageVal[0];
+        return String(imageVal);
+    };
+
     return (
         <Sheet open={isCartOpen} onOpenChange={(open) => !open && closeCart()}>
             <SheetContent
@@ -107,9 +121,9 @@ export function CartDrawer({ store }: CartDrawerProps) {
                                     <div className="flex gap-3">
                                         {/* Product Image */}
                                         <div className="w-16 h-16 rounded-lg bg-muted overflow-hidden flex-shrink-0 border">
-                                            {item.productImage ? (
+                                            {item.productImage && getImageUrl(item.productImage) ? (
                                                 <img
-                                                    src={item.productImage}
+                                                    src={getImageUrl(item.productImage)}
                                                     alt={getProductName(item)}
                                                     className="w-full h-full object-cover"
                                                 />
