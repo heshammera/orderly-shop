@@ -21,24 +21,34 @@ export default function App() {
     useEffect(() => {
         // 1. Initial Auth Check
         async function checkInitialSession() {
-            const { data: { session } } = await supabase.auth.getSession();
-            let stores = [];
+            try {
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                if (sessionError) throw sessionError;
 
-            if (session?.user) {
-                const { data } = await supabase
-                    .from('store_members')
-                    .select('role, stores(id, name, slug)')
-                    .eq('user_id', session.user.id);
-                stores = data?.map(s => ({ ...s.stores, role: s.role })) || [];
+                let stores = [];
+
+                if (session?.user) {
+                    const { data, error: storeError } = await supabase
+                        .from('store_members')
+                        .select('role, stores(id, name, slug)')
+                        .eq('user_id', session.user.id);
+
+                    if (storeError) throw storeError;
+                    stores = data?.map(s => ({ ...s.stores, role: s.role })) || [];
+                }
+
+                setAuthState({
+                    user: session?.user ?? null,
+                    session: session ?? null,
+                    stores
+                });
+            } catch (err) {
+                console.warn('[App] Error in initial session check:', err);
+                setAuthState({ user: null, session: null, stores: [] });
+            } finally {
+                // Small delay for branding, ALWAYS fires even if network fails
+                setTimeout(() => setIsAppReady(true), 1500);
             }
-
-            setAuthState({
-                user: session?.user ?? null,
-                session: session ?? null,
-                stores
-            });
-            // Small delay for branding
-            setTimeout(() => setIsAppReady(true), 1500);
         }
 
         checkInitialSession();
