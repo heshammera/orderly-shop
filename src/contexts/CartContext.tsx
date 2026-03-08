@@ -11,6 +11,7 @@ interface CartItem {
     basePrice: number;
     unitPrice: number;
     quantity: number;
+    maxQuantity?: number;
     variants: any[];
     addedAt: string;
 }

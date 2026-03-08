@@ -130,9 +130,16 @@ export function SecurityTab({ store }: SecurityTabProps) {
             const result = await response.json();
 
             if (!response.ok) {
+                let errorMsg = result.message || result.error;
+                if (result.error === 'daily_limit_exceeded') {
+                    errorMsg = language === 'ar'
+                        ? 'عفواً، لقد تجاوزت الحد المسموح به لعدد المحاولات اليومية. يرجى المحاولة لاحقاً.'
+                        : 'Daily limit exceeded. Please try again later.';
+                }
+
                 toast({
                     title: language === 'ar' ? 'خطأ' : 'Error',
-                    description: result.error || result.message,
+                    description: errorMsg,
                     variant: 'destructive',
                 });
                 return;

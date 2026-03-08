@@ -18,6 +18,12 @@ interface CheckoutContextType {
     couponCode: string;
     setCouponCode: (code: string) => void;
 
+    // Multi-step & Payment
+    currentStep: number;
+    setCurrentStep: (step: number) => void;
+    paymentMethod: string;
+    setPaymentMethod: (method: string) => void;
+
     // Calculated Values
     subtotal: number;
     shippingCost: number;
@@ -84,6 +90,34 @@ export function CheckoutProvider({ store, children, isEditable = false }: Checko
         notes: ''
     });
     const [selectedGovernorate, setSelectedGovernorate] = useState<string>('');
+
+    // Multi-step & Payment State
+    const [currentStep, setCurrentStep] = useState(1);
+    const [paymentMethod, setPaymentMethod] = useState('cod');
+
+    // Load saved form data from local storage
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const savedData = localStorage.getItem(`checkout_data_${store?.id}`);
+            if (savedData) {
+                try {
+                    const parsed = JSON.parse(savedData);
+                    if (parsed.formData) setFormData(prev => ({ ...prev, ...parsed.formData }));
+                    if (parsed.selectedGovernorate) setSelectedGovernorate(parsed.selectedGovernorate);
+                } catch (e) { }
+            }
+        }
+    }, [store?.id]);
+
+    // Save form data to local storage when it changes
+    useEffect(() => {
+        if (typeof window !== 'undefined' && store?.id) {
+            localStorage.setItem(`checkout_data_${store.id}`, JSON.stringify({
+                formData,
+                selectedGovernorate
+            }));
+        }
+    }, [formData, selectedGovernorate, store?.id]);
 
     // Coupon State
     const [couponCode, setCouponCode] = useState('');
@@ -271,6 +305,7 @@ export function CheckoutProvider({ store, children, isEditable = false }: Checko
                     bumpOffer: bumpOffer ? { selected: bumpOffer.selected, price: bumpOffer.price, label: bumpOffer.label } : null,
                     redeemPoints,
                     pointsToRedeem,
+                    paymentMethod,
                     language,
                 }),
             });
@@ -314,6 +349,7 @@ export function CheckoutProvider({ store, children, isEditable = false }: Checko
             subtotal, shippingCost, discount, total,
             customerPoints, redeemPoints, setRedeemPoints, pointsDiscount, pointsToRedeem,
             bumpOffer, setBumpOffer, formatPrice,
+            currentStep, setCurrentStep, paymentMethod, setPaymentMethod,
             handleApplyCoupon, handlePlaceOrder, removeCoupon,
             loading, appliedCoupon, store
         }}>

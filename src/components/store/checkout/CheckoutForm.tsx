@@ -9,6 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { governorates } from '@/lib/governorates';
 import { ComponentSchema, COMPONENT_DEFAULTS } from '@/lib/store-builder/types';
+import { ProgressBar } from '@/components/store/checkout/ProgressBar';
+import { PaymentMethods } from '@/components/store/checkout/PaymentMethods';
+import { cn } from '@/lib/utils';
 
 interface CheckoutFormProps extends ComponentSchema { }
 
@@ -23,7 +26,8 @@ export function CheckoutForm({ data }: { data: ComponentSchema }) {
     const {
         formData, setFormData,
         selectedGovernorate, setSelectedGovernorate,
-        store, formatPrice, shippingCost
+        store, formatPrice, shippingCost,
+        currentStep
     } = useCheckout();
 
     const abandonedCartIdRef = useRef<string | null>(null);
@@ -295,8 +299,11 @@ export function CheckoutForm({ data }: { data: ComponentSchema }) {
     };
 
     // If using Theme Engine fields, we just render them all sequentially.
-    // If legacy, we split them into contact and shipping for backwards compatibility.
     const isThemeEngine = settings.checkoutFields && settings.checkoutFields.length > 0;
+
+    // Split fields for steps
+    const contactFields = visibleFields.filter(f => ['name', 'phone', 'alt_phone', 'email'].includes(f.id || f.field_id));
+    const shippingFields = visibleFields.filter(f => !contactFields.includes(f));
 
     return (
         <Card className="border-none shadow-sm overflow-hidden bg-white ring-1 ring-slate-200">
@@ -307,42 +314,38 @@ export function CheckoutForm({ data }: { data: ComponentSchema }) {
                 </CardTitle>
             </CardHeader>
             <CardContent className="p-6 sm:p-8">
-                <form id="checkout-form" onSubmit={(e) => e.preventDefault()} className="space-y-8">
-                    {isThemeEngine ? (
-                        <div className="space-y-6">
-                            {visibleFields.map(renderField)}
-                        </div>
-                    ) : (
-                        // Legacy Layout
-                        <>
-                            {/* Section 1: Contact Info */}
-                            {visibleFields.filter(f => ['name', 'phone', 'alt_phone', 'email'].includes(f.id)).length > 0 && (
-                                <div className="space-y-6">
-                                    <div className="flex items-center gap-2 text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">
-                                        <span className="flex items-center justify-center w-5 h-5 bg-slate-100 rounded text-[10px] text-slate-500">1</span>
-                                        {language === 'ar' ? 'بيانات التواصل' : 'Contact Information'}
-                                    </div>
-                                    <div className="grid sm:grid-cols-2 gap-5">
-                                        {visibleFields.filter(f => ['name', 'phone', 'alt_phone', 'email'].includes(f.id)).slice(0, 2).map(renderField)}
-                                    </div>
-                                    {visibleFields.filter(f => ['name', 'phone', 'alt_phone', 'email'].includes(f.id)).slice(2).map(renderField)}
-                                </div>
-                            )}
+                <ProgressBar />
 
-                            {/* Section 2: Shipping Info */}
-                            {visibleFields.filter(f => ['city', 'address', 'notes'].includes(f.id)).length > 0 && (
-                                <div className="space-y-6">
-                                    <div className="flex items-center gap-2 text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">
-                                        <span className="flex items-center justify-center w-5 h-5 bg-slate-100 rounded text-[10px] text-slate-500">
-                                            {visibleFields.filter(f => ['name', 'phone', 'alt_phone', 'email'].includes(f.id)).length > 0 ? '2' : '1'}
-                                        </span>
-                                        {language === 'ar' ? 'تفاصيل الشحن' : 'Shipping Details'}
-                                    </div>
-                                    {visibleFields.filter(f => ['city', 'address', 'notes'].includes(f.id)).map(renderField)}
+                <form id="checkout-form" onSubmit={(e) => e.preventDefault()} className="space-y-8">
+                    {/* Step 1: Contact Info */}
+                    <div className={cn("space-y-6", currentStep !== 1 && "hidden")}>
+                        <div className="flex items-center gap-2 text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">
+                            <span className="flex items-center justify-center w-5 h-5 bg-slate-100 rounded text-[10px] text-slate-500">1</span>
+                            {language === 'ar' ? 'بيانات التواصل' : 'Contact Information'}
+                        </div>
+                        {contactFields.length > 0 && (
+                            <>
+                                <div className="grid sm:grid-cols-2 gap-5">
+                                    {contactFields.slice(0, 2).map(renderField)}
                                 </div>
-                            )}
-                        </>
-                    )}
+                                {contactFields.slice(2).map(renderField)}
+                            </>
+                        )}
+                    </div>
+
+                    {/* Step 2: Shipping Info */}
+                    <div className={cn("space-y-6", currentStep !== 2 && "hidden")}>
+                        <div className="flex items-center gap-2 text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">
+                            <span className="flex items-center justify-center w-5 h-5 bg-slate-100 rounded text-[10px] text-slate-500">2</span>
+                            {language === 'ar' ? 'تفاصيل الشحن' : 'Shipping Details'}
+                        </div>
+                        {shippingFields.map(renderField)}
+                    </div>
+
+                    {/* Step 3: Payment */}
+                    <div className={cn(currentStep !== 3 && "hidden")}>
+                        <PaymentMethods />
+                    </div>
                 </form>
             </CardContent>
         </Card>

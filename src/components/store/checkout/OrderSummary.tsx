@@ -8,9 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { CheckCircle2, X, Loader2 } from 'lucide-react';
+import { CheckCircle2, X, Loader2, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ComponentSchema } from '@/lib/store-builder/types';
+import { ProductRecommendations } from './ProductRecommendations';
+import { StockIndicator } from './StockIndicator';
 
 interface OrderSummaryProps extends ComponentSchema { }
 
@@ -25,7 +27,7 @@ export function OrderSummary({ data }: { data: ComponentSchema }) {
         subtotal, shippingCost, discount, total,
         loading, store,
         customerPoints, redeemPoints, setRedeemPoints, pointsDiscount, pointsToRedeem,
-        handlePlaceOrder
+        handlePlaceOrder, currentStep, setCurrentStep
     } = useCheckout();
 
     const formatPrice = (price: number) => {
@@ -82,13 +84,16 @@ export function OrderSummary({ data }: { data: ComponentSchema }) {
                                         ))}
                                     </div>
                                 )}
-                                <div className="text-sm font-bold text-slate-900">
+                                <StockIndicator stock={item.maxQuantity} threshold={10} />
+                                <div className="text-sm font-bold text-slate-900 mt-1">
                                     {formatPrice(item.unitPrice * item.quantity)}
                                 </div>
                             </div>
                         </div>
                     ))}
                 </div>
+
+                <ProductRecommendations />
 
                 <div className="space-y-6 bg-slate-50/50 -mx-6 p-6">
                     {/* Coupon Section */}
@@ -192,7 +197,20 @@ export function OrderSummary({ data }: { data: ComponentSchema }) {
 
                 <div className="pt-4">
                     <Button
-                        onClick={(e) => handlePlaceOrder(e)}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            const form = document.getElementById('checkout-form') as HTMLFormElement;
+                            if (form && !form.checkValidity()) {
+                                form.reportValidity();
+                                return;
+                            }
+
+                            if (currentStep < 3) {
+                                setCurrentStep(currentStep + 1);
+                            } else {
+                                handlePlaceOrder(e);
+                            }
+                        }}
                         size="lg"
                         className="w-full text-lg h-14 font-bold shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
                         disabled={loading}
@@ -201,8 +219,13 @@ export function OrderSummary({ data }: { data: ComponentSchema }) {
                             <Loader2 className="w-6 h-6 animate-spin" />
                         ) : (
                             <div className="flex items-center gap-2">
-                                <span>{content.buttonText || (language === 'ar' ? 'إتمام الشراء الآن' : 'Complete Purchase')}</span>
-                                <CheckCircle2 className="w-5 h-5" />
+                                <span>
+                                    {currentStep < 3
+                                        ? (language === 'ar' ? 'المتابعة' : 'Continue')
+                                        : (content.buttonText || (language === 'ar' ? 'إتمام الشراء الآن' : 'Complete Purchase'))
+                                    }
+                                </span>
+                                {currentStep < 3 ? <ArrowRight className="w-5 h-5 rtl:rotate-180" /> : <CheckCircle2 className="w-5 h-5" />}
                             </div>
                         )}
                     </Button>

@@ -125,7 +125,13 @@ function VerifyContent() {
             const data = await res.json();
 
             if (!res.ok) {
-                throw new Error(data.message || data.error || 'Failed to send code');
+                let errorMsg = data.message || data.error || 'Failed to send code';
+                if (data.error === 'daily_limit_exceeded') {
+                    errorMsg = language === 'ar'
+                        ? 'عفواً، لقد تجاوزت الحد المسموح به لعدد المحاولات اليومية. يرجى المحاولة لاحقاً.'
+                        : 'Daily limit exceeded. Please try again later.';
+                }
+                throw new Error(errorMsg);
             }
 
             setMethod(selectedMethod);
