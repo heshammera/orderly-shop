@@ -459,7 +459,7 @@ export default function EditorPage({ params }: { params: { storeId: string } }) 
             if (store?.slug) {
                 try {
                     const path = pageSlug === 'home' ? `/s/${store.slug}` : `/s/${store.slug}/${pageSlug}`;
-                    await fetch(`/api/revalidate?path=${path}`, { method: 'POST' });
+                    await fetch(`/api/revalidate?path=${path}&type=layout`, { method: 'POST' });
                 } catch (e) { }
             }
 
@@ -800,8 +800,8 @@ export default function EditorPage({ params }: { params: { storeId: string } }) 
                 {/* 2. Live Preview Iframe */}
                 <main className="flex-1 h-full bg-slate-100 relative p-4 flex flex-col items-center overflow-x-hidden overflow-y-auto">
                     <div className={`transition-all duration-300 ease-in-out flex-1 flex flex-col bg-white overflow-hidden rounded-xl shadow-xl border border-slate-200 ${deviceView === 'desktop' ? 'w-full max-w-5xl' :
-                            deviceView === 'tablet' ? 'w-[768px]' :
-                                'w-[375px]'
+                        deviceView === 'tablet' ? 'w-[768px]' :
+                            'w-[375px]'
                         }`}>
                         <div className="w-full h-10 bg-slate-50 border-b flex items-center px-4 gap-2 shrink-0">
                             <div className="flex gap-1.5">

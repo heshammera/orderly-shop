@@ -240,6 +240,17 @@ export default function ThemesPage({ params }: { params: { storeId: string } }) 
             }
 
             toast.success(language === 'ar' ? 'تم تفعيل الثيم بنجاح!' : 'Theme activated successfully!', { id: 'activate-theme' });
+
+            // Invalidate store cache so the new theme reflects immediately
+            try {
+                const { data: storeData } = await supabase.from('stores').select('slug').eq('id', storeId).single();
+                if (storeData?.slug) {
+                    await fetch(`/api/revalidate?path=/s/${storeData.slug}&type=layout`, { method: 'POST' });
+                }
+            } catch (e) {
+                console.error('Failed to invalidate store cache', e);
+            }
+
             await fetchThemesData();
         } catch (error: any) {
             console.error('Activation Error:', error);
