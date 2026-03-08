@@ -67,24 +67,35 @@ export const AuthService = {
     // Perform Biometric Login
     async loginWithBiometrics() {
         try {
+            console.log('[AuthService] Biometrics: Fetching credentials from SecureStore...');
             const credentialsStr = await SecureStore.getItemAsync(SECURE_AUTH_KEY);
-            if (!credentialsStr) throw new Error('No credentials stored');
 
+            if (!credentialsStr) {
+                console.log('[AuthService] Biometrics: No credentials stored.');
+                throw new Error('No credentials stored');
+            }
+
+            console.log('[AuthService] Biometrics: Credentials found, parsing...');
             const { email, password } = JSON.parse(credentialsStr);
 
+            console.log('[AuthService] Biometrics: Prompting native authentication...');
             const result = await LocalAuthentication.authenticateAsync({
                 promptMessage: 'الدخول باستخدام البصمة',
                 cancelLabel: 'إلغاء',
                 fallbackLabel: 'استخدام كلمة المرور',
             });
 
+            console.log('[AuthService] Biometrics: Native prompt result:', result);
+
             if (result.success) {
+                console.log('[AuthService] Biometrics: Success. Logging in via Supabase...');
                 return await this.login(email, password);
             } else {
+                console.log('[AuthService] Biometrics: User cancelled or failed:', result.error);
                 throw new Error('فشل التحقق من البصمة');
             }
         } catch (error) {
-            console.error('Biometric Auth Error:', error);
+            console.error('[AuthService] Biometric Auth Error:', error);
             throw error;
         }
     }
