@@ -18,7 +18,8 @@ const DEFAULT_FORM_FIELDS = (COMPONENT_DEFAULTS.CheckoutForm.settings as any).fo
 export function CheckoutForm({ data }: { data: ComponentSchema }) {
     const { settings, content } = data;
     const { language } = useLanguage();
-    const { items, cartTotal } = useCart();
+    const { cart: items } = useCart();
+    const cartTotal = items?.reduce((acc, item) => acc + (item.unitPrice * item.quantity), 0) || 0;
     const {
         formData, setFormData,
         selectedGovernorate, setSelectedGovernorate,

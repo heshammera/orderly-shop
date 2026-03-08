@@ -1,0 +1,3 @@
+﻿src/app/dashboard/[storeId]/carts/page.tsx(11,10): error TS2305: Module '"@/lib/utils"' has no exported member 'formatPrice'.
+src/components/store/checkout/CheckoutForm.tsx(21,13): error TS2339: Property 'items' does not exist on type 'CartContextType'.
+src/components/store/checkout/CheckoutForm.tsx(21,20): error TS2339: Property 'cartTotal' does not exist on type 'CartContextType'.

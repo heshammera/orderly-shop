@@ -53,6 +53,20 @@ function VerifyContent() {
                 setUserId(user.id);
                 setUserEmail(user.email || null);
                 setUserName(user.user_metadata?.full_name || '');
+            } else if (!queryUid && queryEmail) {
+                // If we don't have a session AND no queryUid, but we DO have an email in the URL 
+                // This happens when login fails with "Email not confirmed" and redirects here.
+                try {
+                    const res = await fetch(`/api/auth/unverified-user?email=${encodeURIComponent(queryEmail)}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        setUserId(data.userId);
+                        setUserEmail(queryEmail);
+                        if (data.phone) setUserPhone(data.phone);
+                    }
+                } catch (err) {
+                    console.error("Failed to fetch unverified user details:", err);
+                }
             }
         };
         checkUser();

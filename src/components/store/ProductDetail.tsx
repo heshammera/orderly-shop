@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { useCart } from '@/contexts/CartContext';
 import { trackViewContent, trackAddToCart } from '@/lib/pixelTracker';
 import { ProductReviews } from './products/ProductReviews';
+import { SimilarProducts } from '@/components/store/SimilarProducts';
 
 // Define types here or import shared types
 type DiscountType = 'fixed' | 'percentage';
@@ -964,6 +965,13 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
                     productName={productName}
                 />
             </div>
+
+            {/* Similar Products Section */}
+            <SimilarProducts
+                store={store}
+                productId={product.id}
+                categoryId={undefined} // Can be supplied if we pass categoryId from page level 
+            />
         </div>
     );
 }
