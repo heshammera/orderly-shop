@@ -23,10 +23,34 @@
                 "foregroundImage": "./assets/adaptive-icon.png",
                 "backgroundColor": "#ffffff"
             },
-            "package": "com.storehub.mobile"
+            "package": "com.storehub.mobile",
+            "intentFilters": [
+                {
+                    "action": "VIEW",
+                    "data": [
+                        {
+                            "scheme": "storehub"
+                        }
+                    ],
+                    "category": [
+                        "BROWSABLE",
+                        "DEFAULT"
+                    ]
+                }
+            ]
         },
         "web": {
             "favicon": "./assets/favicon.png"
-        }
+        },
+        "scheme": "storehub",
+        "plugins": [
+            [
+                "expo-notifications",
+                {
+                    "icon": "./assets/icon.png",
+                    "color": "#ffffff"
+                }
+            ]
+        ]
     }
 }
