@@ -7,24 +7,48 @@ const SECURE_AUTH_KEY = 'user_auth_credentials';
 export const AuthService = {
     // Standard Login
     async login(email, password) {
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
+        console.log('[AuthService] Attempting login with email:', email);
 
-        if (error) throw error;
+        // Wrap signInWithPassword in a 10-second timeout to prevent infinite hanging
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Network request timed out after 10 seconds. Check your connection or AsyncStorage.')), 10000)
+        );
 
-        // Fetch stores for this user to help with navigation
-        const { data: stores } = await supabase
-            .from('store_members')
-            .select('role, stores(id, name, slug)')
-            .eq('user_id', data.user.id);
+        console.log('[AuthService] Calling supabase.auth.signInWithPassword...');
 
-        return {
-            user: data.user,
-            session: data.session,
-            stores: stores?.map(s => ({ ...s.stores, role: s.role })) || []
-        };
+        try {
+            const { data, error } = await Promise.race([
+                supabase.auth.signInWithPassword({ email, password }),
+                timeoutPromise
+            ]);
+
+            console.log('[AuthService] Supabase Auth response received. Error:', error?.message || 'None');
+
+            if (error) throw error;
+
+            console.log('[AuthService] User authenticated successfully. Fetching store members for user ID:', data.user.id);
+            // Fetch stores for this user to help with navigation
+            const { data: stores, error: storeError } = await Promise.race([
+                supabase
+                    .from('store_members')
+                    .select('role, stores(id, name, slug)')
+                    .eq('user_id', data.user.id),
+                timeoutPromise
+            ]);
+
+            console.log('[AuthService] Store members response received. Error:', storeError?.message || 'None');
+            if (storeError) console.warn('[AuthService] Failed to load stores:', storeError);
+
+            console.log('[AuthService] Login flow complete. Returning user data.');
+            return {
+                user: data.user,
+                session: data.session,
+                stores: stores?.map(s => ({ ...s.stores, role: s.role })) || []
+            };
+        } catch (e) {
+            console.error('[AuthService] Exception in login method:', e);
+            throw e;
+        }
     },
 
     // Logout
