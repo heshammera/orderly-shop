@@ -104,7 +104,7 @@ export default function SubscriptionRequestsPage() {
             }
 
             // 2. No conflict, approve normally
-            const { error } = await supabase.rpc('approve_subscription_request', { p_request_id: id });
+            const { error } = await supabase.rpc('approve_subscription_request', { p_request_id: id, p_keep_store_ids: null });
             if (error) throw error;
 
             toast({ title: 'Success', description: 'Subscription approved successfully.' });
