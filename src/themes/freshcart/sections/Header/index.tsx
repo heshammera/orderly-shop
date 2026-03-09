@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useCart } from '@/contexts/CartContext';
+import { Search, ShoppingCart, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import InlineEditableText from '@/components/ThemeEngine/InlineEditableText';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -27,6 +30,19 @@ export default function Header({ settings, blocks = [], sectionId = 'header_1', 
     const store = storeContext?.store || storeContext;
     const storeName = store?.name ? (typeof store.name === 'string' ? store.name : store.name[language] || store.name.ar || store.name.en) : 'Store';
     const storeSlug = store?.slug || '';
+
+    const router = useRouter();
+    const { cartCount, openCart } = useCart();
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (searchQuery.trim() && storeSlug) {
+            router.push(`${storeContext?.store?.baseUrl ?? `/s/${storeSlug}`}/products?q=${encodeURIComponent(searchQuery.trim())}`);
+            setIsMobileMenuOpen(false);
+        }
+    };
 
     const defaultLinks = [
         { settings: { label: 'الرئيسية', url: '/' } },
@@ -85,26 +101,70 @@ export default function Header({ settings, blocks = [], sectionId = 'header_1', 
 
                 {/* Search & Cart Actions */}
                 <div className="flex items-center gap-2 md:gap-4 shrink-0">
-                    <div className="hidden md:flex relative w-48 lg:w-64">
+                    <form onSubmit={handleSearch} className="hidden md:flex relative w-48 lg:w-64">
                         <input
                             type="search"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder={settings.search_placeholder || 'ابحث عن طعام طازج...'}
-                            className="w-full rounded-full border border-green-100 bg-green-50/30 px-5 py-2.5 text-xs outline-none focus:border-[#10b981] focus:ring-1 focus:ring-[#10b981] transition-all"
+                            className="w-full rounded-full border border-green-100 bg-green-50/30 px-5 py-2.5 pr-10 text-xs outline-none focus:border-[#10b981] focus:ring-1 focus:ring-[#10b981] transition-all"
                         />
-                    </div>
+                        <button type="submit" className="absolute top-1/2 -translate-y-1/2 right-3 text-[#10b981] hover:text-green-700">
+                            <Search className="w-4 h-4" />
+                        </button>
+                    </form>
 
-                    <button className="p-2.5 text-slate-600 bg-slate-50 hover:bg-green-50 hover:text-[#10b981] rounded-full transition-all relative group">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="21" r="1" /><circle cx="19" cy="21" r="1" /><path d="M2.05 2.05h1.49a2 2 0 0 1 1.95 1.57l1.1 4.38m0 0 2.22 8.81a2 2 0 0 0 1.95 1.57h8.41a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" /></svg>
-                        <span className="absolute top-0 right-0 h-5 w-5 bg-orange-400 text-white text-[10px] font-bold flex items-center justify-center rounded-full group-hover:scale-110 transition-transform">
-                            5
-                        </span>
+                    <button className="md:hidden p-2.5 text-slate-600 bg-slate-50 hover:bg-green-50 hover:text-[#10b981] rounded-full transition-all" onClick={() => setIsMobileMenuOpen(true)}>
+                        <Search className="w-5 h-5" />
                     </button>
 
-                    <button className="lg:hidden p-2 text-slate-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12" /><line x1="4" x2="20" y1="6" y2="6" /><line x1="4" x2="20" y1="18" y2="18" /></svg>
+                    <button onClick={openCart} className="p-2.5 text-slate-600 bg-slate-50 hover:bg-green-50 hover:text-[#10b981] rounded-full transition-all relative group">
+                        <ShoppingCart className="w-5 h-5" />
+                        {cartCount > 0 && (
+                            <span className="absolute top-0 right-0 h-5 w-5 bg-orange-400 text-white text-[10px] font-bold flex items-center justify-center rounded-full group-hover:scale-110 transition-transform">
+                                {cartCount}
+                            </span>
+                        )}
+                    </button>
+
+                    <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="lg:hidden p-2 text-slate-600">
+                        {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                     </button>
                 </div>
             </div>
+
+            {/* Mobile Menu Dropdown */}
+            {isMobileMenuOpen && (
+                <div className="lg:hidden bg-white border-t border-green-50 shadow-lg animate-in slide-in-from-top-2 absolute w-full left-0 z-40">
+                    <div className="p-4 space-y-4">
+                        <form onSubmit={handleSearch} className="md:hidden relative mb-4 z-10">
+                            <input
+                                type="search"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full p-3 rounded-full border border-green-100 bg-green-50/30 text-slate-800 text-sm outline-none focus:border-[#10b981] px-5 pr-10"
+                                placeholder={settings.search_placeholder || (language === 'ar' ? 'بحث...' : 'Search...')}
+                            />
+                            <button type="submit" className="absolute top-1/2 -translate-y-1/2 right-4 text-[#10b981] hover:text-green-700">
+                                <Search className="w-5 h-5" />
+                            </button>
+                        </form>
+                        <ul className="flex flex-col space-y-2 relative z-10">
+                            {displayLinks.map((link, idx) => (
+                                <li key={idx}>
+                                    <Link
+                                        href={link.settings.url || '#'}
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="hover:text-white hover:bg-[#10b981] font-bold block text-sm p-3 rounded-full text-slate-600 transition-colors"
+                                    >
+                                        {link.settings.label}
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+            )}
         </header>
     );
 }

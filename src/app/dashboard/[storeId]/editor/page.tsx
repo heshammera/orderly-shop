@@ -100,6 +100,12 @@ export default function EditorPage({ params }: { params: { storeId: string } }) 
     const [pageSlug, setPageSlug] = useState<string>('home');
     const [previewProductId, setPreviewProductId] = useState<string | null>(null);
     const [deviceView, setDeviceView] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+    const [previewTimestamp, setPreviewTimestamp] = useState<number>(Date.now());
+
+    // Force iframe full reload when switching pages
+    useEffect(() => {
+        setPreviewTimestamp(Date.now());
+    }, [pageSlug]);
 
     // Theme Engine State
     const [globalTokens, setGlobalTokens] = useState<Record<string, string>>(DEFAULT_GLOBAL_TOKENS);
@@ -608,13 +614,13 @@ export default function EditorPage({ params }: { params: { storeId: string } }) 
 
     if (loading) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
 
-    let previewUrl = `/s/${store?.slug || storeId}?preview=true&t=${Date.now()}`;
+    let previewUrl = `/s/${store?.slug || storeId}?preview=true&t=${previewTimestamp}`;
     if (pageSlug === 'product') {
         previewUrl = previewProductId
-            ? `/s/${store?.slug || storeId}/p/${previewProductId}?preview=true&t=${Date.now()}`
-            : `/s/${store?.slug || storeId}/products?preview=true&t=${Date.now()}`; // Fallback if no products
+            ? `/s/${store?.slug || storeId}/${previewProductId}?preview=true&t=${previewTimestamp}`
+            : `/s/${store?.slug || storeId}/products?preview=true&t=${previewTimestamp}`; // Fallback if no products
     } else if (pageSlug === 'checkout') {
-        previewUrl = `/s/${store?.slug || storeId}/checkout?preview=true&t=${Date.now()}`;
+        previewUrl = `/s/${store?.slug || storeId}/checkout?preview=true&t=${previewTimestamp}`;
     }
 
     return (

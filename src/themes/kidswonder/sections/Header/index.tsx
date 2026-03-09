@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useCart } from '@/contexts/CartContext';
+import { Search, ShoppingCart, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import InlineEditableText from '@/components/ThemeEngine/InlineEditableText';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -27,6 +30,19 @@ export default function Header({ settings, blocks = [], sectionId = 'header_1', 
     const store = storeContext?.store || storeContext;
     const storeName = store?.name ? (typeof store.name === 'string' ? store.name : store.name[language] || store.name.ar || store.name.en) : 'Store';
     const storeSlug = store?.slug || '';
+
+    const router = useRouter();
+    const { cartCount, openCart } = useCart();
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (searchQuery.trim() && storeSlug) {
+            router.push(`${storeContext?.store?.baseUrl ?? `/s/${storeSlug}`}/products?q=${encodeURIComponent(searchQuery.trim())}`);
+            setIsMobileMenuOpen(false);
+        }
+    };
 
     const defaultLinks = [
         { settings: { label: 'الرئيسية', url: '/' } },
@@ -86,18 +102,66 @@ export default function Header({ settings, blocks = [], sectionId = 'header_1', 
 
                 {/* Search & Cart Actions - Bubbly style */}
                 <div className="flex items-center gap-3 shrink-0">
-                    <button className="p-3 text-[#2D3436] bg-[#F1F2F6] hover:bg-[#FFE66D] rounded-2xl transition-all shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+                    <form onSubmit={handleSearch} className="hidden md:flex relative items-center group/search">
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-0 opacity-0 group-hover/search:w-48 group-hover/search:opacity-100 transition-all duration-300 bg-[#F1F2F6] border-2 border-transparent focus:border-[#4ECDC4] rounded-2xl text-sm outline-none px-4 py-2 mr-2 focus:w-48 focus:opacity-100 text-[#2D3436]"
+                            placeholder={settings.search_placeholder || (language === 'ar' ? 'ابحث عن ألعاب...' : 'Search toys...')}
+                        />
+                        <button type="submit" className="p-3 text-[#2D3436] bg-[#F1F2F6] hover:bg-[#FFE66D] rounded-2xl transition-all shadow-sm">
+                            <Search className="w-5 h-5" />
+                        </button>
+                    </form>
+
+                    <button onClick={openCart} className="p-3 text-[#2D3436] bg-[#F1F2F6] hover:bg-[#FF6B6B] hover:text-white rounded-2xl transition-all shadow-sm relative group">
+                        <ShoppingCart className="w-5 h-5" />
+                        {cartCount > 0 && (
+                            <span className="absolute -top-1 -right-1 h-6 w-6 bg-[#4ECDC4] text-white text-[11px] font-black flex items-center justify-center rounded-full border-2 border-white group-hover:scale-110 transition-transform">
+                                {cartCount}
+                            </span>
+                        )}
                     </button>
 
-                    <button className="p-3 text-[#2D3436] bg-[#F1F2F6] hover:bg-[#FF6B6B] hover:text-white rounded-2xl transition-all shadow-sm relative group">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="21" r="1" /><circle cx="19" cy="21" r="1" /><path d="M2.05 2.05h1.49a2 2 0 0 1 1.95 1.57l1.1 4.38m0 0 2.22 8.81a2 2 0 0 0 1.95 1.57h8.41a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" /></svg>
-                        <span className="absolute -top-1 -right-1 h-6 w-6 bg-[#4ECDC4] text-white text-[11px] font-black flex items-center justify-center rounded-full border-2 border-white group-hover:scale-110 transition-transform">
-                            3
-                        </span>
+                    <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden p-3 text-[#2D3436] bg-[#F1F2F6] hover:bg-[#4ECDC4] hover:text-white rounded-2xl transition-all shadow-sm relative z-50">
+                        {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                     </button>
                 </div>
             </div>
+
+            {/* Mobile Menu Dropdown */}
+            {isMobileMenuOpen && (
+                <div className="md:hidden bg-white border-t-4 border-[#FF6B6B] shadow-lg animate-in slide-in-from-top-2 absolute w-full left-0 z-40 rounded-b-3xl">
+                    <div className="p-4 space-y-4">
+                        <form onSubmit={handleSearch} className="relative mb-4 z-10">
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full p-4 border-2 border-[#F1F2F6] bg-[#F1F2F6] text-[#2D3436] font-bold rounded-2xl text-sm outline-none focus:border-[#4ECDC4] focus:bg-white transition-colors px-4 pr-12"
+                                placeholder={settings.search_placeholder || (language === 'ar' ? 'إبحث هنا...' : 'Search...')}
+                            />
+                            <button type="submit" className="absolute top-1/2 -translate-y-1/2 right-4 text-[#2D3436] hover:text-[#FF6B6B]">
+                                <Search className="w-5 h-5 font-bold" />
+                            </button>
+                        </form>
+                        <ul className="flex flex-col space-y-2 relative z-10">
+                            {displayLinks.map((link, idx) => (
+                                <li key={idx}>
+                                    <Link
+                                        href={link.settings.url || '#'}
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="hover:text-white hover:bg-[#4ECDC4] text-[#2D3436] font-black uppercase text-center block text-lg p-3 rounded-2xl transition-all"
+                                    >
+                                        {link.settings.label}
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+            )}
         </header>
     );
 }

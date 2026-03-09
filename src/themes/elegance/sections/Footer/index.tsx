@@ -17,7 +17,7 @@ interface FooterProps {
 
 export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps) {
     return (
-        <footer className="bg-white border-t border-gray-200 mt-16 text-gray-800">
+        <footer className="bg-white border-t border-gray-200 mt-8 text-gray-800">
             {/* Top part */}
             <div className="container mx-auto px-4 py-10">
                 <div className="flex flex-wrap -mx-4">

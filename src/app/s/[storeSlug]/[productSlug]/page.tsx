@@ -13,16 +13,28 @@ const getAdminClient = cache(() => {
     return createClient(url, key);
 });
 
-export async function generateMetadata({ params }: { params: { storeSlug: string, productId: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: { storeSlug: string, productSlug: string } }): Promise<Metadata> {
     try {
         const supabaseAdmin = getAdminClient();
         if (!supabaseAdmin) return {};
 
-        const { data: product } = await supabaseAdmin
+        const { data: store } = await supabaseAdmin.from('stores').select('id').eq('slug', params.storeSlug).single();
+        if (!store) return {};
+
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.productSlug);
+
+        let query = supabaseAdmin
             .from('products')
             .select('name, description, images')
-            .eq('id', params.productId)
-            .single();
+            .eq('store_id', store.id);
+
+        if (isUuid) {
+            query = query.eq('id', params.productSlug);
+        } else {
+            query = query.eq('sku', params.productSlug);
+        }
+
+        const { data: product } = await query.single();
 
         if (!product) return {};
 
@@ -48,7 +60,7 @@ export async function generateMetadata({ params }: { params: { storeSlug: string
     }
 }
 
-export default async function ProductPage({ params }: { params: { storeSlug: string, productId: string } }) {
+export default async function ProductPage({ params }: { params: { storeSlug: string, productSlug: string } }) {
     const supabaseAdmin = getAdminClient();
     if (!supabaseAdmin) return notFound();
 
@@ -63,24 +75,39 @@ export default async function ProductPage({ params }: { params: { storeSlug: str
         return notFound();
     }
 
-    // Fetch ALL data in parallel to reduce total request time
-    const [productRes, variantsRes, upsellRes, headerCategoriesRes, activeThemeRes] = await Promise.all([
-        supabaseAdmin
-            .from('products')
-            .select('*')
-            .eq('id', params.productId)
-            .eq('store_id', store.id)
-            .eq('status', 'active')
-            .single(),
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.productSlug);
+
+    let productQuery = supabaseAdmin
+        .from('products')
+        .select('*')
+        .eq('store_id', store.id)
+        .eq('status', 'active');
+
+    if (isUuid) {
+        productQuery = productQuery.eq('id', params.productSlug);
+    } else {
+        productQuery = productQuery.eq('sku', params.productSlug);
+    }
+
+    const { data: productResData, error: productError } = await productQuery.single();
+
+    if (productError || !productResData) {
+        return notFound();
+    }
+
+    const actualProductId = productResData.id;
+
+    // Fetch ALL OTHER data in parallel to reduce total request time
+    const [variantsRes, upsellRes, headerCategoriesRes, activeThemeRes] = await Promise.all([
         supabaseAdmin
             .from('product_variants')
             .select('*, variant_options(*)')
-            .eq('product_id', params.productId)
+            .eq('product_id', actualProductId)
             .order('sort_order'),
         supabaseAdmin
             .from('upsell_offers')
             .select('*')
-            .eq('product_id', params.productId)
+            .eq('product_id', actualProductId)
             .eq('is_active', true)
             .order('min_quantity'),
         supabaseAdmin
@@ -103,24 +130,20 @@ export default async function ProductPage({ params }: { params: { storeSlug: str
             .maybeSingle(),
     ]);
 
-    if (!productRes.data) {
-        return notFound();
-    }
-
     // Parse Data
     let parsedImages: string[] = [];
     try {
-        parsedImages = typeof productRes.data.images === 'string' ? (JSON.parse(productRes.data.images) as string[]) : (Array.isArray(productRes.data.images) ? (productRes.data.images as string[]) : []);
+        parsedImages = typeof productResData.images === 'string' ? (JSON.parse(productResData.images) as string[]) : (Array.isArray(productResData.images) ? (productResData.images as string[]) : []);
     } catch {
         parsedImages = [];
     }
 
     const product = {
-        ...productRes.data,
-        name: typeof productRes.data.name === 'string' ? JSON.parse(productRes.data.name) : productRes.data.name,
-        description: typeof productRes.data.description === 'string' ? JSON.parse(productRes.data.description) : productRes.data.description || { ar: '', en: '' },
+        ...productResData,
+        name: typeof productResData.name === 'string' ? JSON.parse(productResData.name) : productResData.name,
+        description: typeof productResData.description === 'string' ? JSON.parse(productResData.description) : productResData.description || { ar: '', en: '' },
         images: parsedImages,
-        ignore_stock: productRes.data.ignore_stock || false,
+        ignore_stock: productResData.ignore_stock || false,
     };
 
     const variants = variantsRes.data?.map((v: any) => ({

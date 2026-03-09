@@ -14,6 +14,7 @@ interface CartPageProps {
         id: string;
         currency: string;
         slug: string;
+        baseUrl?: string;
     };
 }
 
@@ -45,7 +46,7 @@ export function CartPage({ store }: CartPageProps) {
                         ? 'ابدأ التسوق وأضف منتجات للسلة'
                         : 'Start shopping and add products to your cart'}
                 </p>
-                <Link href={`/s/${store.slug}/products`}>
+                <Link href={`${store.baseUrl ?? `/s/${store.slug}`}/products`}>
                     <Button>{language === 'ar' ? 'تصفح المنتجات' : 'Browse Products'}</Button>
                 </Link>
             </div>
@@ -92,7 +93,7 @@ export function CartPage({ store }: CartPageProps) {
 
                                     {/* Info */}
                                     <div className="flex-1 min-w-0">
-                                        <Link href={`/s/${store.slug}/p/${item.productId}`} className="hover:underline">
+                                        <Link href={`${store.baseUrl ?? `/s/${store.slug}`}/${item.productId}`} className="hover:underline">
                                             <h3 className="font-medium hover:text-primary transition-colors">
                                                 {typeof item.productName === 'string' ? item.productName : (item.productName[language] || item.productName.ar)}
                                             </h3>
@@ -185,13 +186,13 @@ export function CartPage({ store }: CartPageProps) {
                                 <span className="text-primary">{formatPrice(subtotal)}</span>
                             </div>
 
-                            <Link href={`/s/${store.slug}/checkout`}>
+                            <Link href={`${store.baseUrl ?? `/s/${store.slug}`}/checkout`}>
                                 <Button size="lg" className="w-full">
                                     {language === 'ar' ? 'إتمام الطلب' : 'Proceed to Checkout'}
                                 </Button>
                             </Link>
 
-                            <Link href={`/s/${store.slug}/products`}>
+                            <Link href={`${store.baseUrl ?? `/s/${store.slug}`}/products`}>
                                 <Button variant="ghost" className="w-full mt-2">
                                     {language === 'ar' ? 'متابعة التسوق' : 'Continue Shopping'}
                                 </Button>

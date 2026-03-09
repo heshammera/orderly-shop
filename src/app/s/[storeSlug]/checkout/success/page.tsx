@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { CheckoutSuccessClient } from './CheckoutSuccessClient';
+import { headers } from 'next/headers';
 
 export const metadata: Metadata = {
     title: 'Order Confirmed',
@@ -22,9 +23,23 @@ export default async function Page({ params, searchParams }: { params: { storeSl
 
     if (!store) return notFound();
 
+    const headersList = headers();
+    const host = headersList.get('host') || '';
+    const hostname = host.replace(/:\d+$/, '').replace(/^\[(.+)\]$/, '$1').toLowerCase().trim();
+
+    const isMainDomain = hostname === 'localhost' ||
+        hostname === '127.0.0.1' ||
+        hostname === '::1' ||
+        hostname.endsWith('.vercel.app') ||
+        hostname === 'orderlyshops.com' ||
+        hostname === 'www.orderlyshops.com';
+
+    const baseUrl = isMainDomain ? `/s/${params.storeSlug}` : '';
+
     const parsedStore = {
         ...store,
         name: typeof store.name === 'string' ? JSON.parse(store.name) : store.name,
+        baseUrl: baseUrl,
     };
 
     // Fetch order details if orderId provided

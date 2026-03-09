@@ -74,6 +74,7 @@ interface StoreData {
     currency: string;
     settings: any;
     slug: string;
+    baseUrl?: string;
 }
 
 interface ProductDetailProps {
@@ -513,7 +514,7 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
                                     <div key={block.id} className={cn("min-w-0 mb-2", alignClass)}>
                                         {showBreadcrumbs && (
                                             <div className={cn("text-sm text-muted-foreground mb-3 flex items-center gap-2 flex-wrap", justifyClass)}>
-                                                <Link href={`/s/${store.slug}`} className="hover:text-primary transition-colors">
+                                                <Link href={store.baseUrl || '/'} className="hover:text-primary transition-colors">
                                                     {language === 'ar' ? 'الرئيسية' : 'Home'}
                                                 </Link>
                                                 <span>/</span>

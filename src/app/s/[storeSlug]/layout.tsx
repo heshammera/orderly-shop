@@ -6,6 +6,7 @@ import { StatusPage } from '@/components/store-status/StatusPage';
 import { VisitLogger } from '@/components/store/VisitLogger';
 import { Metadata } from 'next';
 import { cache } from 'react';
+import { headers } from 'next/headers';
 
 export const revalidate = 60; // Cache for 60 seconds to reduce server load
 
@@ -60,6 +61,19 @@ export default async function Layout({
     children: React.ReactNode;
     params: { storeSlug: string };
 }) {
+    const headersList = headers();
+    const host = headersList.get('host') || '';
+    const hostname = host.replace(/:\d+$/, '').replace(/^\[(.+)\]$/, '$1').toLowerCase().trim();
+
+    const isMainDomain = hostname === 'localhost' ||
+        hostname === '127.0.0.1' ||
+        hostname === '::1' ||
+        hostname.endsWith('.vercel.app') ||
+        hostname === 'orderlyshops.com' ||
+        hostname === 'www.orderlyshops.com';
+
+    const baseUrl = isMainDomain ? `/s/${params.storeSlug}` : '';
+
     const supabaseAdmin = getAdminClient();
     if (!supabaseAdmin) {
         return notFound();
@@ -100,6 +114,7 @@ export default async function Layout({
         ...store,
         name: typeof store.name === 'string' ? JSON.parse(store.name) : store.name,
         description: typeof store.description === 'string' ? JSON.parse(store.description) : store.description,
+        baseUrl: baseUrl,
     };
 
     // Get integrations from store settings

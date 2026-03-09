@@ -17,11 +17,11 @@ interface FooterProps {
 
 export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps) {
     return (
-        <footer className="bg-[#050505] text-white border-t border-zinc-900 pt-24 pb-12">
+        <footer className="bg-[#050505] text-white border-t border-zinc-900 pt-12 pb-6">
             <div className="container mx-auto px-4">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-16 mb-24">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
                     {/* Brand */}
-                    <div className="md:col-span-1 space-y-8">
+                    <div className="md:col-span-1 space-y-4">
                         <div className="text-3xl font-serif italic tracking-tighter text-white">LUXE JEWELS</div>
                         <InlineEditableText
                             as="p"
@@ -33,7 +33,7 @@ export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps
                     </div>
 
                     {/* Navigation */}
-                    <div className="space-y-8">
+                    <div className="space-y-4">
                         <div className="flex items-center gap-4">
                             <InlineEditableText
                                 as="h3"
@@ -51,7 +51,7 @@ export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps
                     </div>
 
                     {/* Support */}
-                    <div className="space-y-8">
+                    <div className="space-y-4">
                         <h3 className="text-xs uppercase tracking-[0.4em] font-bold text-amber-400">الخدمات</h3>
                         <ul className="space-y-4 font-serif text-lg italic text-zinc-400">
                             <li><Link href="#" className="hover:text-amber-400 transition-colors">دليل المقاسات</Link></li>
@@ -61,7 +61,7 @@ export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps
                     </div>
 
                     {/* Contact Info */}
-                    <div className="space-y-8">
+                    <div className="space-y-4">
                         <InlineEditableText
                             as="h3"
                             sectionId={sectionId}
@@ -69,7 +69,7 @@ export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps
                             value={settings.contact_heading || 'بيت المجوهرات'}
                             className="text-xs uppercase tracking-[0.4em] font-bold text-amber-400"
                         />
-                        <ul className="space-y-6 text-zinc-400 font-light tracking-wide">
+                        <ul className="space-y-3 text-zinc-400 font-light tracking-wide">
                             <li className="flex flex-col gap-1">
                                 <span className="text-[10px] uppercase text-zinc-600">Email</span>
                                 <InlineEditableText as="span" sectionId={sectionId} settingId="contact_email" value={settings.contact_email || 'concierge@luxe.com'} />

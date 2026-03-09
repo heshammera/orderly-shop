@@ -12,6 +12,7 @@ interface StoreData {
     id: string;
     slug: string;
     currency: string;
+    baseUrl?: string;
 }
 
 interface SimilarProductsProps {
@@ -77,7 +78,7 @@ export function SimilarProducts({ store, productId, categoryId }: SimilarProduct
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 {products.map((product) => (
                     <div key={product.id} className="group">
-                        <Link href={`/s/${store.slug}/p/${product.id}`} className="block h-full cursor-pointer">
+                        <Link href={`${store.baseUrl ?? `/s/${store.slug}`}/${product.sku || product.id}`} className="block h-full cursor-pointer">
                             <Card className="overflow-hidden hover:shadow-lg transition-all h-full flex flex-col border border-gray-100">
                                 <CardContent className="p-0 flex flex-col h-full">
                                     <div className="aspect-square bg-muted relative overflow-hidden flex-shrink-0">

@@ -159,7 +159,7 @@ export function CheckoutProvider({ store, children, isEditable = false }: Checko
     useEffect(() => {
         const isPreview = typeof window !== 'undefined' && window.location.search.includes('preview=true');
         if (!isPreview && !isEditable && cartCount === 0 && !success) {
-            router.push(`/s/${store.slug}/products`);
+            router.push(`${store.baseUrl ?? `/s/${store.slug}`}/products`);
         }
     }, [cartCount, success, store.slug, router, isEditable]);
 
@@ -327,7 +327,7 @@ export function CheckoutProvider({ store, children, isEditable = false }: Checko
 
             await clearCart();
             setSuccess(true);
-            router.replace(`/s/${store.slug}/checkout/success?orderId=${result.order_number}`);
+            router.replace(`${store.baseUrl ?? `/s/${store.slug}`}/checkout/success?orderId=${result.order_number}`);
 
         } catch (error: any) {
             console.error(error);

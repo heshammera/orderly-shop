@@ -43,10 +43,10 @@ export default function Footer({ settings, blocks = [], sectionId = 'footer_1', 
     const displayLinks = blocks.length > 0 ? blocks : defaultLinks;
 
     return (
-        <footer className="bg-card text-card-foreground border-t border-border mt-8 md:mt-16 pb-4 md:pb-6 pt-8 md:pt-12 text-sm">
+        <footer className="bg-card text-card-foreground border-t border-border mt-8 md:mt-8 pb-4 md:pb-6 pt-8 md:pt-12 text-sm">
             <div className="container mx-auto px-4">
 
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-y-8 gap-x-4 md:gap-8 mb-8 md:mb-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-y-8 gap-x-4 md:gap-8 mb-8 md:mb-6">
 
                     {/* About Section */}
                     <div className="flex flex-col gap-3 md:gap-4 col-span-2 lg:col-span-1">

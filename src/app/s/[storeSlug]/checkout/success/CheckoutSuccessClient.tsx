@@ -5,7 +5,7 @@ import { CheckCircle, Package, ArrowRight, ArrowLeft, Home } from 'lucide-react'
 import Link from 'next/link';
 
 interface CheckoutSuccessClientProps {
-    store: any;
+    store: any; // Add baseUrl here implicitly
     order: any;
 }
 
@@ -107,7 +107,7 @@ export function CheckoutSuccessClient({ store, order }: CheckoutSuccessClientPro
                 {/* Actions */}
                 <div className="flex flex-col gap-3 pt-2">
                     <Link
-                        href={`/s/${store.slug}/products`}
+                        href={`${store.baseUrl ?? `/s/${store.slug}`}/products`}
                         className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg px-6 py-3 font-medium transition-colors"
                     >
                         {isRTL ? 'تصفح المزيد من المنتجات' : 'Browse More Products'}
@@ -115,7 +115,7 @@ export function CheckoutSuccessClient({ store, order }: CheckoutSuccessClientPro
                     </Link>
 
                     <Link
-                        href={`/s/${store.slug}`}
+                        href={store.baseUrl || '/'}
                         className="inline-flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
                     >
                         <Home className="w-4 h-4" />

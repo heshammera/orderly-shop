@@ -15,6 +15,7 @@ interface Product {
     compare_at_price: number | null;
     images: string[];
     status: string;
+    sku?: string | null;
 }
 
 interface Category {
@@ -29,6 +30,7 @@ interface StoreData {
     description: { ar: string; en: string };
     currency: string;
     slug: string;
+    baseUrl?: string;
 }
 
 interface StoreHomeProps {
@@ -62,7 +64,7 @@ export function StoreHome({ store, products, categories }: StoreHomeProps) {
                             {storeDescription}
                         </p>
                     )}
-                    <Link href={`/s/${store.slug}/products`}>
+                    <Link href={`${store.baseUrl ?? `/s/${store.slug}`}/products`}>
                         <Button size="lg" className="gap-2">
                             {language === 'ar' ? 'تصفح المنتجات' : 'Browse Products'}
                             <ArrowForward className="w-4 h-4" />
@@ -78,7 +80,7 @@ export function StoreHome({ store, products, categories }: StoreHomeProps) {
                         <h2 className="text-2xl font-bold">
                             {language === 'ar' ? 'التصنيفات' : 'Categories'}
                         </h2>
-                        <Link href={`/s/${store.slug}/products`}>
+                        <Link href={`${store.baseUrl ?? `/s/${store.slug}`}/products`}>
                             <Button variant="ghost" className="gap-1">
                                 {language === 'ar' ? 'عرض الكل' : 'View All'}
                                 <ArrowForward className="w-4 h-4" />
@@ -89,7 +91,7 @@ export function StoreHome({ store, products, categories }: StoreHomeProps) {
                         {categories.map((category) => (
                             <Link
                                 key={category.id}
-                                href={`/s/${store.slug}/products?category=${category.id}`}
+                                href={`${store.baseUrl ?? `/s/${store.slug}`}/products?category=${category.id}`}
                             >
                                 <Card className="group overflow-hidden hover:shadow-lg transition-shadow">
                                     <CardContent className="p-0">
@@ -127,7 +129,7 @@ export function StoreHome({ store, products, categories }: StoreHomeProps) {
                     <h2 className="text-2xl font-bold">
                         {language === 'ar' ? 'أحدث المنتجات' : 'Latest Products'}
                     </h2>
-                    <Link href={`/s/${store.slug}/products`}>
+                    <Link href={`${store.baseUrl ?? `/s/${store.slug}`}/products`}>
                         <Button variant="ghost" className="gap-1">
                             {language === 'ar' ? 'عرض الكل' : 'View All'}
                             <ArrowForward className="w-4 h-4" />
@@ -142,7 +144,7 @@ export function StoreHome({ store, products, categories }: StoreHomeProps) {
                 ) : (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                         {products.map((product) => (
-                            <Link key={product.id} href={`/s/${store.slug}/p/${product.id}`}>
+                            <Link key={product.id} href={`${store.baseUrl ?? `/s/${store.slug}`}/${product.sku || product.id}`}>
                                 <Card className="group overflow-hidden hover:shadow-lg transition-shadow h-full">
                                     <CardContent className="p-0">
                                         <div className="aspect-square bg-muted relative overflow-hidden">

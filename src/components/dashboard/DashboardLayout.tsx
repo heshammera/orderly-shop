@@ -279,7 +279,7 @@ export function DashboardLayout({
                         <div className="p-4 border-t space-y-2">
                             {slug && isAdmin && (
                                 <a
-                                    href={`/s/${slug}`}
+                                    href={isSubdomain ? '/' : `/s/${slug}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className={cn("block w-full", isCollapsed ? "flex justify-center" : "")}
@@ -348,7 +348,7 @@ export function DashboardLayout({
                                 <div className="p-4 border-t space-y-2">
                                     {slug && isAdmin && (
                                         <a
-                                            href={`/s/${slug}`}
+                                            href={isSubdomain ? '/' : `/s/${slug}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="block w-full"
@@ -378,7 +378,7 @@ export function DashboardLayout({
                 </div>
 
                 {slug && isAdmin && (
-                    <a href={`/s/${slug}`} target="_blank" rel="noopener noreferrer">
+                    <a href={isSubdomain ? '/' : `/s/${slug}`} target="_blank" rel="noopener noreferrer">
                         <Button variant="ghost" size="icon">
                             <ExternalLink className="w-5 h-5" />
                         </Button>
@@ -401,7 +401,7 @@ export function DashboardLayout({
             >
                 <div className="hidden lg:flex items-center justify-end gap-2 h-16 px-6 border-b bg-card">
                     {slug && isAdmin && (
-                        <a href={`/s/${slug}`} target="_blank" rel="noopener noreferrer">
+                        <a href={isSubdomain ? '/' : `/s/${slug}`} target="_blank" rel="noopener noreferrer">
                             <Button variant="ghost" size="sm" className='gap-2 hidden md:flex'>
                                 <ExternalLink className="w-4 h-4" />
                                 {language === 'ar' ? 'زيارة المتجر' : 'Visit Store'}

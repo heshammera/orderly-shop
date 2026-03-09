@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import ThemePreviewManager from '@/components/ThemeEngine/ThemePreviewManager';
 import { Metadata } from 'next';
 import { cache } from 'react';
+import { headers } from 'next/headers';
 
 export const revalidate = 60; // Cache for 60 seconds to reduce server load
 
@@ -55,6 +56,19 @@ export async function generateMetadata({ params }: { params: { storeSlug: string
 }
 
 export default async function StorePage({ params }: { params: { storeSlug: string } }) {
+    const headersList = headers();
+    const host = headersList.get('host') || '';
+    const hostname = host.replace(/:\d+$/, '').replace(/^\[(.+)\]$/, '$1').toLowerCase().trim();
+
+    const isMainDomain = hostname === 'localhost' ||
+        hostname === '127.0.0.1' ||
+        hostname === '::1' ||
+        hostname.endsWith('.vercel.app') ||
+        hostname === 'orderlyshops.com' ||
+        hostname === 'www.orderlyshops.com';
+
+    const baseUrl = isMainDomain ? `/s/${params.storeSlug}` : '';
+
     // Use admin client to fetch store even if pending
     const supabaseAdmin = getAdminClient();
     if (!supabaseAdmin) {
@@ -172,6 +186,7 @@ export default async function StorePage({ params }: { params: { storeSlug: strin
         ...store,
         name: typeof store.name === 'string' ? JSON.parse(store.name) : store.name,
         description: typeof store.description === 'string' ? JSON.parse(store.description) : store.description,
+        baseUrl: baseUrl,
     };
 
     const storeContext = {

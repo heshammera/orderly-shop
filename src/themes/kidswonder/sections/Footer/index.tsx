@@ -17,15 +17,15 @@ interface FooterProps {
 
 export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps) {
     return (
-        <footer className="bg-[#ffafcc] text-[#2d2d2d] pt-24 pb-12 relative overflow-hidden">
+        <footer className="bg-[#ffafcc] text-[#2d2d2d] pt-12 pb-6 relative overflow-hidden">
             {/* Colorful "Stickers" decorations */}
             <div className="absolute top-10 left-10 w-16 h-16 bg-[#00b4d8] rounded-xl rotate-12 opacity-20"></div>
             <div className="absolute top-40 right-10 w-12 h-12 bg-[#ffbe0b] rounded-full opacity-20"></div>
 
             <div className="container mx-auto px-4 relative z-10">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     {/* Brand */}
-                    <div className="md:col-span-1 space-y-8">
+                    <div className="md:col-span-1 space-y-4">
                         <div className="text-3xl font-black tracking-tight text-[#ff6b6b] flex items-center gap-3">
                             <div className="w-10 h-10 bg-white rounded-2xl shadow-lg flex items-center justify-center -rotate-6 border-2 border-[#ffbe0b]">
                                 <span className="text-white text-xl">🚀</span>
@@ -42,7 +42,7 @@ export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps
                     </div>
 
                     {/* Fun Stuff */}
-                    <div className="space-y-6">
+                    <div className="space-y-3">
                         <InlineEditableText
                             as="h3"
                             sectionId={sectionId}
@@ -58,7 +58,7 @@ export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps
                     </div>
 
                     {/* Parents Corner */}
-                    <div className="space-y-6">
+                    <div className="space-y-3">
                         <h3 className="text-[#ff6b6b] font-black uppercase tracking-widest text-xs">ركن الآباء</h3>
                         <ul className="space-y-4 font-black text-sm">
                             <li><Link href="#" className="hover:text-white transition-colors">الأمان جودة</Link></li>
@@ -68,7 +68,7 @@ export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps
                     </div>
 
                     {/* Contact */}
-                    <div className="space-y-6">
+                    <div className="space-y-3">
                         <InlineEditableText
                             as="h3"
                             sectionId={sectionId}
@@ -76,7 +76,7 @@ export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps
                             value={settings.contact_heading || 'تواصل معنا'}
                             className="text-[#ff6b6b] font-black uppercase tracking-widest text-xs"
                         />
-                        <ul className="space-y-6 font-black text-sm">
+                        <ul className="space-y-3 font-black text-sm">
                             <li className="flex flex-col gap-1">
                                 <span className="text-white/60 uppercase text-[10px] tracking-[0.2em]">Email Us</span>
                                 <InlineEditableText as="span" sectionId={sectionId} settingId="contact_email" value={settings.contact_email || 'hello@kidswonder.com'} />

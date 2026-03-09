@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useCart } from '@/contexts/CartContext';
+import { Search, ShoppingCart, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import InlineEditableText from '@/components/ThemeEngine/InlineEditableText';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -28,6 +31,19 @@ export default function Header({ settings, blocks = [], sectionId = 'header_1', 
     const storeName = store?.name ? (typeof store.name === 'string' ? store.name : store.name[language] || store.name.ar || store.name.en) : 'Store';
     const storeSlug = store?.slug || '';
 
+    const router = useRouter();
+    const { cartCount, openCart } = useCart();
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (searchQuery.trim() && storeSlug) {
+            router.push(`${storeContext?.store?.baseUrl ?? `/s/${storeSlug}`}/products?q=${encodeURIComponent(searchQuery.trim())}`);
+            setIsMobileMenuOpen(false);
+        }
+    };
+
     const defaultLinks = [
         { settings: { label: 'الرئيسية', url: '/' } },
         { settings: { label: 'كل المنتجات', url: '/products' } },
@@ -52,9 +68,9 @@ export default function Header({ settings, blocks = [], sectionId = 'header_1', 
             )}
 
             <div className="container mx-auto px-4 h-16 md:h-20 flex items-center justify-between gap-4 md:gap-8">
-                {/* Mobile Menu Toggle (Decorative for now) */}
-                <button className="md:hidden p-2 text-foreground hover:bg-muted rounded-md transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12" /><line x1="4" x2="20" y1="6" y2="6" /><line x1="4" x2="20" y1="18" y2="18" /></svg>
+                {/* Mobile Menu Toggle */}
+                <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden p-2 text-foreground hover:bg-muted rounded-md transition-colors">
+                    {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                 </button>
 
                 {/* Logo */}
@@ -85,29 +101,66 @@ export default function Header({ settings, blocks = [], sectionId = 'header_1', 
 
                 {/* Search & Cart Actions */}
                 <div className="flex items-center gap-2 md:gap-4 shrink-0">
-                    <div className="hidden lg:flex relative right-0 w-64 mr-auto origin-left transition-all duration-300">
+                    <form onSubmit={handleSearch} className="hidden lg:flex relative right-0 w-64 mr-auto origin-left transition-all duration-300">
                         <input
                             type="search"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder={settings.search_placeholder || 'ابحث هنا...'}
                             className="w-full rounded-full border border-border bg-muted/50 px-4 py-2 pr-10 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                         />
-                        <div className="absolute top-1/2 -translate-y-1/2 right-3 text-muted-foreground w-4 h-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
-                        </div>
-                    </div>
+                        <button type="submit" className="absolute top-1/2 -translate-y-1/2 right-3 text-muted-foreground hover:text-primary">
+                            <Search className="w-4 h-4" />
+                        </button>
+                    </form>
 
-                    <button className="lg:hidden p-2 text-foreground hover:bg-muted rounded-full transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+                    <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-2 text-foreground hover:bg-muted rounded-full transition-colors">
+                        <Search className="w-5 h-5" />
                     </button>
 
-                    <button className="p-2 text-foreground hover:bg-muted rounded-full transition-colors relative group">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="21" r="1" /><circle cx="19" cy="21" r="1" /><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" /></svg>
-                        <span className="absolute top-0 right-0 h-4 w-4 bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center rounded-full group-hover:scale-110 transition-transform">
-                            0
-                        </span>
+                    <button onClick={openCart} className="p-2 text-foreground hover:bg-muted rounded-full transition-colors relative group">
+                        <ShoppingCart className="w-5 h-5" />
+                        {cartCount > 0 && (
+                            <span className="absolute top-0 right-0 h-4 w-4 bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center rounded-full group-hover:scale-110 transition-transform">
+                                {cartCount}
+                            </span>
+                        )}
                     </button>
                 </div>
             </div>
+
+            {/* Mobile Menu Dropdown */}
+            {isMobileMenuOpen && (
+                <div className="md:hidden bg-background border-t border-border shadow-lg animate-in slide-in-from-top-2 absolute w-full left-0 z-50">
+                    <div className="p-4 space-y-4">
+                        <form onSubmit={handleSearch} className="relative mb-4">
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full p-2 border border-border bg-muted/50 text-foreground rounded text-sm outline-none focus:border-primary px-4 pr-10"
+                                placeholder={settings.search_placeholder || (language === 'ar' ? 'ابحث...' : 'Search...')}
+                            />
+                            <button type="submit" className="absolute top-1/2 -translate-y-1/2 right-3 text-muted-foreground hover:text-primary">
+                                <Search className="w-4 h-4" />
+                            </button>
+                        </form>
+                        <ul className="flex flex-col space-y-4 text-foreground">
+                            {displayLinks.map((link, idx) => (
+                                <li key={idx}>
+                                    <Link
+                                        href={link.settings.url || '#'}
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="hover:text-primary font-semibold block text-sm"
+                                    >
+                                        {link.settings.label}
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+            )}
         </header>
     );
 }

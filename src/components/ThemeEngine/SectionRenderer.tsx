@@ -14,6 +14,7 @@ export default function SectionRenderer({ pageData, storeContext, themeName = 'd
     const currentRegistry = themeRegistries[themeName] || themeRegistries['default'];
 
     const storeIdentifier = storeContext?.store?.slug || storeContext?.storeData?.slug || storeContext?.slug || storeContext?.id || '';
+    const baseUrl = storeContext?.store?.baseUrl ?? (storeIdentifier ? `/s/${storeIdentifier}` : '');
 
     // Deep mapping of links to resolve them dynamically to the correct storefront url
     const resolveLinks = (obj: any): any => {
@@ -21,21 +22,21 @@ export default function SectionRenderer({ pageData, storeContext, themeName = 'd
         if (typeof obj === 'string') {
             const productMatch = obj.match(/^\/product(s)?\/(.+)$/);
             if (productMatch) {
-                return `/s/${storeIdentifier}/p/${productMatch[2]}`;
+                return `${baseUrl}/${productMatch[2]}`;
             }
             const categoryMatch = obj.match(/^\/categor(y|ies)\/(.+)$/);
             if (categoryMatch) {
-                return `/s/${storeIdentifier}/products?category=${categoryMatch[2]}`;
+                return `${baseUrl}/products?category=${categoryMatch[2]}`;
             }
             if (obj === '/products' || obj === '/products/') {
-                return `/s/${storeIdentifier}/products`;
+                return `${baseUrl}/products`;
             }
             if (obj === '/categories' || obj === '/categories/') {
-                return `/s/${storeIdentifier}/products`;
+                return `${baseUrl}/products`;
             }
             // Add root replacement if needed
             if (obj === '/') {
-                return `/s/${storeIdentifier}`;
+                return `${baseUrl}` || '/';
             }
             return obj;
         }

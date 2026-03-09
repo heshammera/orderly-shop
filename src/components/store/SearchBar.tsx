@@ -10,11 +10,12 @@ import { useDebounce } from '@/hooks/useDebounce';
 interface SearchBarProps {
     storeId: string;
     storeSlug: string;
+    baseUrl?: string;
     placeholder?: string;
     onSearch?: (query: string) => void;
 }
 
-export function SearchBar({ storeId, storeSlug, placeholder, onSearch }: SearchBarProps) {
+export function SearchBar({ storeId, storeSlug, baseUrl, placeholder, onSearch }: SearchBarProps) {
     const { language } = useLanguage();
     const router = useRouter();
     const pathname = usePathname();
@@ -148,7 +149,7 @@ export function SearchBar({ storeId, storeSlug, placeholder, onSearch }: SearchB
                                 <li key={product.id}>
                                     <button
                                         onClick={() => {
-                                            router.push(`/s/${storeSlug}/p/${product.id}`);
+                                            router.push(`${baseUrl || `/s/${storeSlug}`}/${product.sku || product.id}`);
                                             setIsOpen(false);
                                         }}
                                         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-start"

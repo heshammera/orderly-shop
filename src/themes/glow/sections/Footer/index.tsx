@@ -17,11 +17,11 @@ interface FooterProps {
 
 export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps) {
     return (
-        <footer className="bg-white text-stone-800 border-t border-stone-100 pt-24 pb-12">
+        <footer className="bg-white text-stone-800 border-t border-stone-100 pt-12 pb-6">
             <div className="container mx-auto px-4">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     {/* Brand */}
-                    <div className="md:col-span-1 space-y-6">
+                    <div className="md:col-span-1 space-y-3">
                         <div className="text-2xl font-light tracking-[0.2em] text-stone-900 uppercase">GLOW BEAUTY</div>
                         <InlineEditableText
                             as="p"
@@ -33,7 +33,7 @@ export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps
                     </div>
 
                     {/* Navigation */}
-                    <div className="space-y-6">
+                    <div className="space-y-3">
                         <InlineEditableText
                             as="h3"
                             sectionId={sectionId}
@@ -49,7 +49,7 @@ export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps
                     </div>
 
                     {/* Links */}
-                    <div className="space-y-6">
+                    <div className="space-y-3">
                         <h3 className="text-sm font-black uppercase tracking-widest text-[#e0afa0]">معلومات</h3>
                         <ul className="space-y-4 font-medium text-stone-500">
                             <li><Link href="#" className="hover:text-[#d4a373] transition-colors">من نحن</Link></li>
@@ -59,7 +59,7 @@ export default function Footer({ settings, sectionId = 'footer_1' }: FooterProps
                     </div>
 
                     {/* Contact */}
-                    <div className="space-y-6">
+                    <div className="space-y-3">
                         <InlineEditableText
                             as="h3"
                             sectionId={sectionId}

@@ -22,6 +22,7 @@ interface StoreData {
     settings: any;
     slug: string;
     has_removed_copyright?: boolean;
+    baseUrl?: string;
 }
 
 interface Integration {
@@ -58,7 +59,7 @@ function StoreHeader({ store, headerCategories = [] }: { store: StoreData, heade
             <div className="container mx-auto px-4">
                 <div className="flex items-center justify-between h-16">
                     {/* Logo / Store Name */}
-                    <Link href={`/s/${store.slug}`} className="flex items-center gap-3">
+                    <Link href={store.baseUrl || '/'} className="flex items-center gap-3">
                         {store.logo_url ? (
                             <img src={store.logo_url} alt={storeName} className="w-10 h-10 rounded-lg object-cover" />
                         ) : (
@@ -71,18 +72,18 @@ function StoreHeader({ store, headerCategories = [] }: { store: StoreData, heade
 
                     {/* Desktop Navigation */}
                     <nav className="hidden md:flex items-center gap-6">
-                        <Link href={`/s/${store.slug}`} className="text-sm font-medium hover:text-primary transition-colors">
+                        <Link href={store.baseUrl || '/'} className="text-sm font-medium hover:text-primary transition-colors">
                             {language === 'ar' ? 'الرئيسية' : 'Home'}
                         </Link>
-                        <Link href={`/s/${store.slug}/products`} className="text-sm font-medium hover:text-primary transition-colors">
+                        <Link href={`${store.baseUrl ?? `/s/${store.slug}`}/products`} className="text-sm font-medium hover:text-primary transition-colors">
                             {language === 'ar' ? 'المنتجات' : 'Products'}
                         </Link>
                         {headerCategories.map(category => (
-                            <Link key={category.id} href={`/s/${store.slug}/products?category=${category.id}`} className="text-sm font-medium hover:text-primary transition-colors">
+                            <Link key={category.id} href={`${store.baseUrl ?? `/s/${store.slug}`}/products?category=${category.id}`} className="text-sm font-medium hover:text-primary transition-colors">
                                 {category.name[language] || category.name.ar || category.name.en}
                             </Link>
                         ))}
-                        <Link href={`/s/${store.slug}/track`} className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-1">
+                        <Link href={`${store.baseUrl ?? `/s/${store.slug}`}/track`} className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-1">
                             <Truck className="w-4 h-4" />
                             {language === 'ar' ? 'تتبع طلبك' : 'Track Order'}
                         </Link>
@@ -116,14 +117,14 @@ function StoreHeader({ store, headerCategories = [] }: { store: StoreData, heade
                             <SheetContent side={language === 'ar' ? 'right' : 'left'}>
                                 <nav className="flex flex-col gap-4 mt-8">
                                     <Link
-                                        href={`/s/${store.slug}`}
+                                        href={store.baseUrl || '/'}
                                         onClick={() => setMobileMenuOpen(false)}
                                         className="text-lg font-medium hover:text-primary transition-colors"
                                     >
                                         {language === 'ar' ? 'الرئيسية' : 'Home'}
                                     </Link>
                                     <Link
-                                        href={`/s/${store.slug}/products`}
+                                        href={`${store.baseUrl ?? `/s/${store.slug}`}/products`}
                                         onClick={() => setMobileMenuOpen(false)}
                                         className="text-lg font-medium hover:text-primary transition-colors"
                                     >
@@ -132,7 +133,7 @@ function StoreHeader({ store, headerCategories = [] }: { store: StoreData, heade
                                     {headerCategories.map(category => (
                                         <Link
                                             key={category.id}
-                                            href={`/s/${store.slug}/products?category=${category.id}`}
+                                            href={`${store.baseUrl ?? `/s/${store.slug}`}/products?category=${category.id}`}
                                             onClick={() => setMobileMenuOpen(false)}
                                             className="text-lg font-medium hover:text-primary transition-colors"
                                         >
@@ -140,7 +141,7 @@ function StoreHeader({ store, headerCategories = [] }: { store: StoreData, heade
                                         </Link>
                                     ))}
                                     <Link
-                                        href={`/s/${store.slug}/track`}
+                                        href={`${store.baseUrl ?? `/s/${store.slug}`}/track`}
                                         onClick={() => setMobileMenuOpen(false)}
                                         className="text-lg font-medium hover:text-primary transition-colors flex items-center gap-2"
                                     >

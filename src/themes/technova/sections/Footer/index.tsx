@@ -43,10 +43,10 @@ export default function Footer({ settings, blocks = [], sectionId = 'footer_1', 
     const displayLinks = blocks.length > 0 ? blocks : defaultLinks;
 
     return (
-        <footer className="pb-6 pt-16 text-sm" style={{ background: '#060610', borderTop: '1px solid rgba(0,212,255,0.1)' }}>
+        <footer className="pb-6 pt-8 text-sm" style={{ background: '#060610', borderTop: '1px solid rgba(0,212,255,0.1)' }}>
             <div className="container mx-auto px-4">
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     {/* About */}
                     <div className="flex flex-col gap-4">
                         <span className="text-xl font-black text-white">
