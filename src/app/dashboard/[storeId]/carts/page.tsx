@@ -193,7 +193,7 @@ export default function AbandonedCartsPage({ params }: { params: { storeId: stri
         const name = cart.customer_name || (language === 'ar' ? 'عميلنا العزيز' : 'Customer');
         const recoveryLink = getRecoveryLink(cart);
         const itemCount = cart.cart_items?.length || 0;
-        const totalFormatted = `${cart.total_price?.toFixed(2)} ${storeCurrency}`;
+        const totalFormatted = formatPrice(cart.total_price, storeCurrency);
 
         const templates = [
             {
@@ -270,7 +270,7 @@ export default function AbandonedCartsPage({ params }: { params: { storeId: stri
                             </div>
                             <div>
                                 <p className="text-sm text-muted-foreground">{language === 'ar' ? 'القيمة الإجمالية' : 'Total Value'}</p>
-                                <p className="text-2xl font-bold text-red-700 dark:text-red-300">{stats.totalValue.toFixed(0)} {storeCurrency}</p>
+                                <p className="text-2xl font-bold text-red-700 dark:text-red-300">{formatPrice(stats.totalValue, storeCurrency)}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -352,7 +352,7 @@ export default function AbandonedCartsPage({ params }: { params: { storeId: stri
                                                     <p className="text-muted-foreground font-mono mt-1" dir="ltr">{cart.customer_phone}</p>
                                                 </div>
                                                 <div className="text-right">
-                                                    <div className="font-black text-xl text-primary">{formatPrice(cart.total_price)} {storeCurrency}</div>
+                                                    <div className="font-black text-xl text-primary">{formatPrice(cart.total_price, storeCurrency)}</div>
                                                     <div className="text-xs text-muted-foreground flex items-center gap-1 justify-end mt-1">
                                                         <Clock className="w-3.5 h-3.5" />
                                                         {formatDistanceToNow(new Date(cart.updated_at), { addSuffix: true, locale: language === 'ar' ? ar : enUS })}
@@ -385,7 +385,7 @@ export default function AbandonedCartsPage({ params }: { params: { storeId: stri
                                                             </div>
                                                             <div className="text-end text-sm whitespace-nowrap">
                                                                 <span className="text-muted-foreground mr-2">{item.quantity}x</span>
-                                                                <span className="font-semibold">{formatPrice(item.unitPrice)} {storeCurrency}</span>
+                                                                <span className="font-semibold">{formatPrice(item.unitPrice, storeCurrency)}</span>
                                                             </div>
                                                         </div>
                                                     ))}

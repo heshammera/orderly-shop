@@ -213,7 +213,8 @@ export default function SelectPlanPage() {
                 p_payment_method: 'wallet',
                 p_amount: totalEgp, // We submit the EGP amount as requester pays in EGP
                 p_receipt_url: uploadData.path,
-                p_transaction_id: transactionId
+                p_transaction_id: transactionId,
+                p_keep_store_ids: keepStoreIds
             });
 
             if (rpcError) throw rpcError;
