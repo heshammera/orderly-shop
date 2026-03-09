@@ -829,6 +829,19 @@ export default function EditorPage({ params }: { params: { storeId: string } }) 
                     </div>
                 </main>
             </div>
+
+            {/* Floating Mobile Save Button */}
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 lg:hidden">
+                <Button
+                    size="lg"
+                    onClick={() => handleSave()}
+                    disabled={saving}
+                    className="rounded-full shadow-2xl px-8 py-6 text-base gap-2 bg-primary hover:bg-primary/90"
+                >
+                    {saving ? <Loader2 className="animate-spin w-5 h-5" /> : <Save className="w-5 h-5" />}
+                    {language === 'ar' ? 'حفظ ونشر' : 'Save & Publish'}
+                </Button>
+            </div>
         </div>
     );
 }

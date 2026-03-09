@@ -143,6 +143,20 @@ export function Header({ tutorialsEnabled = true }: HeaderProps) {
             >
               <Globe className="h-5 w-5" />
             </Button>
+            {user ? (
+              <Link href="/dashboard">
+                <Button size="sm" className="gradient-primary text-white rounded-full px-4 gap-1.5 text-xs shadow-glow">
+                  <LayoutDashboard className="w-3.5 h-3.5" />
+                  {language === 'ar' ? 'لوحة التحكم' : 'Dashboard'}
+                </Button>
+              </Link>
+            ) : (
+              <Link href="/login">
+                <Button size="sm" className="gradient-primary text-white rounded-full px-4 gap-1.5 text-xs shadow-glow">
+                  {t.nav.login}
+                </Button>
+              </Link>
+            )}
             <Button
               variant="ghost"
               size="icon"
