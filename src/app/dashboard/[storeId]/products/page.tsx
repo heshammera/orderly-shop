@@ -27,6 +27,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ProductForm } from '@/components/dashboard/ProductForm';
 import { ProductDetailsDialog } from '@/components/dashboard/ProductDetailsDialog';
+import { BulkProductImport } from '@/components/dashboard/BulkProductImport';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
@@ -139,26 +140,29 @@ export default function ProductsPage({ params }: { params: { storeId: string } }
                         {language === 'ar' ? 'ترقية الباقة للإضافة' : 'Upgrade to Add'}
                     </Button>
                 ) : (
-                    <Dialog>
-                        <DialogTrigger asChild>
-                            <Button>
-                                <Plus className="w-4 h-4 mr-2" />
-                                {language === 'ar' ? 'إضافة منتج' : 'Add Product'}
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                            <DialogHeader>
-                                <DialogTitle>{language === 'ar' ? 'إضافة منتج جديد' : 'Add New Product'}</DialogTitle>
-                                <DialogDescription>
-                                    {language === 'ar' ? 'أدخل تفاصيل المنتج الجديد أدناه' : 'Enter the details of the new product below'}
-                                </DialogDescription>
-                            </DialogHeader>
-                            <ProductForm
-                                storeId={storeId}
-                                onSuccess={() => window.location.reload()}
-                            />
-                        </DialogContent>
-                    </Dialog>
+                    <div className="flex items-center gap-2">
+                        <BulkProductImport storeId={storeId} onSuccess={fetchProducts} />
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button>
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    {language === 'ar' ? 'إضافة منتج' : 'Add Product'}
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                                <DialogHeader>
+                                    <DialogTitle>{language === 'ar' ? 'إضافة منتج جديد' : 'Add New Product'}</DialogTitle>
+                                    <DialogDescription>
+                                        {language === 'ar' ? 'أدخل تفاصيل المنتج الجديد أدناه' : 'Enter the details of the new product below'}
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <ProductForm
+                                    storeId={storeId}
+                                    onSuccess={() => window.location.reload()}
+                                />
+                            </DialogContent>
+                        </Dialog>
+                    </div>
                 )}
             </div>
 
