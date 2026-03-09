@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import InlineEditableText from '@/components/ThemeEngine/InlineEditableText';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface HeaderLink {
     type: string;
@@ -18,9 +19,15 @@ interface HeaderProps {
     };
     blocks?: HeaderLink[];
     sectionId?: string;
+    storeContext?: any;
 }
 
-export default function Header({ settings, blocks = [], sectionId = 'header_1' }: HeaderProps) {
+export default function Header({ settings, blocks = [], sectionId = 'header_1', storeContext }: HeaderProps) {
+    const { language } = useLanguage();
+    const store = storeContext?.store || storeContext;
+    const storeName = store?.name ? (typeof store.name === 'string' ? store.name : store.name[language] || store.name.ar || store.name.en) : 'Store';
+    const storeSlug = store?.slug || '';
+
     const defaultLinks = [
         { settings: { label: 'الرئيسية', url: '/' } },
         { settings: { label: 'الألعاب', url: '/products' } },
@@ -47,13 +54,21 @@ export default function Header({ settings, blocks = [], sectionId = 'header_1' }
 
             <div className="container mx-auto px-4 h-20 md:h-24 flex items-center justify-between gap-4">
                 {/* Logo with playful font */}
-                <Link href="/" className="shrink-0 flex items-center gap-2 group">
-                    <div className="h-12 w-12 bg-[#4ECDC4] rounded-2xl flex items-center justify-center rotate-3 group-hover:rotate-0 transition-transform shadow-lg border-2 border-white">
-                        <span className="text-white text-2xl font-black">K</span>
-                    </div>
-                    <span className="text-2xl md:text-3xl font-black lowercase tracking-tighter text-[#2D3436]">
-                        Kids<span className="text-[#FF6B6B]">Wonder</span>
-                    </span>
+                <Link href={storeSlug ? `/s/${storeSlug}` : '/'} className="shrink-0 flex items-center gap-2 group">
+                    {settings.logo || store?.logo_url ? (
+                        <div className="h-10 md:h-12 w-auto max-w-[150px]">
+                            <img src={settings.logo || store?.logo_url} alt={storeName} className="h-full w-auto object-contain" />
+                        </div>
+                    ) : (
+                        <>
+                            <div className="h-12 w-12 bg-[#4ECDC4] rounded-2xl flex items-center justify-center rotate-3 group-hover:rotate-0 transition-transform shadow-lg border-2 border-white">
+                                <span className="text-white text-2xl font-black">K</span>
+                            </div>
+                            <span className="text-2xl md:text-3xl font-black lowercase tracking-tighter text-[#2D3436]">
+                                {storeName}
+                            </span>
+                        </>
+                    )}
                 </Link>
 
                 {/* Desktop Navigation - Rounded and colorful hover */}

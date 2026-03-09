@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import InlineEditableText from '@/components/ThemeEngine/InlineEditableText';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface HeaderLink {
     type: string;
@@ -18,9 +19,15 @@ interface HeaderProps {
     };
     blocks?: HeaderLink[];
     sectionId?: string;
+    storeContext?: any;
 }
 
-export default function Header({ settings, blocks = [], sectionId = 'header_1' }: HeaderProps) {
+export default function Header({ settings, blocks = [], sectionId = 'header_1', storeContext }: HeaderProps) {
+    const { language } = useLanguage();
+    const store = storeContext?.store || storeContext;
+    const storeName = store?.name ? (typeof store.name === 'string' ? store.name : store.name[language] || store.name.ar || store.name.en) : 'Store';
+    const storeSlug = store?.slug || '';
+
     const defaultLinks = [
         { settings: { label: 'الرئيسية', url: '/' } },
         { settings: { label: 'المجوهرات', url: '/jewelry' } },
@@ -46,9 +53,17 @@ export default function Header({ settings, blocks = [], sectionId = 'header_1' }
 
             <div className="container mx-auto px-6 h-20 md:h-24 flex items-center justify-between gap-8">
                 {/* Luxe Logo */}
-                <Link href="/" className="shrink-0 flex flex-col items-center">
-                    <span className="text-2xl md:text-3xl font-serif text-white tracking-[0.15em] italic">LUXE</span>
-                    <div className="h-[1px] w-full bg-amber-400 mt-1 origin-center scale-x-50"></div>
+                <Link href={storeSlug ? `/s/${storeSlug}` : '/'} className="shrink-0 flex flex-col items-center">
+                    {settings.logo || store?.logo_url ? (
+                        <div className="h-10 md:h-12 w-auto max-w-[150px]">
+                            <img src={settings.logo || store?.logo_url} alt={storeName} className="h-full w-auto object-contain" />
+                        </div>
+                    ) : (
+                        <>
+                            <span className="text-2xl md:text-3xl font-serif text-white tracking-[0.15em] italic">{storeName}</span>
+                            <div className="h-[1px] w-full bg-amber-400 mt-1 origin-center scale-x-50"></div>
+                        </>
+                    )}
                 </Link>
 
                 {/* Desktop Navigation */}

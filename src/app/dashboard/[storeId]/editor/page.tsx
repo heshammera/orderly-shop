@@ -608,13 +608,13 @@ export default function EditorPage({ params }: { params: { storeId: string } }) 
 
     if (loading) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
 
-    let previewUrl = `/s/${store?.slug || storeId}?preview=true`;
+    let previewUrl = `/s/${store?.slug || storeId}?preview=true&t=${Date.now()}`;
     if (pageSlug === 'product') {
         previewUrl = previewProductId
-            ? `/s/${store?.slug || storeId}/p/${previewProductId}?preview=true`
-            : `/s/${store?.slug || storeId}/products?preview=true`; // Fallback if no products
+            ? `/s/${store?.slug || storeId}/p/${previewProductId}?preview=true&t=${Date.now()}`
+            : `/s/${store?.slug || storeId}/products?preview=true&t=${Date.now()}`; // Fallback if no products
     } else if (pageSlug === 'checkout') {
-        previewUrl = `/s/${store?.slug || storeId}/checkout?preview=true`;
+        previewUrl = `/s/${store?.slug || storeId}/checkout?preview=true&t=${Date.now()}`;
     }
 
     return (

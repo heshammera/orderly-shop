@@ -7,10 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Palette, MonitorPlay, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function ThemesPage({ params }: { params: { storeId: string } }) {
     const { storeId } = params;
     const { language } = useLanguage();
+    const router = useRouter();
     const supabase = createClient();
 
     const [loading, setLoading] = useState(true);
@@ -250,6 +252,9 @@ export default function ThemesPage({ params }: { params: { storeId: string } }) 
             } catch (e) {
                 console.error('Failed to invalidate store cache', e);
             }
+
+            // Force Next.js router cache to dump so navigation reflects real state
+            router.refresh();
 
             await fetchThemesData();
         } catch (error: any) {

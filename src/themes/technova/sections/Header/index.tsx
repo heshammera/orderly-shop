@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import InlineEditableText from '@/components/ThemeEngine/InlineEditableText';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface HeaderLink {
     type: string;
@@ -22,6 +23,11 @@ interface HeaderProps {
 }
 
 export default function Header({ settings, blocks = [], sectionId = 'header_1', storeContext }: HeaderProps) {
+    const { language } = useLanguage();
+    const store = storeContext?.store || storeContext;
+    const storeName = store?.name ? (typeof store.name === 'string' ? store.name : store.name[language] || store.name.ar || store.name.en) : 'Store';
+    const storeSlug = store?.slug || '';
+
     const defaultLinks = [
         { settings: { label: 'الرئيسية', url: '/' } },
     ];
@@ -55,12 +61,20 @@ export default function Header({ settings, blocks = [], sectionId = 'header_1', 
 
             <div className="container mx-auto px-4 h-16 md:h-20 flex items-center justify-between gap-4">
                 {/* TechNova Logo */}
-                <Link href="/" className="shrink-0 flex items-center gap-2 group">
+                <Link href={storeSlug ? `/s/${storeSlug}` : '/'} className="shrink-0 flex items-center gap-2 group">
                     <div className="relative">
-                        <div className="absolute inset-0 bg-cyan-500 blur-sm opacity-20 group-hover:opacity-40 transition-opacity"></div>
-                        <span className="relative text-2xl font-mono font-black tracking-tighter text-white">
-                            TECH<span className="text-cyan-400">NOVA</span>
-                        </span>
+                        {settings.logo || store?.logo_url ? (
+                            <div className="h-10 md:h-12 w-auto max-w-[150px]">
+                                <img src={settings.logo || store?.logo_url} alt={storeName} className="h-full w-auto object-contain" />
+                            </div>
+                        ) : (
+                            <>
+                                <div className="absolute inset-0 bg-cyan-500 blur-sm opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                                <span className="relative text-2xl font-mono font-black tracking-tighter text-white">
+                                    {storeName}
+                                </span>
+                            </>
+                        )}
                     </div>
                 </Link>
 

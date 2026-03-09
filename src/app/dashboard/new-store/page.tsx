@@ -86,6 +86,81 @@ export default function CreateStorePage() {
 
             if (rpcError) throw rpcError;
 
+            // 4. Automatically Apply 'default' Theme
+            try {
+                // Fetch the default theme and its latest version
+                const { data: defaultTheme } = await supabase
+                    .from('themes')
+                    .select('id, folder_name, theme_versions(id)')
+                    .eq('folder_name', 'default')
+                    .single();
+
+                if (defaultTheme && defaultTheme.theme_versions && defaultTheme.theme_versions.length > 0) {
+                    const latestVersionId = defaultTheme.theme_versions[defaultTheme.theme_versions.length - 1].id;
+
+                    // Insert active store theme record
+                    const { data: newStoreTheme, error: attachError } = await supabase
+                        .from('store_themes')
+                        .insert({
+                            store_id: storeId,
+                            theme_version_id: latestVersionId,
+                            is_active: true
+                        })
+                        .select('id')
+                        .single();
+
+                    if (!attachError && newStoreTheme) {
+                        // Seed default templates for the store to prevent crashing EditorPage
+                        const defaultHomeData = {
+                            sections_order: ['header_1', 'hero_banner_1', 'category_slider_1', 'featured_grid_1', 'newsletter_1', 'footer_1'],
+                            sections_data: {
+                                'header_1': { type: 'header', settings: { notice_text: '🔥 شحن مجاني للطلبات فوق 200 ريال!', search_placeholder: 'ابحث عن منتج...' }, blocks: [{ type: 'link', settings: { label: 'الرئيسية', url: '/' } }] },
+                                'hero_banner_1': { type: 'hero_banner', settings: { heading: 'مرحباً بك في متجرك الجديد', subheading: 'قم بتخصيص هذا التصميم من لوحة التحكم', button_label: 'تسوق الآن', background_image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1600&q=80' }, blocks: [] },
+                                'category_slider_1': { type: 'category_slider', settings: { heading: 'تسوق حسب التصنيف', subheading: 'تصفح مجموعاتنا' }, blocks: [{ type: 'category', settings: { title: 'جديدنا', image_url: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?w=300&q=80', link: '' } }] },
+                                'featured_grid_1': { type: 'featured_grid', settings: { heading: 'المنتجات المميزة', subheading: 'اخترنا لك بعناية' }, blocks: [] },
+                                'footer_1': { type: 'footer', settings: { about_heading: 'عن متجرنا', about_text: 'نقدم أفضل المنتجات.', copyright: 'جميع الحقوق محفوظة' }, blocks: [] },
+                                'newsletter_1': { type: 'newsletter', settings: { heading: 'اشترك في نشرتنا البريدية', button_label: 'اشتراك' }, blocks: [] }
+                            }
+                        };
+                        const defaultProductData = {
+                            sections_order: ['main_product_1'],
+                            sections_data: {
+                                'main_product_1': {
+                                    type: 'main_product', settings: {}, blocks: [
+                                        { type: 'title', id: 'block_title', settings: {} },
+                                        { type: 'price', id: 'block_price', settings: {} },
+                                        { type: 'quantity', id: 'block_quantity', settings: {} },
+                                        { type: 'buy_buttons', id: 'block_buy_buttons', settings: {} },
+                                        { type: 'description', id: 'block_description', settings: {} }
+                                    ]
+                                }
+                            }
+                        };
+                        const defaultCheckoutData = {
+                            sections_order: ['main_checkout_1'],
+                            sections_data: {
+                                'main_checkout_1': {
+                                    type: 'main_checkout', settings: {}, blocks: [
+                                        { type: 'checkout_field', id: 'field_name', settings: { field_id: 'name', visible: true, required: true, placeholder: '' } },
+                                        { type: 'checkout_field', id: 'field_phone', settings: { field_id: 'phone', visible: true, required: true, placeholder: '' } },
+                                        { type: 'checkout_field', id: 'field_address', settings: { field_id: 'address', visible: true, required: true, placeholder: '' } },
+                                    ]
+                                }
+                            }
+                        };
+
+                        await supabase.from('store_theme_templates').insert([
+                            { store_theme_id: newStoreTheme.id, page_type: 'home', settings_data: defaultHomeData },
+                            { store_theme_id: newStoreTheme.id, page_type: 'product', settings_data: defaultProductData },
+                            { store_theme_id: newStoreTheme.id, page_type: 'checkout', settings_data: defaultCheckoutData }
+                        ]);
+                    }
+                }
+            } catch (themeErr) {
+                console.error('Failed to automatically assign default theme:', themeErr);
+                // We do not fail the store creation process if the theme binding fails.
+            }
+
             toast({
                 title: language === 'ar' ? 'تم إنشاء المتجر بنجاح' : 'Store Created Successfully',
                 description: language === 'ar' ? 'يمكنك الآن البدء في إعداد متجرك الجديد' : 'You can now start setting up your new store.',

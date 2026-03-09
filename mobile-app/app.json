@@ -1,33 +1,39 @@
 {
-    "expo": {
-        "name": "Orderly Shops",
-        "slug": "orderly-shops",
-        "version": "1.0.0",
-        "orientation": "portrait",
-        "icon": "./assets/icon.png",
-        "userInterfaceStyle": "light",
-        "splash": {
-            "image": "./assets/splash-icon.png",
-            "resizeMode": "contain",
-            "backgroundColor": "#ffffff"
-        },
-        "assetBundlePatterns": [
-            "**/*"
-        ],
-        "ios": {
-            "supportsTablet": true,
-            "bundleIdentifier": "com.storehub.mobile"
-        },
-        "android": {
-            "adaptiveIcon": {
-                "foregroundImage": "./assets/android-icon-foreground.png",
-                "backgroundColor": "#ffffff"
-            },
-            "package": "com.storehub.mobile"
-        },
-        "web": {
-            "favicon": "./assets/favicon.png"
-        },
-        "scheme": "storehub"
-    }
+  "expo": {
+    "name": "Orderly Shops",
+    "slug": "orderly-shops",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.storehub.mobile"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.storehub.mobile"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "scheme": "storehub",
+    "extra": {
+      "eas": {
+        "projectId": "dc806900-4045-4e08-9973-4f1e3ce51479"
+      }
+    },
+    "owner": "heshammera"
+  }
 }

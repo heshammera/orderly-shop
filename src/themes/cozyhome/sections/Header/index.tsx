@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import InlineEditableText from '@/components/ThemeEngine/InlineEditableText';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface HeaderLink {
     type: string;
@@ -18,9 +19,15 @@ interface HeaderProps {
     };
     blocks?: HeaderLink[];
     sectionId?: string;
+    storeContext?: any;
 }
 
-export default function Header({ settings, blocks = [], sectionId = 'header_1' }: HeaderProps) {
+export default function Header({ settings, blocks = [], sectionId = 'header_1', storeContext }: HeaderProps) {
+    const { language } = useLanguage();
+    const store = storeContext?.store || storeContext;
+    const storeName = store?.name ? (typeof store.name === 'string' ? store.name : store.name[language] || store.name.ar || store.name.en) : 'Store';
+    const storeSlug = store?.slug || '';
+
     const defaultLinks = [
         { settings: { label: 'الرئيسية', url: '/' } },
         { settings: { label: 'كل المنتجات', url: '/products' } },
@@ -51,14 +58,14 @@ export default function Header({ settings, blocks = [], sectionId = 'header_1' }
                 </button>
 
                 {/* Logo */}
-                <Link href="/" className="shrink-0 flex items-center gap-2">
-                    {settings.logo ? (
+                <Link href={storeSlug ? `/s/${storeSlug}` : '/'} className="shrink-0 flex items-center gap-2">
+                    {settings.logo || store?.logo_url ? (
                         <div className="h-10 md:h-12 w-auto max-w-[150px]">
-                            <img src={settings.logo} alt="Store Logo" className="h-full w-auto object-contain" />
+                            <img src={settings.logo || store?.logo_url} alt={storeName} className="h-full w-auto object-contain" />
                         </div>
                     ) : (
                         <span className="text-xl md:text-2xl font-black tracking-tight text-foreground">
-                            اسم <span className="text-primary">مَتجَرِك</span>
+                            {storeName}
                         </span>
                     )}
                 </Link>

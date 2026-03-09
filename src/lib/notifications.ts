@@ -63,7 +63,7 @@ export async function createNotification(
                 }));
 
                 // Send to Expo API
-                await fetch('https://exp.host/--/api/v2/push/send', {
+                const expoResponse = await fetch('https://exp.host/--/api/v2/push/send', {
                     method: 'POST',
                     headers: {
                         'Accept': 'application/json',
@@ -72,6 +72,9 @@ export async function createNotification(
                     },
                     body: JSON.stringify(messages),
                 });
+
+                const expoResult = await expoResponse.json();
+                console.log('Expo Push API Response:', JSON.stringify(expoResult, null, 2));
             }
         } catch (pushError) {
             console.error('Failed to send push notification:', pushError);
