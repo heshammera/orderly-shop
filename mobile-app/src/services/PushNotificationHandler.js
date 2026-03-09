@@ -44,14 +44,24 @@ export const PushNotificationHandler = {
             const Constants = require('expo-constants').default;
             const projectId =
                 Constants?.expoConfig?.extra?.eas?.projectId ??
-                Constants?.easConfig?.projectId ??
-                '00000000-0000-0000-0000-000000000000'; // Fallback for local testing without EAS
+                Constants?.easConfig?.projectId;
 
-            const expoTokenResponse = await Notifications.getExpoPushTokenAsync({
-                projectId,
-            });
-            token = expoTokenResponse.data;
-            console.log('Successfully generated Expo push token:', token);
+            if (projectId) {
+                const expoTokenResponse = await Notifications.getExpoPushTokenAsync({ projectId });
+                token = expoTokenResponse.data;
+                console.log('Successfully generated Expo push token:', token);
+            } else {
+                // For local Expo Go tests without an EAS project, we cannot use getExpoPushTokenAsync
+                // because Expo servers will reject unregistered project IDs.
+                // Instead, we get the raw device token (which works for APNs/FCM directly)
+                const deviceToken = await Notifications.getDevicePushTokenAsync();
+
+                // For our local testing backend, we will just simulate an Expo token 
+                // so the backend validation doesn't immediately drop it.
+                token = `ExponentPushToken[local-dev-mock-${deviceToken.data?.substring(0, 10) || Date.now()}]`;
+                console.log('Running in local mode without EAS. Using Mock Token:', token);
+            }
+
         } catch (e) {
             console.error('Push notification setup failed:', e);
         }
