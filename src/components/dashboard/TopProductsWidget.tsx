@@ -5,28 +5,39 @@ import { createClient } from '@/lib/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Trophy } from 'lucide-react';
+import { subDays } from 'date-fns';
 
 interface TopProductsWidgetProps {
     storeId: string;
     currency: string;
+    dateRange?: string;
 }
 
-export function TopProductsWidget({ storeId, currency }: TopProductsWidgetProps) {
+export function TopProductsWidget({ storeId, currency, dateRange = '30d' }: TopProductsWidgetProps) {
     const supabase = createClient();
     const { language } = useLanguage();
     const [topProducts, setTopProducts] = useState<any[]>([]);
 
     useEffect(() => {
         fetchTopProducts();
-    }, [storeId]);
+    }, [storeId, dateRange]);
 
     const fetchTopProducts = async () => {
         try {
+            let days = 30;
+            if (dateRange === '7d') days = 7;
+            if (dateRange === '90d') days = 90;
+            if (dateRange === '180d') days = 180;
+            if (dateRange === '365d') days = 365;
+
+            const startDate = subDays(new Date(), days).toISOString();
+
             // First get orders for this store with expanded status list (including pending)
             const { data: orders } = await supabase
                 .from('orders')
                 .select('id')
                 .eq('store_id', storeId)
+                .gte('created_at', startDate)
                 .in('status', ['delivered', 'processing', 'shipped', 'pending']);
 
             if (!orders || orders.length === 0) {

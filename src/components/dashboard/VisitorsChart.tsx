@@ -4,26 +4,26 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart3, Loader2 } from 'lucide-react';
+import { Users, Loader2 } from 'lucide-react';
 import { format, subDays } from 'date-fns';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-interface RevenueChartProps {
+interface VisitorsChartProps {
     storeId: string;
     dateRange?: string;
 }
 
-export function RevenueChart({ storeId, dateRange = '30d' }: RevenueChartProps) {
+export function VisitorsChart({ storeId, dateRange = '30d' }: VisitorsChartProps) {
     const supabase = createClient();
     const { language } = useLanguage();
     const [chartData, setChartData] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        fetchRevenueData();
+        fetchVisitorsData();
     }, [storeId, dateRange]);
 
-    const fetchRevenueData = async () => {
+    const fetchVisitorsData = async () => {
         setIsLoading(true);
         try {
             let days = 30;
@@ -34,31 +34,41 @@ export function RevenueChart({ storeId, dateRange = '30d' }: RevenueChartProps) 
 
             const startDate = subDays(new Date(), days).toISOString();
 
-            const { data: orders } = await supabase
-                .from('orders')
-                .select('created_at, total')
+            // Fetch store visits
+            const { data: visits } = await supabase
+                .from('store_visits')
+                .select('created_at')
                 .eq('store_id', storeId)
-                .gte('created_at', startDate)
-                .in('status', ['delivered', 'processing', 'shipped']);
+                .gte('created_at', startDate);
 
             // Group by day
-            const grouped = orders?.reduce((acc: any, order) => {
-                const day = format(new Date(order.created_at), 'yyyy-MM-dd');
+            const grouped = visits?.reduce((acc: any, visit) => {
+                const day = format(new Date(visit.created_at), 'yyyy-MM-dd');
                 if (!acc[day]) {
-                    acc[day] = { date: day, revenue: 0, count: 0 };
+                    acc[day] = { date: day, visitors: 0 };
                 }
-                acc[day].revenue += order.total;
-                acc[day].count += 1;
+                acc[day].visitors += 1;
                 return acc;
             }, {});
 
-            const chartArray = Object.values(grouped || {}).sort((a: any, b: any) =>
+            let chartArray = Object.values(grouped || {}).sort((a: any, b: any) =>
                 a.date.localeCompare(b.date)
             );
 
+            // If no actual tracking data, create a mock array just to show the UI functions
+            // Wait, we can just leave it empty. Let's make it look nice if there's no data yet.
+            if (chartArray.length === 0) {
+                chartArray = Array.from({ length: days }).map((_, i) => {
+                    return {
+                        date: format(subDays(new Date(), days - i - 1), 'yyyy-MM-dd'),
+                        visitors: 0 // Show 0 instead of mock data so it's accurate
+                    };
+                });
+            }
+
             setChartData(chartArray);
         } catch (error) {
-            console.error('Error fetching revenue data:', error);
+            console.error('Error fetching visitors data:', error);
         } finally {
             setIsLoading(false);
         }
@@ -66,20 +76,20 @@ export function RevenueChart({ storeId, dateRange = '30d' }: RevenueChartProps) 
 
     const getTitle = () => {
         const ranges: Record<string, { ar: string, en: string }> = {
-            '7d': { ar: 'الإيرادات - آخر 7 أيام', en: 'Revenue - Last 7 Days' },
-            '30d': { ar: 'الإيرادات - آخر 30 يوم', en: 'Revenue - Last 30 Days' },
-            '90d': { ar: 'الإيرادات - آخر 3 أشهر', en: 'Revenue - Last 3 Months' },
-            '180d': { ar: 'الإيرادات - آخر 6 أشهر', en: 'Revenue - Last 6 Months' },
-            '365d': { ar: 'الإيرادات - آخر 12 شهرًا', en: 'Revenue - Last 12 Months' },
+            '7d': { ar: 'زيارات المتجر - آخر 7 أيام', en: 'Store Visits - Last 7 Days' },
+            '30d': { ar: 'زيارات المتجر - آخر 30 يوم', en: 'Store Visits - Last 30 Days' },
+            '90d': { ar: 'زيارات المتجر - آخر 3 أشهر', en: 'Store Visits - Last 3 Months' },
+            '180d': { ar: 'زيارات المتجر - آخر 6 أشهر', en: 'Store Visits - Last 6 Months' },
+            '365d': { ar: 'زيارات المتجر - آخر 12 شهرًا', en: 'Store Visits - Last 12 Months' },
         };
         return language === 'ar' ? ranges[dateRange]?.ar : ranges[dateRange]?.en;
     };
 
     return (
-        <Card>
+        <Card className="h-full">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="w-5 h-5" />
+                    <Users className="w-5 h-5" />
                     {getTitle()}
                 </CardTitle>
             </CardHeader>
@@ -88,14 +98,16 @@ export function RevenueChart({ storeId, dateRange = '30d' }: RevenueChartProps) 
                     <div className="flex justify-center items-center py-20">
                         <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
                     </div>
-                ) : chartData.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">
-                        {language === 'ar' ? 'لا توجد بيانات' : 'No data available'}
-                    </p>
                 ) : (
                     <div className="h-[350px] w-full mt-4">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                            <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                                <defs>
+                                    <linearGradient id="colorVisits" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
                                 <XAxis
                                     dataKey="date"
@@ -112,17 +124,18 @@ export function RevenueChart({ storeId, dateRange = '30d' }: RevenueChartProps) 
                                     tickFormatter={(val) => val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val}
                                 />
                                 <Tooltip
-                                    formatter={(value: number) => [`${value.toFixed(2)} SAR`, language === 'ar' ? 'الإيرادات' : 'Revenue']}
+                                    formatter={(value: number) => [`${value}`, language === 'ar' ? 'الزيارات' : 'Visits']}
                                     labelFormatter={(label) => format(new Date(label), 'PPP')}
                                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                                 />
-                                <Bar
-                                    dataKey="revenue"
-                                    fill="hsl(var(--primary))"
-                                    radius={[4, 4, 0, 0]}
-                                    maxBarSize={50}
+                                <Area
+                                    type="monotone"
+                                    dataKey="visitors"
+                                    stroke="hsl(var(--primary))"
+                                    fillOpacity={1}
+                                    fill="url(#colorVisits)"
                                 />
-                            </BarChart>
+                            </AreaChart>
                         </ResponsiveContainer>
                     </div>
                 )}
