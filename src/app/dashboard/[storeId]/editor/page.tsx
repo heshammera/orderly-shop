@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { createClient } from '@/lib/supabase/client';
-import { Loader2, ArrowLeft, Eye, Save, Plus, Monitor, Tablet, Smartphone } from 'lucide-react';
+import { Loader2, ArrowLeft, Eye, Save, Plus, Monitor, Tablet, Smartphone, PanelLeftOpen, X } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
@@ -100,6 +100,7 @@ export default function EditorPage({ params }: { params: { storeId: string } }) 
     const [pageSlug, setPageSlug] = useState<string>('home');
     const [previewProductId, setPreviewProductId] = useState<string | null>(null);
     const [deviceView, setDeviceView] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [previewTimestamp, setPreviewTimestamp] = useState<number>(Date.now());
 
     // Force iframe full reload when switching pages
@@ -627,17 +628,17 @@ export default function EditorPage({ params }: { params: { storeId: string } }) 
         <div className="flex h-screen w-full bg-background overflow-hidden relative flex-col" dir={language === 'ar' ? 'rtl' : 'ltr'}>
 
             {/* Header */}
-            <header className="h-14 border-b bg-white flex items-center justify-between px-4 z-50 shadow-sm shrink-0">
-                <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="sm" asChild>
+            <header className="h-14 border-b bg-white flex items-center justify-between px-2 sm:px-4 z-50 shadow-sm shrink-0">
+                <div className="flex items-center gap-2 sm:gap-4">
+                    <Button variant="ghost" size="sm" asChild className="px-2 sm:px-3">
                         <Link href={`/dashboard/${storeId}`}>
-                            <ArrowLeft className={`w-4 h-4 mr-2 ${language === 'ar' ? 'ml-2 mr-0 rotate-180' : ''}`} />
-                            {language === 'ar' ? 'عودة' : 'Back'}
+                            <ArrowLeft className={`w-4 h-4 sm:mr-2 ${language === 'ar' ? 'sm:ml-2 sm:mr-0 rotate-180' : ''}`} />
+                            <span className="hidden sm:inline">{language === 'ar' ? 'عودة' : 'Back'}</span>
                         </Link>
                     </Button>
-                    <div className="h-6 w-px bg-slate-200" />
+                    <div className="h-6 w-px bg-slate-200 hidden sm:block" />
                     <Select value={pageSlug} onValueChange={setPageSlug}>
-                        <SelectTrigger className="w-[180px] h-8 text-sm bg-white" dir="rtl">
+                        <SelectTrigger className="w-[120px] sm:w-[180px] h-8 text-xs sm:text-sm bg-white" dir="rtl">
                             <SelectValue placeholder="اختر الصفحة" />
                         </SelectTrigger>
                         <SelectContent dir="rtl">
@@ -672,14 +673,24 @@ export default function EditorPage({ params }: { params: { storeId: string } }) 
                     </button>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-2">
+                    {/* Mobile: Toggle Sidebar Button */}
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSidebarOpen(!sidebarOpen)}
+                        className="lg:hidden px-2 sm:px-3"
+                    >
+                        <PanelLeftOpen className="w-4 h-4" />
+                        <span className="hidden sm:inline ms-1">{language === 'ar' ? 'تحرير' : 'Edit'}</span>
+                    </Button>
                     <Button variant="outline" size="sm" asChild className="hidden sm:flex">
                         <Link href={previewUrl.replace('?preview=true', '')} target="_blank">
                             <Eye className={`w-4 h-4 ${language === 'ar' ? 'ml-2' : 'mr-2'}`} />
                             {language === 'ar' ? 'معاينة حية' : 'Live Preview'}
                         </Link>
                     </Button>
-                    <Button size="sm" onClick={() => handleSave()} disabled={saving} className="min-w-[100px]">
+                    <Button size="sm" onClick={() => handleSave()} disabled={saving} className="hidden lg:flex min-w-[100px]">
                         {saving ? <Loader2 className={`animate-spin w-4 h-4 ${language === 'ar' ? 'ml-2' : 'mr-2'}`} /> : <Save className={`w-4 h-4 ${language === 'ar' ? 'ml-2' : 'mr-2'}`} />}
                         {language === 'ar' ? 'حفظ ونشر' : 'Save & Publish'}
                     </Button>
@@ -687,9 +698,32 @@ export default function EditorPage({ params }: { params: { storeId: string } }) 
             </header>
 
             <div className="flex flex-1 overflow-hidden">
+                {/* Mobile Sidebar Overlay Backdrop */}
+                {sidebarOpen && (
+                    <div
+                        className="fixed inset-0 bg-black/40 z-30 lg:hidden"
+                        onClick={() => setSidebarOpen(false)}
+                    />
+                )}
+
                 {/* 1. Editor Sidebar */}
-                <aside className="w-80 h-full bg-card border-l border-border flex flex-col shadow-xl z-10 shrink-0 overflow-y-auto">
-                    <div className="p-4 flex flex-col gap-6">
+                <aside className={`
+                    bg-card border-l border-border flex flex-col shadow-xl z-40 shrink-0 overflow-y-auto
+                    fixed lg:relative inset-y-0 right-0 lg:inset-auto
+                    w-[85vw] sm:w-80 h-full
+                    transition-transform duration-300 ease-in-out
+                    ${sidebarOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+                    pt-0 lg:pt-0
+                `}>
+                    {/* Mobile Sidebar Header */}
+                    <div className="flex items-center justify-between p-3 border-b lg:hidden shrink-0">
+                        <h3 className="font-bold text-sm">{language === 'ar' ? 'تحرير المتجر' : 'Edit Store'}</h3>
+                        <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)} className="h-8 w-8">
+                            <X className="w-4 h-4" />
+                        </Button>
+                    </div>
+
+                    <div className="p-4 flex flex-col gap-6 flex-1 overflow-y-auto">
 
                         <Tabs defaultValue="sections" className="w-full flex-1 flex flex-col" dir={language === 'ar' ? 'rtl' : 'ltr'}>
                             <TabsList className="w-full grid grid-cols-3 mb-6">
@@ -804,12 +838,12 @@ export default function EditorPage({ params }: { params: { storeId: string } }) 
                 </aside>
 
                 {/* 2. Live Preview Iframe */}
-                <main className="flex-1 h-full bg-slate-100 relative p-4 flex flex-col items-center overflow-x-hidden overflow-y-auto">
-                    <div className={`transition-all duration-300 ease-in-out flex-1 flex flex-col bg-white overflow-hidden rounded-xl shadow-xl border border-slate-200 ${deviceView === 'desktop' ? 'w-full max-w-5xl' :
-                        deviceView === 'tablet' ? 'w-[768px]' :
-                            'w-[375px]'
+                <main className="flex-1 h-full bg-slate-100 relative p-0 lg:p-4 flex flex-col items-center overflow-x-hidden overflow-y-auto">
+                    <div className={`transition-all duration-300 ease-in-out flex-1 flex flex-col bg-white overflow-hidden lg:rounded-xl lg:shadow-xl lg:border lg:border-slate-200 w-full ${deviceView === 'desktop' ? 'lg:max-w-5xl' :
+                            deviceView === 'tablet' ? 'lg:w-[768px]' :
+                                'lg:w-[375px]'
                         }`}>
-                        <div className="w-full h-10 bg-slate-50 border-b flex items-center px-4 gap-2 shrink-0">
+                        <div className="w-full h-10 bg-slate-50 border-b items-center px-4 gap-2 shrink-0 hidden lg:flex">
                             <div className="flex gap-1.5">
                                 <div className="w-2.5 h-2.5 rounded-full bg-red-400"></div>
                                 <div className="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
