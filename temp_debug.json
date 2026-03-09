@@ -1,0 +1,57 @@
+{
+  "items": [
+    {
+      "product_id": "d59bcc59-54f0-438f-ac0c-d09710789ee3",
+      "product_snapshot": {
+        "name": {
+          "ar": "بيزك ديربي",
+          "en": ""
+        },
+        "variants": [
+          {
+            "optionId": "7ff7b441-e792-4655-b339-95425bdf0267",
+            "variantId": "56a88ab5-8f2d-4348-bbef-79f46573ead9",
+            "optionLabel": "ابيض",
+            "variantName": "اللون",
+            "priceModifier": 0
+          }
+        ]
+      }
+    },
+    {
+      "product_id": "d59bcc59-54f0-438f-ac0c-d09710789ee3",
+      "product_snapshot": {
+        "name": "بيزك ديربي",
+        "variants": [
+          {
+            "optionId": "7ff7b441-e792-4655-b339-95425bdf0267",
+            "variantId": "56a88ab5-8f2d-4348-bbef-79f46573ead9",
+            "optionLabel": "ابيض",
+            "variantName": "اللون",
+            "priceModifier": 0
+          }
+        ]
+      }
+    },
+    {
+      "product_id": "d59bcc59-54f0-438f-ac0c-d09710789ee3",
+      "product_snapshot": {
+        "name": "بيزك ديربي",
+        "variants": [
+          {
+            "optionId": "50913c33-c982-4522-86cb-42766191ce57",
+            "variantId": "56a88ab5-8f2d-4348-bbef-79f46573ead9",
+            "optionLabel": "اسود",
+            "variantName": "اللون",
+            "priceModifier": 0
+          }
+        ]
+      }
+    }
+  ],
+  "cats": [
+    {
+      "name": "{\"ar\":\"ملابس نسائية\",\"en\":\"women clothes\"}"
+    }
+  ]
+}

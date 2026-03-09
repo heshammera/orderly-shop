@@ -1,0 +1,23 @@
+{
+  "visits_count": 0,
+  "visits_error": null,
+  "items": [
+    {
+      "product_id": "d59bcc59-54f0-438f-ac0c-d09710789ee3",
+      "total_price": 110,
+      "product": {
+        "name": "{\"ar\":\"بيزك ديربي\",\"en\":\"\"}",
+        "images": "[\"https://iuggymtefgbunbiieosn.supabase.co/storage/v1/object/public/products/products/1771842324407-1747830189351586460.jpg\",\"https://iuggymtefgbunbiieosn.supabase.co/storage/v1/object/public/products/products/1771842329985-1747830252438999469.jpg\",\"https://iuggymtefgbunbiieosn.supabase.co/storage/v1/object/public/products/products/1771842333384-1747830278562695941.jpg\",\"https://iuggymtefgbunbiieosn.supabase.co/storage/v1/object/public/products/products/1771842337748-1747830358860388863.jpg\",\"https://iuggymtefgbunbiieosn.supabase.co/storage/v1/object/public/products/products/1771842351392-1747830359920947203.jpg\",\"https://iuggymtefgbunbiieosn.supabase.co/storage/v1/object/public/products/products/1771842356195-1747830359955288164.jpg\",\"https://iuggymtefgbunbiieosn.supabase.co/storage/v1/object/public/products/products/1771842364334-1747830360087367856.jpg\",\"https://iuggymtefgbunbiieosn.supabase.co/storage/v1/object/public/products/products/1771842380517-1747830360184202628.jpg\",\"https://iuggymtefgbunbiieosn.supabase.co/storage/v1/object/public/products/products/1771842394637-1763316599031694500.jpg\"]"
+      }
+    },
+    {
+      "product_id": "d59bcc59-54f0-438f-ac0c-d09710789ee3",
+      "total_price": 80,
+      "product": {
+        "name": "{\"ar\":\"بيزك ديربي\",\"en\":\"\"}",
+        "images": "[\"https://iuggymtefgbunbiieosn.supabase.co/storage/v1/object/public/products/products/1771842324407-1747830189351586460.jpg\",\"https://iuggymtefgbunbiieosn.supabase.co/storage/v1/object/public/products/products/1771842329985-1747830252438999469.jpg\",\"https://iuggymtefgbunbiieosn.supabase.co/storage/v1/object/public/products/products/1771842333384-1747830278562695941.jpg\",\"https://iuggymtefgbunbiieosn.supabase.co/storage/v1/object/public/products/products/1771842337748-1747830358860388863.jpg\",\"https://iuggymtefgbunbiieosn.supabase.co/storage/v1/object/public/products/products/1771842351392-1747830359920947203.jpg\",\"https://iuggymtefgbunbiieosn.supabase.co/storage/v1/object/public/products/products/1771842356195-1747830359955288164.jpg\",\"https://iuggymtefgbunbiieosn.supabase.co/storage/v1/object/public/products/products/1771842364334-1747830360087367856.jpg\",\"https://iuggymtefgbunbiieosn.supabase.co/storage/v1/object/public/products/products/1771842380517-1747830360184202628.jpg\",\"https://iuggymtefgbunbiieosn.supabase.co/storage/v1/object/public/products/products/1771842394637-1763316599031694500.jpg\"]"
+      }
+    }
+  ],
+  "items_error": null
+}

@@ -47,24 +47,32 @@ export function TopProductsWidget({ storeId, currency, dateRange = '30d' }: TopP
 
             const orderIds = orders.map(o => o.id);
 
-            // Get order items for these orders
+            // Get order items for these orders joining live product data
             const { data: orderItems } = await supabase
                 .from('order_items')
-                .select('product_snapshot, quantity, price, order_id')
+                .select(`
+                    quantity, 
+                    total_price, 
+                    product_id,
+                    product_snapshot,
+                    product:products(name, images)
+                `)
                 .in('order_id', orderIds);
 
             // Group by product
-            const grouped = orderItems?.reduce((acc: any, item) => {
-                const productId = item.product_snapshot?.id || 'unknown';
+            const grouped = orderItems?.reduce((acc: any, item: any) => {
+                const productId = item.product_id || 'custom-bump-offer';
                 if (!acc[productId]) {
                     acc[productId] = {
-                        product: item.product_snapshot,
+                        productId,
+                        product: item.product,
+                        snapshotName: item.product_snapshot?.name,
                         totalQuantity: 0,
                         totalRevenue: 0,
                     };
                 }
                 acc[productId].totalQuantity += item.quantity;
-                acc[productId].totalRevenue += item.price * item.quantity;
+                acc[productId].totalRevenue += item.total_price || 0;
                 return acc;
             }, {});
 
@@ -93,23 +101,56 @@ export function TopProductsWidget({ storeId, currency, dateRange = '30d' }: TopP
                     </p>
                 ) : (
                     <div className="space-y-4">
-                        {topProducts.map((item: any, index) => {
-                            const productName = typeof item.product?.name === 'string'
-                                ? JSON.parse(item.product.name)
-                                : item.product?.name;
-                            const displayName = productName?.en || productName?.ar || 'Unknown Product';
+                        {topProducts.map((item: any, index: number) => {
+                            let displayName = item.snapshotName || 'Unknown Product';
+
+                            // Try to parse JSON names from live product table
+                            if (item.product?.name) {
+                                try {
+                                    const parsed = typeof item.product.name === 'string' && item.product.name.startsWith('{')
+                                        ? JSON.parse(item.product.name)
+                                        : item.product.name;
+                                    displayName = parsed?.ar || parsed?.en || (typeof parsed === 'string' ? parsed : displayName);
+                                } catch (e) { displayName = item.product.name; }
+                            } else if (item.snapshotName) {
+                                if (typeof item.snapshotName === 'object') {
+                                    displayName = item.snapshotName?.ar || item.snapshotName?.en || displayName;
+                                } else if (typeof item.snapshotName === 'string' && item.snapshotName.startsWith('{')) {
+                                    try {
+                                        const parsed = JSON.parse(item.snapshotName);
+                                        displayName = parsed?.ar || parsed?.en || displayName;
+                                    } catch (e) { }
+                                }
+                            }
+
+                            // Parse images - stored as stringified JSON in DB
+                            let imageUrl = null;
+                            if (item.product?.images) {
+                                try {
+                                    const imgs = typeof item.product.images === 'string'
+                                        ? JSON.parse(item.product.images)
+                                        : item.product.images;
+                                    if (Array.isArray(imgs) && imgs.length > 0) {
+                                        imageUrl = imgs[0];
+                                    }
+                                } catch (e) { }
+                            }
 
                             return (
                                 <div key={index} className="flex items-center gap-4 p-3 border rounded-lg">
                                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
                                         {index + 1}
                                     </div>
-                                    {item.product?.images?.[0] && (
+                                    {imageUrl ? (
                                         <img
-                                            src={item.product.images[0]}
+                                            src={imageUrl}
                                             alt={displayName}
                                             className="w-12 h-12 object-cover rounded"
                                         />
+                                    ) : (
+                                        <div className="w-12 h-12 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs text-muted-foreground">
+                                            -
+                                        </div>
                                     )}
                                     <div className="flex-1">
                                         <p className="font-medium">{displayName}</p>

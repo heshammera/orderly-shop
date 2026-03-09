@@ -43,7 +43,7 @@ export function SalesByCategoryChart({ storeId, dateRange = '30d', currency }: S
                 .select('id')
                 .eq('store_id', storeId)
                 .gte('created_at', startDate)
-                .in('status', ['delivered', 'processing', 'shipped', 'completed']);
+                .in('status', ['pending', 'completed', 'delivered', 'processing', 'shipped']);
 
             const orderIds = orders?.map(o => o.id) || [];
 
@@ -93,7 +93,15 @@ export function SalesByCategoryChart({ storeId, dateRange = '30d', currency }: S
                 if (mapping) {
                     const category = categories?.find(c => c.id === mapping.category_id);
                     if (category) {
-                        const catName = category.name?.[language] || category.name?.['en'] || 'Unknown';
+                        let catName = 'Unknown';
+                        if (category.name) {
+                            let parsed = category.name;
+                            if (typeof category.name === 'string' && category.name.startsWith('{')) {
+                                try { parsed = JSON.parse(category.name); } catch (e) { }
+                            }
+                            catName = parsed?.[language] || parsed?.['en'] || (typeof parsed === 'string' ? parsed : 'Unknown');
+                        }
+
                         if (!categoryRevenue[category.id]) {
                             categoryRevenue[category.id] = { name: catName, value: 0 };
                         }

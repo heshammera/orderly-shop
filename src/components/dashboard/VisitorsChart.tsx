@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Loader2 } from 'lucide-react';
+import { TrendingUp, Loader2 } from 'lucide-react';
 import { format, subDays } from 'date-fns';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -20,10 +20,10 @@ export function VisitorsChart({ storeId, dateRange = '30d' }: VisitorsChartProps
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        fetchVisitorsData();
+        fetchActivityData();
     }, [storeId, dateRange]);
 
-    const fetchVisitorsData = async () => {
+    const fetchActivityData = async () => {
         setIsLoading(true);
         try {
             let days = 30;
@@ -34,41 +34,34 @@ export function VisitorsChart({ storeId, dateRange = '30d' }: VisitorsChartProps
 
             const startDate = subDays(new Date(), days).toISOString();
 
-            // Fetch store visits
-            const { data: visits } = await supabase
-                .from('store_visits')
+            // Use orders as activity data since store_visits may be empty
+            const { data: orders } = await supabase
+                .from('orders')
                 .select('created_at')
                 .eq('store_id', storeId)
                 .gte('created_at', startDate);
 
-            // Group by day
-            const grouped = visits?.reduce((acc: any, visit) => {
-                const day = format(new Date(visit.created_at), 'yyyy-MM-dd');
-                if (!acc[day]) {
-                    acc[day] = { date: day, visitors: 0 };
-                }
-                acc[day].visitors += 1;
-                return acc;
-            }, {});
+            // Pre-fill all dates
+            const grouped: Record<string, { date: string; orders: number }> = {};
+            for (let i = 0; i < days; i++) {
+                const day = format(subDays(new Date(), days - i - 1), 'yyyy-MM-dd');
+                grouped[day] = { date: day, orders: 0 };
+            }
 
-            let chartArray = Object.values(grouped || {}).sort((a: any, b: any) =>
+            orders?.forEach((order) => {
+                const day = format(new Date(order.created_at), 'yyyy-MM-dd');
+                if (grouped[day]) {
+                    grouped[day].orders += 1;
+                }
+            });
+
+            const chartArray = Object.values(grouped).sort((a: any, b: any) =>
                 a.date.localeCompare(b.date)
             );
 
-            // If no actual tracking data, create a mock array just to show the UI functions
-            // Wait, we can just leave it empty. Let's make it look nice if there's no data yet.
-            if (chartArray.length === 0) {
-                chartArray = Array.from({ length: days }).map((_, i) => {
-                    return {
-                        date: format(subDays(new Date(), days - i - 1), 'yyyy-MM-dd'),
-                        visitors: 0 // Show 0 instead of mock data so it's accurate
-                    };
-                });
-            }
-
             setChartData(chartArray);
         } catch (error) {
-            console.error('Error fetching visitors data:', error);
+            console.error('Error fetching activity data:', error);
         } finally {
             setIsLoading(false);
         }
@@ -76,11 +69,11 @@ export function VisitorsChart({ storeId, dateRange = '30d' }: VisitorsChartProps
 
     const getTitle = () => {
         const ranges: Record<string, { ar: string, en: string }> = {
-            '7d': { ar: 'زيارات المتجر - آخر 7 أيام', en: 'Store Visits - Last 7 Days' },
-            '30d': { ar: 'زيارات المتجر - آخر 30 يوم', en: 'Store Visits - Last 30 Days' },
-            '90d': { ar: 'زيارات المتجر - آخر 3 أشهر', en: 'Store Visits - Last 3 Months' },
-            '180d': { ar: 'زيارات المتجر - آخر 6 أشهر', en: 'Store Visits - Last 6 Months' },
-            '365d': { ar: 'زيارات المتجر - آخر 12 شهرًا', en: 'Store Visits - Last 12 Months' },
+            '7d': { ar: 'نشاط الطلبات - آخر 7 أيام', en: 'Order Activity - Last 7 Days' },
+            '30d': { ar: 'نشاط الطلبات - آخر 30 يوم', en: 'Order Activity - Last 30 Days' },
+            '90d': { ar: 'نشاط الطلبات - آخر 3 أشهر', en: 'Order Activity - Last 3 Months' },
+            '180d': { ar: 'نشاط الطلبات - آخر 6 أشهر', en: 'Order Activity - Last 6 Months' },
+            '365d': { ar: 'نشاط الطلبات - آخر 12 شهرًا', en: 'Order Activity - Last 12 Months' },
         };
         return language === 'ar' ? ranges[dateRange]?.ar : ranges[dateRange]?.en;
     };
@@ -89,7 +82,7 @@ export function VisitorsChart({ storeId, dateRange = '30d' }: VisitorsChartProps
         <Card className="h-full">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <Users className="w-5 h-5" />
+                    <TrendingUp className="w-5 h-5" />
                     {getTitle()}
                 </CardTitle>
             </CardHeader>
@@ -103,9 +96,9 @@ export function VisitorsChart({ storeId, dateRange = '30d' }: VisitorsChartProps
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                                 <defs>
-                                    <linearGradient id="colorVisits" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                                    <linearGradient id="colorOrders" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.4} />
+                                        <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
@@ -121,19 +114,19 @@ export function VisitorsChart({ storeId, dateRange = '30d' }: VisitorsChartProps
                                     axisLine={false}
                                     tickLine={false}
                                     tick={{ fontSize: 12 }}
-                                    tickFormatter={(val) => val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val}
+                                    allowDecimals={false}
                                 />
                                 <Tooltip
-                                    formatter={(value: number) => [`${value}`, language === 'ar' ? 'الزيارات' : 'Visits']}
+                                    formatter={(value: number) => [`${value}`, language === 'ar' ? 'الطلبات' : 'Orders']}
                                     labelFormatter={(label) => format(new Date(label), 'PPP')}
                                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                                 />
                                 <Area
                                     type="monotone"
-                                    dataKey="visitors"
-                                    stroke="hsl(var(--primary))"
+                                    dataKey="orders"
+                                    stroke="#8B5CF6"
                                     fillOpacity={1}
-                                    fill="url(#colorVisits)"
+                                    fill="url(#colorOrders)"
                                 />
                             </AreaChart>
                         </ResponsiveContainer>
@@ -143,3 +136,4 @@ export function VisitorsChart({ storeId, dateRange = '30d' }: VisitorsChartProps
         </Card>
     );
 }
+

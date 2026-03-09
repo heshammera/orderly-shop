@@ -10,10 +10,11 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 interface RevenueChartProps {
     storeId: string;
+    currency: string;
     dateRange?: string;
 }
 
-export function RevenueChart({ storeId, dateRange = '30d' }: RevenueChartProps) {
+export function RevenueChart({ storeId, currency, dateRange = '30d' }: RevenueChartProps) {
     const supabase = createClient();
     const { language } = useLanguage();
     const [chartData, setChartData] = useState<any[]>([]);
@@ -39,20 +40,24 @@ export function RevenueChart({ storeId, dateRange = '30d' }: RevenueChartProps) 
                 .select('created_at, total')
                 .eq('store_id', storeId)
                 .gte('created_at', startDate)
-                .in('status', ['delivered', 'processing', 'shipped']);
+                .in('status', ['pending', 'completed', 'delivered', 'processing', 'shipped']);
 
-            // Group by day
-            const grouped = orders?.reduce((acc: any, order) => {
+            // Pre-fill all dates in range with 0 to ensure full chart rendering
+            const grouped: Record<string, { date: string; revenue: number; count: number }> = {};
+            for (let i = 0; i < days; i++) {
+                const day = format(subDays(new Date(), days - i - 1), 'yyyy-MM-dd');
+                grouped[day] = { date: day, revenue: 0, count: 0 };
+            }
+
+            orders?.forEach((order) => {
                 const day = format(new Date(order.created_at), 'yyyy-MM-dd');
-                if (!acc[day]) {
-                    acc[day] = { date: day, revenue: 0, count: 0 };
+                if (grouped[day]) {
+                    grouped[day].revenue += order.total;
+                    grouped[day].count += 1;
                 }
-                acc[day].revenue += order.total;
-                acc[day].count += 1;
-                return acc;
-            }, {});
+            });
 
-            const chartArray = Object.values(grouped || {}).sort((a: any, b: any) =>
+            const chartArray = Object.values(grouped).sort((a: any, b: any) =>
                 a.date.localeCompare(b.date)
             );
 
@@ -88,10 +93,6 @@ export function RevenueChart({ storeId, dateRange = '30d' }: RevenueChartProps) 
                     <div className="flex justify-center items-center py-20">
                         <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
                     </div>
-                ) : chartData.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">
-                        {language === 'ar' ? 'لا توجد بيانات' : 'No data available'}
-                    </p>
                 ) : (
                     <div className="h-[350px] w-full mt-4">
                         <ResponsiveContainer width="100%" height="100%">
@@ -112,7 +113,7 @@ export function RevenueChart({ storeId, dateRange = '30d' }: RevenueChartProps) 
                                     tickFormatter={(val) => val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val}
                                 />
                                 <Tooltip
-                                    formatter={(value: number) => [`${value.toFixed(2)} SAR`, language === 'ar' ? 'الإيرادات' : 'Revenue']}
+                                    formatter={(value: number) => [`${value.toFixed(2)} ${currency}`, language === 'ar' ? 'الإيرادات' : 'Revenue']}
                                     labelFormatter={(label) => format(new Date(label), 'PPP')}
                                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                                 />

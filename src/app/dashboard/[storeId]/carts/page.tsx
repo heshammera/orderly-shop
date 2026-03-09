@@ -1,16 +1,23 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ShoppingBag, MessageCircle, Clock, CheckCircle2, XCircle } from 'lucide-react';
+import { Loader2, ShoppingBag, MessageCircle, Clock, CheckCircle2, XCircle, TrendingUp, DollarSign, ShoppingCart, Link2, Copy, ChevronDown } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { formatPrice } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { createClient } from '@/lib/supabase/client';
 
 interface CartItem {
     productId: string;
@@ -33,17 +40,74 @@ interface AbandonedCart {
     updated_at: string;
 }
 
+interface CartStats {
+    pending: number;
+    recovered: number;
+    lost: number;
+    totalValue: number;
+    recoveredValue: number;
+    recoveryRate: number;
+}
+
 export default function AbandonedCartsPage({ params }: { params: { storeId: string } }) {
     const { language, dir } = useLanguage();
     const { toast } = useToast();
+    const supabase = createClient();
 
     const [carts, setCarts] = useState<AbandonedCart[]>([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState<'pending' | 'recovered' | 'lost'>('pending');
+    const [stats, setStats] = useState<CartStats>({ pending: 0, recovered: 0, lost: 0, totalValue: 0, recoveredValue: 0, recoveryRate: 0 });
+    const [storeSlug, setStoreSlug] = useState('');
+    const [storeCurrency, setStoreCurrency] = useState('SAR');
 
-    // Using a fake store name since we might not have it in state here without fetching, 
-    // but the URL will suffice for WhatsApp context
-    const storeName = language === 'ar' ? 'متجرنا' : 'our store';
+    // Fetch store info
+    useEffect(() => {
+        const fetchStoreInfo = async () => {
+            const { data } = await supabase
+                .from('stores')
+                .select('slug, currency')
+                .eq('id', params.storeId)
+                .single();
+            if (data) {
+                setStoreSlug(data.slug || '');
+                setStoreCurrency(data.currency || 'SAR');
+            }
+        };
+        fetchStoreInfo();
+    }, [params.storeId]);
+
+    // Fetch stats across all statuses
+    const fetchStats = useCallback(async () => {
+        try {
+            const [pendingRes, recoveredRes, lostRes] = await Promise.all([
+                supabase.from('abandoned_carts').select('total_price').eq('store_id', params.storeId).eq('recovery_status', 'pending'),
+                supabase.from('abandoned_carts').select('total_price').eq('store_id', params.storeId).eq('recovery_status', 'recovered'),
+                supabase.from('abandoned_carts').select('total_price').eq('store_id', params.storeId).eq('recovery_status', 'lost'),
+            ]);
+
+            const pendingData = pendingRes.data || [];
+            const recoveredData = recoveredRes.data || [];
+            const lostData = lostRes.data || [];
+
+            const pendingValue = pendingData.reduce((sum, c) => sum + (c.total_price || 0), 0);
+            const recoveredValue = recoveredData.reduce((sum, c) => sum + (c.total_price || 0), 0);
+            const lostValue = lostData.reduce((sum, c) => sum + (c.total_price || 0), 0);
+            const total = pendingData.length + recoveredData.length + lostData.length;
+            const rate = total > 0 ? Math.round((recoveredData.length / total) * 100) : 0;
+
+            setStats({
+                pending: pendingData.length,
+                recovered: recoveredData.length,
+                lost: lostData.length,
+                totalValue: pendingValue + recoveredValue + lostValue,
+                recoveredValue,
+                recoveryRate: rate,
+            });
+        } catch (error) {
+            console.error('Error fetching stats:', error);
+        }
+    }, [params.storeId]);
 
     const fetchCarts = async () => {
         setLoading(true);
@@ -67,7 +131,7 @@ export default function AbandonedCartsPage({ params }: { params: { storeId: stri
 
     useEffect(() => {
         fetchCarts();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        fetchStats();
     }, [params.storeId, statusFilter]);
 
     const updateStatus = async (id: string, newStatus: 'recovered' | 'lost') => {
@@ -80,6 +144,7 @@ export default function AbandonedCartsPage({ params }: { params: { storeId: stri
 
             if (res.ok) {
                 setCarts(carts.filter(cart => cart.id !== id));
+                fetchStats();
                 toast({
                     title: language === 'ar' ? 'تم التحديث' : 'Updated',
                     description: language === 'ar' ? 'تم تحديث حالة السلة بنجاح' : 'Cart status updated successfully',
@@ -97,13 +162,8 @@ export default function AbandonedCartsPage({ params }: { params: { storeId: stri
     };
 
     const formatPhoneNumber = (phone: string) => {
-        // Simple formatter: remove leading zeors and non-digits for wa.me link
         let cleaned = phone.replace(/\D/g, '');
         if (cleaned.startsWith('0')) {
-            // Assume saudi or local code if no country code provided, but this is basic
-            // Ideally, the user enters the full number or we know the country. 
-            // We can just rely on standard formats. To be safe, keep it as is if we don't know the exact country code.
-            // But WhatsApp requires country code. If starts with 05, it's likely SA (966).
             if (cleaned.startsWith('05') && cleaned.length === 10) {
                 cleaned = '966' + cleaned.substring(1);
             }
@@ -111,15 +171,58 @@ export default function AbandonedCartsPage({ params }: { params: { storeId: stri
         return cleaned;
     };
 
-    const getWhatsAppLink = (cart: AbandonedCart) => {
+    // Recovery link generator
+    const getRecoveryLink = (cart: AbandonedCart) => {
+        if (!storeSlug) return '';
+        const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+        return `${baseUrl}/s/${storeSlug}?recover=${cart.id}`;
+    };
+
+    const copyRecoveryLink = (cart: AbandonedCart) => {
+        const link = getRecoveryLink(cart);
+        navigator.clipboard.writeText(link);
+        toast({
+            title: language === 'ar' ? 'تم النسخ' : 'Copied',
+            description: language === 'ar' ? 'تم نسخ رابط الاسترداد' : 'Recovery link copied',
+        });
+    };
+
+    // WhatsApp message templates
+    const getWhatsAppTemplates = (cart: AbandonedCart) => {
         const phone = formatPhoneNumber(cart.customer_phone);
         const name = cart.customer_name || (language === 'ar' ? 'عميلنا العزيز' : 'Customer');
+        const recoveryLink = getRecoveryLink(cart);
+        const itemCount = cart.cart_items?.length || 0;
+        const totalFormatted = `${cart.total_price?.toFixed(2)} ${storeCurrency}`;
 
-        const textAr = `مرحباً ${name}، لاحظنا أنك تركت بعض المنتجات في السلة التابعة لمرتجرنا. هل يمكننا مساعدتك في إتمام الطلب؟`;
-        const textEn = `Hello ${name}, we noticed you left some items in your cart at ${storeName}. Can we help you complete your order?`;
+        const templates = [
+            {
+                id: 'friendly',
+                label: language === 'ar' ? '💬 تذكير ودي' : '💬 Friendly Reminder',
+                message: language === 'ar'
+                    ? `مرحباً ${name} 👋\n\nلاحظنا إنك تركت ${itemCount} منتج في سلتك بقيمة ${totalFormatted}.\n\nهل تحتاج مساعدة في إتمام طلبك؟ يمكنك العودة مباشرة من هنا:\n${recoveryLink}\n\nنحن هنا لمساعدتك! 😊`
+                    : `Hi ${name} 👋\n\nWe noticed you left ${itemCount} item(s) in your cart worth ${totalFormatted}.\n\nNeed help completing your order? You can go back directly:\n${recoveryLink}\n\nWe're here to help! 😊`,
+            },
+            {
+                id: 'discount',
+                label: language === 'ar' ? '🎁 عرض خصم' : '🎁 Discount Offer',
+                message: language === 'ar'
+                    ? `مرحباً ${name} 🎉\n\nمنتجاتك لا تزال في انتظارك! (${itemCount} منتج بقيمة ${totalFormatted})\n\n🎁 خصيصاً لك: استخدم كود خصم خاص عند إتمام طلبك!\n\nأكمل طلبك الآن:\n${recoveryLink}\n\nالعرض لفترة محدودة ⏰`
+                    : `Hi ${name} 🎉\n\nYour items are still waiting! (${itemCount} item(s) worth ${totalFormatted})\n\n🎁 Just for you: Use a special discount code when completing your order!\n\nComplete your order now:\n${recoveryLink}\n\nLimited time offer ⏰`,
+            },
+            {
+                id: 'urgency',
+                label: language === 'ar' ? '⚡ فرصة أخيرة' : '⚡ Last Chance',
+                message: language === 'ar'
+                    ? `${name}، لا تفوّت الفرصة! ⚡\n\nمنتجاتك في السلة (${totalFormatted}) قد تنفد قريباً.\n\nأكمل طلبك قبل فوات الأوان:\n${recoveryLink}\n\n⚠️ الكميات محدودة!`
+                    : `${name}, don't miss out! ⚡\n\nYour cart items (${totalFormatted}) may go out of stock soon.\n\nComplete your order before it's too late:\n${recoveryLink}\n\n⚠️ Limited stock!`,
+            },
+        ];
 
-        const message = encodeURIComponent(language === 'ar' ? textAr : textEn);
-        return `https://wa.me/${phone}?text=${message}`;
+        return templates.map(t => ({
+            ...t,
+            link: `https://wa.me/${phone}?text=${encodeURIComponent(t.message)}`,
+        }));
     };
 
     const getProductName = (nameObj: any) => {
@@ -143,11 +246,79 @@ export default function AbandonedCartsPage({ params }: { params: { storeId: stri
                 </p>
             </div>
 
+            {/* Stats Cards */}
+            <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+                <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/30 dark:to-orange-900/20 border-orange-200 dark:border-orange-800">
+                    <CardContent className="p-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-orange-500/10">
+                                <ShoppingCart className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                            </div>
+                            <div>
+                                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'سلات معلّقة' : 'Pending Carts'}</p>
+                                <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">{stats.pending}</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/30 dark:to-red-900/20 border-red-200 dark:border-red-800">
+                    <CardContent className="p-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-red-500/10">
+                                <DollarSign className="w-5 h-5 text-red-600 dark:text-red-400" />
+                            </div>
+                            <div>
+                                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'القيمة الإجمالية' : 'Total Value'}</p>
+                                <p className="text-2xl font-bold text-red-700 dark:text-red-300">{stats.totalValue.toFixed(0)} {storeCurrency}</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/20 border-green-200 dark:border-green-800">
+                    <CardContent className="p-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-green-500/10">
+                                <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+                            </div>
+                            <div>
+                                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'تم استردادها' : 'Recovered'}</p>
+                                <p className="text-2xl font-bold text-green-700 dark:text-green-300">{stats.recovered}</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border-blue-200 dark:border-blue-800">
+                    <CardContent className="p-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-blue-500/10">
+                                <TrendingUp className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <div>
+                                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'نسبة الاسترداد' : 'Recovery Rate'}</p>
+                                <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{stats.recoveryRate}%</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
             <Tabs defaultValue="pending" onValueChange={(v) => setStatusFilter(v as any)}>
                 <TabsList className="grid w-full grid-cols-3 max-w-md">
-                    <TabsTrigger value="pending">{language === 'ar' ? 'بانتظار الاسترجاع' : 'Pending'}</TabsTrigger>
-                    <TabsTrigger value="recovered">{language === 'ar' ? 'تم الاسترجاع' : 'Recovered'}</TabsTrigger>
-                    <TabsTrigger value="lost">{language === 'ar' ? 'مفقودة' : 'Lost'}</TabsTrigger>
+                    <TabsTrigger value="pending">
+                        {language === 'ar' ? 'بانتظار الاسترجاع' : 'Pending'}
+                        {stats.pending > 0 && <Badge variant="secondary" className="ms-2 text-xs">{stats.pending}</Badge>}
+                    </TabsTrigger>
+                    <TabsTrigger value="recovered">
+                        {language === 'ar' ? 'تم الاسترجاع' : 'Recovered'}
+                        {stats.recovered > 0 && <Badge variant="secondary" className="ms-2 text-xs">{stats.recovered}</Badge>}
+                    </TabsTrigger>
+                    <TabsTrigger value="lost">
+                        {language === 'ar' ? 'مفقودة' : 'Lost'}
+                        {stats.lost > 0 && <Badge variant="secondary" className="ms-2 text-xs">{stats.lost}</Badge>}
+                    </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value={statusFilter} className="mt-6">
@@ -181,7 +352,7 @@ export default function AbandonedCartsPage({ params }: { params: { storeId: stri
                                                     <p className="text-muted-foreground font-mono mt-1" dir="ltr">{cart.customer_phone}</p>
                                                 </div>
                                                 <div className="text-right">
-                                                    <div className="font-black text-xl text-primary">{formatPrice(cart.total_price)}</div>
+                                                    <div className="font-black text-xl text-primary">{formatPrice(cart.total_price)} {storeCurrency}</div>
                                                     <div className="text-xs text-muted-foreground flex items-center gap-1 justify-end mt-1">
                                                         <Clock className="w-3.5 h-3.5" />
                                                         {formatDistanceToNow(new Date(cart.updated_at), { addSuffix: true, locale: language === 'ar' ? ar : enUS })}
@@ -189,6 +360,7 @@ export default function AbandonedCartsPage({ params }: { params: { storeId: stri
                                                 </div>
                                             </div>
 
+                                            {/* Cart items with images */}
                                             <div className="bg-muted/40 rounded-lg p-4">
                                                 <h4 className="text-sm font-semibold mb-3">
                                                     {language === 'ar' ? 'محتويات السلة' : 'Cart Contents'} ({cart.cart_items?.length || 0})
@@ -196,24 +368,24 @@ export default function AbandonedCartsPage({ params }: { params: { storeId: stri
                                                 <div className="space-y-3">
                                                     {cart.cart_items?.map((item, i) => (
                                                         <div key={i} className="flex gap-3 items-center">
-                                                            <div className="w-10 h-10 rounded bg-background border flex-shrink-0 overflow-hidden">
+                                                            <div className="w-12 h-12 rounded-lg bg-background border flex-shrink-0 overflow-hidden">
                                                                 {item.productImage ? (
                                                                     <img src={item.productImage} alt="" className="w-full h-full object-cover" />
                                                                 ) : (
-                                                                    <ShoppingBag className="w-5 h-5 m-auto text-muted-foreground opacity-50 mt-2" />
+                                                                    <ShoppingBag className="w-5 h-5 m-auto text-muted-foreground opacity-50 mt-3" />
                                                                 )}
                                                             </div>
                                                             <div className="flex-1 min-w-0">
                                                                 <p className="text-sm font-medium truncate">{getProductName(item.productName)}</p>
                                                                 {item.variants?.length > 0 && (
                                                                     <p className="text-xs text-muted-foreground truncate">
-                                                                        {item.variants.map(v => v.optionLabel?.[language] || v.optionLabel?.ar || '').join(' - ')}
+                                                                        {item.variants.map(v => v.optionLabel?.[language] || v.optionLabel?.ar || v.optionLabel || '').join(' - ')}
                                                                     </p>
                                                                 )}
                                                             </div>
                                                             <div className="text-end text-sm whitespace-nowrap">
                                                                 <span className="text-muted-foreground mr-2">{item.quantity}x</span>
-                                                                <span className="font-semibold">{formatPrice(item.unitPrice)}</span>
+                                                                <span className="font-semibold">{formatPrice(item.unitPrice)} {storeCurrency}</span>
                                                             </div>
                                                         </div>
                                                     ))}
@@ -221,16 +393,45 @@ export default function AbandonedCartsPage({ params }: { params: { storeId: stri
                                             </div>
                                         </div>
 
-                                        <div className="mt-6 md:mt-0 flex flex-col gap-3 min-w-[200px]">
+                                        {/* Action Buttons */}
+                                        <div className="mt-6 md:mt-0 flex flex-col gap-3 min-w-[220px]">
                                             {statusFilter === 'pending' && (
                                                 <>
+                                                    {/* WhatsApp Templates Dropdown */}
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button
+                                                                className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white gap-2 font-bold"
+                                                            >
+                                                                <MessageCircle className="w-5 h-5" />
+                                                                {language === 'ar' ? 'تواصل عبر واتساب' : 'Contact WhatsApp'}
+                                                                <ChevronDown className="w-4 h-4 ms-auto" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" className="w-56">
+                                                            {getWhatsAppTemplates(cart).map((template) => (
+                                                                <DropdownMenuItem
+                                                                    key={template.id}
+                                                                    onClick={() => window.open(template.link, '_blank')}
+                                                                    className="cursor-pointer py-3"
+                                                                >
+                                                                    <span className="font-medium">{template.label}</span>
+                                                                </DropdownMenuItem>
+                                                            ))}
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+
+                                                    {/* Recovery Link */}
                                                     <Button
-                                                        className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white gap-2 font-bold"
-                                                        onClick={() => window.open(getWhatsAppLink(cart), '_blank')}
+                                                        variant="outline"
+                                                        className="w-full gap-2"
+                                                        onClick={() => copyRecoveryLink(cart)}
                                                     >
-                                                        <MessageCircle className="w-5 h-5" />
-                                                        {language === 'ar' ? 'تواصل عبر واتساب' : 'Contact WhatsApp'}
+                                                        <Link2 className="w-4 h-4" />
+                                                        {language === 'ar' ? 'نسخ رابط الاسترداد' : 'Copy Recovery Link'}
+                                                        <Copy className="w-3 h-3 ms-auto opacity-50" />
                                                     </Button>
+
                                                     <div className="grid grid-cols-2 gap-2 mt-2">
                                                         <Button
                                                             variant="outline"

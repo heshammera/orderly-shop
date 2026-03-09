@@ -80,7 +80,7 @@ export default function AnalyticsPage({ params }: { params: { storeId: string } 
             <AdvancedAnalyticsStats storeId={params.storeId} currency={currency} dateRange={dateRange} />
 
             <div className="grid gap-6 md:grid-cols-2">
-                <RevenueChart storeId={params.storeId} dateRange={dateRange} />
+                <RevenueChart storeId={params.storeId} currency={currency} dateRange={dateRange} />
                 <SalesByCategoryChart storeId={params.storeId} currency={currency} dateRange={dateRange} />
             </div>
 

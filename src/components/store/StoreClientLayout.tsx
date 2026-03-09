@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Menu, ShoppingCart, Globe, Store as StoreIcon, Truck } from 'lucide-react';
 import { CartProvider, useCart } from '@/contexts/CartContext';
+import { CartRecoveryHandler } from '@/components/store/CartRecoveryHandler';
 import { CartDrawer } from '@/components/store/CartDrawer';
 import { TrackingPixels } from '@/components/store/TrackingPixels';
 import { StoreDashboardLink } from '@/components/store/StoreDashboardLink';
@@ -166,6 +167,7 @@ export function StoreClientLayout({ children, store, integrations = {}, headerCa
     return (
         <div className="min-h-screen bg-background" dir={dir}>
             <CartProvider storeId={store.id}>
+                <CartRecoveryHandler storeSlug={store.slug} />
                 <TrackingPixels integrations={integrations} />
                 <CartDrawer store={{ id: store.id, currency: store.currency, slug: store.slug }} />
                 <main className="flex flex-col min-h-screen">
