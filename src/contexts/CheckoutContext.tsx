@@ -221,6 +221,20 @@ export function CheckoutProvider({ store, children, isEditable = false }: Checko
             if (data.usage_limit && data.used_count >= data.usage_limit) throw new Error('Coupon usage limit reached');
             if (data.min_order_amount && subtotal < data.min_order_amount) throw new Error(`Minimum order amount is ${data.min_order_amount}`);
 
+            // Check max_per_customer limit
+            if (data.max_per_customer && formData.phone) {
+                const { count: customerUses, error: usesError } = await supabase
+                    .from('orders')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('store_id', store.id)
+                    .eq('coupon_code', couponCode)
+                    .eq('customer_phone', formData.phone);
+
+                if (!usesError && customerUses !== null && customerUses >= data.max_per_customer) {
+                    throw new Error('Coupon max usage per customer reached');
+                }
+            }
+
             let discountValue = 0;
             if (data.discount_type === 'percentage') {
                 discountValue = (subtotal * data.discount_value) / 100;
@@ -237,9 +251,23 @@ export function CheckoutProvider({ store, children, isEditable = false }: Checko
                 description: `${language === 'ar' ? 'تم خصم' : 'Saved'} ${formatPrice(discountValue)}`,
             });
         } catch (error: any) {
+            let errorMsg = error.message;
+            let arErrorMsg = 'الكوبون غير موجود أو غير فعال';
+
+            if (error.message === 'Coupon expired') {
+                arErrorMsg = 'الكوبون منتهي الصلاحية';
+            } else if (error.message === 'Coupon usage limit reached') {
+                arErrorMsg = 'نفذت كمية هذا الكوبون';
+            } else if (error.message.includes('Minimum order')) {
+                arErrorMsg = `الحد الأدنى للطلب هو ${error.message.split('is ')[1]}`;
+            } else if (error.message === 'Coupon max usage per customer reached') {
+                errorMsg = 'You have reached the maximum usage limit for this coupon';
+                arErrorMsg = 'لقد استنفدت الحد الأقصى لاستخدام هذا الكوبون';
+            }
+
             toast({
                 title: language === 'ar' ? 'كوبون غير صالح' : 'Invalid Coupon',
-                description: error.message === 'Invalid coupon code' ? (language === 'ar' ? 'الكوبون غير موجود أو غير فعال' : 'Coupon not found or inactive') : error.message,
+                description: language === 'ar' ? arErrorMsg : errorMsg,
                 variant: 'destructive'
             });
             setAppliedCoupon(null);

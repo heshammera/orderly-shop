@@ -103,7 +103,7 @@ function GridItem({ item, size, onQuickView }: { item: ProductSnippet, size: 'fu
 export default function FeaturedGrid({ settings, blocks, storeContext, sectionId = 'featured_grid_1' }: FeaturedGridProps) {
     const [quickViewProduct, setQuickViewProduct] = useState<string | null>(null);
     const storeIdentifier = storeContext?.store?.slug || storeContext?.storeData?.slug || storeContext?.slug || storeContext?.id || '';
-    const baseUrl = storeIdentifier ? `/s/${storeIdentifier}/p` : '/product';
+    const baseUrl = '';
     const currency = storeContext?.store?.currency || storeContext?.storeData?.currency || storeContext?.currency || 'SAR';
 
     // In a real scenario, the Data Resolver Layer would take `blocks` (which has product IDs) 

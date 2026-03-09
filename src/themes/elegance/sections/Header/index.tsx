@@ -70,7 +70,7 @@ export default function Header({ settings, blocks = [], sectionId = 'header_1', 
 
             <div className="container mx-auto flex justify-between items-center py-4 px-4">
                 {/* Left section: Logo */}
-                <Link href={storeSlug ? `/s/${storeSlug}` : '/'} className="flex items-center shrink-0">
+                <Link href={storeSlug ? '' : '/'} className="flex items-center shrink-0">
                     {settings.logo || store?.logo_url ? (
                         <img src={settings.logo || store?.logo_url} alt={storeName} className="h-10 md:h-14 w-auto mr-4 object-contain" />
                     ) : (

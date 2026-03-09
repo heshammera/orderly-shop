@@ -222,6 +222,9 @@ export type Database = {
                     store_id: string
                     times_used: number
                     updated_at: string
+                    max_per_customer: number | null
+                    target_products: string[] | null
+                    target_categories: string[] | null
                 }
                 Insert: {
                     code: string
@@ -236,6 +239,9 @@ export type Database = {
                     store_id: string
                     times_used?: number
                     updated_at?: string
+                    max_per_customer?: number | null
+                    target_products?: string[] | null
+                    target_categories?: string[] | null
                 }
                 Update: {
                     code?: string
@@ -250,6 +256,9 @@ export type Database = {
                     store_id?: string
                     times_used?: number
                     updated_at?: string
+                    max_per_customer?: number | null
+                    target_products?: string[] | null
+                    target_categories?: string[] | null
                 }
                 Relationships: [
                     {

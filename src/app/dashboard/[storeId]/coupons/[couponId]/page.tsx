@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -24,42 +24,79 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Loader2, Save } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function NewCouponPage({ params }: { params: { storeId: string } }) {
-    const { storeId } = params;
+export default function EditCouponPage({ params }: { params: { storeId: string, couponId: string } }) {
+    const { storeId, couponId } = params;
     const router = useRouter();
     const supabase = createClient();
-    const [loading, setLoading] = useState(false);
+    const { language } = useLanguage();
+
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
 
     const [formData, setFormData] = useState({
         code: '',
-        discount_type: 'percentage', // percentage | fixed
+        discount_type: 'percentage',
         discount_value: '',
         min_order_amount: '',
         usage_limit: '',
         max_per_customer: '',
         expires_at: '',
         is_active: true
+        // target_products and target_categories will be added in a more advanced selector later
     });
+
+    useEffect(() => {
+        fetchCoupon();
+    }, [couponId]);
+
+    const fetchCoupon = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('coupons')
+                .select('*')
+                .eq('id', couponId)
+                .eq('store_id', storeId)
+                .single();
+
+            if (error) throw error;
+            if (data) {
+                setFormData({
+                    code: data.code || '',
+                    discount_type: data.discount_type || 'percentage',
+                    discount_value: data.discount_value?.toString() || '',
+                    min_order_amount: data.min_order_amount?.toString() || '',
+                    usage_limit: data.usage_limit?.toString() || '',
+                    max_per_customer: data.max_per_customer?.toString() || '',
+                    expires_at: data.expires_at ? new Date(data.expires_at).toISOString().slice(0, 16) : '',
+                    is_active: data.is_active ?? true
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching coupon:', error);
+            toast.error(language === 'ar' ? 'فشل تحميل السجل' : 'Failed to load coupon');
+            router.push(`/dashboard/${storeId}/coupons`);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
+        setSaving(true);
 
         try {
-            // Validation
             if (!formData.code || !formData.discount_value) {
-                toast.error('Please fill in all required fields');
-                setLoading(false);
+                toast.error(language === 'ar' ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill in required fields');
+                setSaving(false);
                 return;
             }
 
             const { error } = await supabase
                 .from('coupons')
-                .insert({
-                    store_id: storeId,
+                .update({
                     code: formData.code.toUpperCase(),
                     discount_type: formData.discount_type,
                     discount_value: Number(formData.discount_value),
@@ -68,65 +105,73 @@ export default function NewCouponPage({ params }: { params: { storeId: string } 
                     max_per_customer: formData.max_per_customer ? Number(formData.max_per_customer) : null,
                     expires_at: formData.expires_at ? new Date(formData.expires_at).toISOString() : null,
                     is_active: formData.is_active
-                });
+                })
+                .eq('id', couponId)
+                .eq('store_id', storeId);
 
             if (error) {
-                if (error.code === '23505') { // Unique violation
-                    toast.error('Coupon code already exists');
+                if (error.code === '23505') {
+                    toast.error(language === 'ar' ? 'رمز الكوبون مستخدم بالفعل' : 'Coupon code already exists');
                 } else {
-                    toast.error('Failed to create coupon');
-                    console.error(error);
+                    throw error;
                 }
             } else {
-                toast.success('Coupon created successfully');
+                toast.success(language === 'ar' ? 'تم التحديث بنجاح' : 'Coupon updated successfully');
                 router.push(`/dashboard/${storeId}/coupons`);
             }
         } catch (error) {
-            console.error('Error:', error);
-            toast.error('Something went wrong');
+            console.error('Error updating:', error);
+            toast.error(language === 'ar' ? 'حدث خطأ غير متوقع' : 'Something went wrong');
         } finally {
-            setLoading(false);
+            setSaving(false);
         }
     };
+
+    if (loading) {
+        return <div className="flex justify-center items-center h-64"><Loader2 className="animate-spin" /></div>;
+    }
 
     return (
         <div className="max-w-2xl mx-auto space-y-6">
             <div className="flex items-center gap-4">
                 <Button variant="ghost" size="icon" asChild>
                     <Link href={`/dashboard/${storeId}/coupons`}>
-                        <ArrowLeft className="w-4 h-4" />
+                        <ArrowLeft className="w-4 h-4 ml-2" />
                     </Link>
                 </Button>
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Create New Coupon</h2>
-                    <p className="text-muted-foreground">Add a new discount code for your customers.</p>
+                    <h2 className="text-2xl font-bold tracking-tight">
+                        {language === 'ar' ? 'تعديل الكوبون' : 'Edit Coupon'}
+                    </h2>
+                    <p className="text-muted-foreground">
+                        {language === 'ar' ? 'تعديل بيانات وخصائص الكوبون' : 'Modify coupon details and limits.'}
+                    </p>
                 </div>
             </div>
 
             <Card>
                 <form onSubmit={handleSubmit}>
                     <CardHeader>
-                        <CardTitle>Coupon Details</CardTitle>
-                        <CardDescription>Configure the discount and limitations.</CardDescription>
+                        <CardTitle>{language === 'ar' ? 'بيانات الكوبون' : 'Coupon Details'}</CardTitle>
+                        <CardDescription>{language === 'ar' ? 'اعدادات الخصم والحدود' : 'Configure the discount and limitations.'}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
 
                         <div className="space-y-2">
-                            <Label htmlFor="code">Coupon Code</Label>
+                            <Label htmlFor="code">{language === 'ar' ? 'رمز الكوبون' : 'Coupon Code'}</Label>
                             <Input
                                 id="code"
-                                placeholder="e.g. SUMMER2024"
+                                placeholder="SUMMER2024"
                                 value={formData.code}
                                 onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                                 className="font-mono uppercase placeholder:normal-case"
                                 required
                             />
-                            <p className="text-xs text-muted-foreground">The code customers will enter at checkout.</p>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="type">Discount Type</Label>
+                                <Label htmlFor="type">{language === 'ar' ? 'نوع الخصم' : 'Discount Type'}</Label>
                                 <Select
                                     value={formData.discount_type}
                                     onValueChange={(val) => setFormData({ ...formData, discount_type: val })}
@@ -135,13 +180,13 @@ export default function NewCouponPage({ params }: { params: { storeId: string } 
                                         <SelectValue placeholder="Select type" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="percentage">Percentage (%)</SelectItem>
-                                        <SelectItem value="fixed">Fixed Amount</SelectItem>
+                                        <SelectItem value="percentage">{language === 'ar' ? 'نسبة مئوية (%)' : 'Percentage (%)'}</SelectItem>
+                                        <SelectItem value="fixed">{language === 'ar' ? 'مبلغ ثابت' : 'Fixed Amount'}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="value">Discount Value</Label>
+                                <Label htmlFor="value">{language === 'ar' ? 'قيمة الخصم' : 'Discount Value'}</Label>
                                 <div className="relative">
                                     <Input
                                         id="value"
@@ -162,23 +207,23 @@ export default function NewCouponPage({ params }: { params: { storeId: string } 
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="usage_limit">Total Usage Limit</Label>
+                                <Label htmlFor="usage_limit">{language === 'ar' ? 'حد الاستخدام الإجمالي' : 'Total Usage Limit'}</Label>
                                 <Input
                                     id="usage_limit"
                                     type="number"
                                     min="1"
-                                    placeholder="Total times usable (Optional)"
+                                    placeholder={language === 'ar' ? 'اختياري: إجمالي عدد مرات الاستخدام' : 'Total times usable (Optional)'}
                                     value={formData.usage_limit}
                                     onChange={(e) => setFormData({ ...formData, usage_limit: e.target.value })}
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="max_per_customer">Max per customer</Label>
+                                <Label htmlFor="max_per_customer">{language === 'ar' ? 'حد الاستخدام لكل عميل' : 'Max uses per customer'}</Label>
                                 <Input
                                     id="max_per_customer"
                                     type="number"
                                     min="1"
-                                    placeholder="Uses per person (Optional)"
+                                    placeholder={language === 'ar' ? 'اختياري: عدد المرات لكل شخص' : 'Per customer (Optional)'}
                                     value={formData.max_per_customer}
                                     onChange={(e) => setFormData({ ...formData, max_per_customer: e.target.value })}
                                 />
@@ -187,7 +232,7 @@ export default function NewCouponPage({ params }: { params: { storeId: string } 
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="min_order">Min. Order Amount (Optional)</Label>
+                                <Label htmlFor="min_order">{language === 'ar' ? 'الحد الأدنى للطلب (اختياري)' : 'Min. Order (Optional)'}</Label>
                                 <Input
                                     id="min_order"
                                     type="number"
@@ -198,7 +243,7 @@ export default function NewCouponPage({ params }: { params: { storeId: string } 
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="expiry">Expiry Date (Optional)</Label>
+                                <Label htmlFor="expiry">{language === 'ar' ? 'تاريخ الانتهاء' : 'Expiry Date'}</Label>
                                 <Input
                                     id="expiry"
                                     type="datetime-local"
@@ -215,16 +260,18 @@ export default function NewCouponPage({ params }: { params: { storeId: string } 
                                 onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
                             />
                             <Label htmlFor="active" className="flex-1 cursor-pointer">
-                                Active Status
-                                <p className="font-normal text-xs text-muted-foreground">Enable or disable this coupon immediately.</p>
+                                {language === 'ar' ? 'حالة التفعيل' : 'Active Status'}
+                                <p className="font-normal text-xs text-muted-foreground">
+                                    {language === 'ar' ? 'عند التعطيل لن يتمكن أحد من استخدام هذا الكوبون.' : 'Enable or disable this coupon immediately.'}
+                                </p>
                             </Label>
                         </div>
 
                     </CardContent>
                     <CardFooter>
-                        <Button type="submit" className="ml-auto" disabled={loading}>
-                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Create Coupon
+                        <Button type="submit" className="ml-auto" disabled={saving}>
+                            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {language === 'ar' ? 'حفظ التعديلات' : 'Save Changes'}
                         </Button>
                     </CardFooter>
                 </form>

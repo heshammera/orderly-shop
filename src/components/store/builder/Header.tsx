@@ -90,7 +90,7 @@ export function Header({ data, isEditable = false, onUpdate, store, storeSlug }:
                     {!isEditable && store?.headerCategories?.map((category: any) => (
                         <Link
                             key={category.id}
-                            href={`/s/${storeSlug}/products?category=${category.id}`}
+                            href={`/products?category=${category.id}`}
                             className={`text-sm font-semibold text-white/90 hover:text-white transition-colors drop-shadow-md cursor-pointer`}
                         >
                             {getText(category.name)}
@@ -110,7 +110,7 @@ export function Header({ data, isEditable = false, onUpdate, store, storeSlug }:
                     {settings.layout === 'center' && !isEditable && store?.headerCategories?.map((category: any) => (
                         <Link
                             key={category.id}
-                            href={`/s/${storeSlug}/products?category=${category.id}`}
+                            href={`/products?category=${category.id}`}
                             className={`text-sm font-semibold text-white/90 hover:text-white transition-colors drop-shadow-md cursor-pointer`}
                         >
                             {getText(category.name)}

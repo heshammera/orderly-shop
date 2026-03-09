@@ -22,7 +22,8 @@ import {
     Tag,
     Calendar,
     Percent,
-    DollarSign
+    DollarSign,
+    Edit
 } from 'lucide-react';
 import {
     DropdownMenu,
@@ -183,6 +184,11 @@ export default function CouponsPage({ params }: { params: { storeId: string } })
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                <DropdownMenuItem asChild>
+                                                    <Link href={`/dashboard/${storeId}/coupons/${coupon.id}`}>
+                                                        <Edit className="w-4 h-4 mr-2" /> Edit Details
+                                                    </Link>
+                                                </DropdownMenuItem>
                                                 <DropdownMenuItem onClick={() => toggleStatus(coupon.id, coupon.is_active)}>
                                                     {coupon.is_active ? 'Deactivate' : 'Activate'}
                                                 </DropdownMenuItem>

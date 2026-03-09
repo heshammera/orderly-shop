@@ -205,6 +205,7 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [addingToCart, setAddingToCart] = useState(false);
     const [quickOrderOpen, setQuickOrderOpen] = useState(false);
+    const [variantImage, setVariantImage] = useState<string | null>(null);
 
     // Pixel: ViewContent on mount
     useEffect(() => {
@@ -310,6 +311,13 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
                 [variantId]: optionId
             }
         }));
+
+        const variant = variants.find(v => v.id === variantId);
+        const option = variant?.options.find(o => o.id === optionId);
+
+        if (option?.value?.startsWith('http') && (variant?.display_type === 'image' || variant?.option_type === 'image')) {
+            setVariantImage(option.value);
+        }
     };
 
     const handleQuickOrder = () => {
@@ -452,11 +460,11 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
                         {product.images.length > 0 ? (
                             <>
                                 <img
-                                    src={product.images[currentImageIndex]}
+                                    src={variantImage || product.images[currentImageIndex]}
                                     alt={productName}
-                                    className="w-full h-full object-cover"
+                                    className="w-full h-full object-cover transition-opacity duration-300"
                                 />
-                                {product.images.length > 1 && (
+                                {product.images.length > 1 && !variantImage && (
                                     <>
                                         <button
                                             onClick={() => setCurrentImageIndex(i => i === 0 ? product.images.length - 1 : i - 1)}
@@ -491,10 +499,13 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
                             {product.images.map((img, idx) => (
                                 <button
                                     key={idx}
-                                    onClick={() => setCurrentImageIndex(idx)}
+                                    onClick={() => {
+                                        setCurrentImageIndex(idx);
+                                        setVariantImage(null);
+                                    }}
                                     className={cn(
                                         "w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-colors",
-                                        currentImageIndex === idx ? "border-primary" : "border-transparent"
+                                        (!variantImage && currentImageIndex === idx) ? "border-primary" : "border-transparent"
                                     )}
                                 >
                                     <img src={img} alt="" className="w-full h-full object-cover" />

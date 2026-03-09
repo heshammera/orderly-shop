@@ -153,12 +153,12 @@ export async function POST(request: NextRequest) {
         if (bumpOffer?.selected) {
             orderItems.push({
                 order_id: orderData.id,
-                product_id: 'bump-offer',
+                product_id: null,
                 quantity: 1,
                 unit_price: bumpOffer.price,
                 total_price: bumpOffer.price,
                 product_snapshot: {
-                    name: bumpOffer.label,
+                    name: bumpOffer.label || 'Bump Offer',
                     variants: []
                 }
             });
@@ -171,6 +171,16 @@ export async function POST(request: NextRequest) {
         if (itemsError) {
             console.error('Order items creation error:', itemsError);
             return NextResponse.json({ error: 'Failed to create order items: ' + itemsError.message }, { status: 500 });
+        }
+
+        // Deduct Stock via RPC
+        try {
+            await supabase.rpc('deduct_order_stock', {
+                p_order_id: orderData.id
+            });
+        } catch (stockError: any) {
+            console.error('Stock deduction error:', stockError);
+            // We don't fail the order if stock deduction fails, just log it.
         }
 
         // Create an order notification for the merchant

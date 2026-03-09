@@ -73,7 +73,7 @@ function ProductCard({ item, storeId }: { item: ProductSnippet, storeId: string 
 
 export default function FeaturedGrid({ settings, blocks, storeContext, sectionId = 'featured_grid_1' }: FeaturedGridProps) {
     const storeIdentifier = storeContext?.store?.slug || storeContext?.storeData?.slug || storeContext?.slug || storeContext?.id || '';
-    const baseUrl = storeIdentifier ? `/s/${storeIdentifier}/p` : '/product';
+    const baseUrl = '';
     const currency = storeContext?.store?.currency || storeContext?.storeData?.currency || storeContext?.currency || 'SAR';
 
     const mockProducts: ProductSnippet[] = [

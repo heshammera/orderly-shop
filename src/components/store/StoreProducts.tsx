@@ -236,9 +236,9 @@ export function StoreProducts({ store, initialCategories, initialProducts }: Sto
                         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                             {products.map((product) => (
                                 <div key={product.id} className="relative group">
-                                    <div onClick={() => router.push(`${store.baseUrl ?? `/s/${store.slug}`}/${product.sku || product.id}`)} className="block h-full cursor-pointer">
+                                    <div onClick={() => router.push(`/${product.sku || product.id}`)} className="block h-full cursor-pointer">
                                         <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 h-full flex flex-col border border-gray-100 hover:border-primary/20 bg-white group-hover:-translate-y-1">
-                                            <Link href={`${store.baseUrl ?? `/s/${store.slug}`}/${product.sku || product.id}`} className="sr-only">
+                                            <Link href={`/${product.sku || product.id}`} className="sr-only">
                                                 {product.name[language] || product.name.ar}
                                             </Link>
                                             <CardContent className="p-0 flex flex-col h-full">

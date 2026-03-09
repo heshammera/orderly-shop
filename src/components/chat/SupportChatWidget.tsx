@@ -354,10 +354,25 @@ export function SupportChatWidget() {
         }
     };
 
+    const [shouldShow, setShouldShow] = useState(false);
+
+    useEffect(() => {
+        const hostname = window.location.hostname;
+        const mainDomains = ['localhost', '127.0.0.1', 'orderlyshops.com', 'www.orderlyshops.com'];
+        const isMainDomain = mainDomains.includes(hostname) || hostname.endsWith('.vercel.app');
+
+        // Show chat only on main domain when not viewing /s/, and hide on /admin
+        if (isMainDomain && !pathname?.startsWith('/s/') && !pathname?.startsWith('/admin')) {
+            setShouldShow(true);
+        } else {
+            setShouldShow(false);
+        }
+    }, [pathname]);
+
     // Determine if user is a merchant (logged in) by checking pathname
     const isMerchant = pathname?.startsWith('/dashboard');
 
-    if (pathname?.startsWith('/s/') || pathname?.startsWith('/admin')) {
+    if (!shouldShow) {
         return null;
     }
 

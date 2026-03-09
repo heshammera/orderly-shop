@@ -148,7 +148,7 @@ export function ProductGrid({ data, storeId, storeCurrency, storeSlug, isEditabl
                                         <h3 className="font-semibold text-xl mb-1">{name}</h3>
                                         <p className="text-primary font-bold text-lg mb-4">{price}</p>
                                         <Button variant="outline" size="sm" asChild>
-                                            <Link href={`/s/${storeSlug || storeId}/p/${product.id}`}>{(t as any).store?.viewDetails || 'View Details'}</Link>
+                                            <Link href={`/${product.id}`}>{(t as any).store?.viewDetails || 'View Details'}</Link>
                                         </Button>
                                     </div>
                                 </div>
@@ -159,7 +159,7 @@ export function ProductGrid({ data, storeId, storeCurrency, storeSlug, isEditabl
                             return (
                                 <div key={product.id} className="group relative">
                                     <Link
-                                        href={`/s/${storeSlug || storeId}/p/${product.id}`}
+                                        href={`/${product.id}`}
                                         className="cursor-pointer block"
                                     >
                                         <div className="aspect-[4/5] relative overflow-hidden rounded-2xl bg-gray-50 mb-4 shadow-sm group-hover:shadow-md transition-shadow">
@@ -193,7 +193,7 @@ export function ProductGrid({ data, storeId, storeCurrency, storeSlug, isEditabl
                         // Default 'cards'
                         return (
                             <div key={product.id} className="group relative flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                                <Link href={`/s/${storeSlug || storeId}/p/${product.id}`} className="block aspect-[4/5] relative overflow-hidden bg-gray-50 flex-shrink-0">
+                                <Link href={`/${product.id}`} className="block aspect-[4/5] relative overflow-hidden bg-gray-50 flex-shrink-0">
                                     <Image
                                         src={image}
                                         alt={name}
@@ -215,7 +215,7 @@ export function ProductGrid({ data, storeId, storeCurrency, storeSlug, isEditabl
                                     </div>
                                 </Link>
                                 <div className="p-5 flex flex-col flex-1">
-                                    <Link href={`/s/${storeSlug || storeId}/p/${product.id}`} className="block mb-1">
+                                    <Link href={`/${product.id}`} className="block mb-1">
                                         <h3 className="font-bold text-lg text-gray-900 line-clamp-1 hover:text-primary transition-colors tracking-tight">{name}</h3>
                                     </Link>
                                     <div className="flex items-center justify-between mt-auto pt-4">

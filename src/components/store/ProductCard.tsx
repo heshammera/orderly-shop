@@ -53,7 +53,7 @@ export function ProductCard({ product, storeId }: ProductCardProps) {
     return (
         <>
             <div className="group relative border rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all bg-white dark:bg-card flex flex-col h-full">
-                <Link href={`/s/${storeId}/p/${product.id}`} className="block aspect-square relative overflow-hidden bg-gray-100 dark:bg-muted">
+                <Link href={`/${product.id}`} className="block aspect-square relative overflow-hidden bg-gray-100 dark:bg-muted">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                         src={image}
@@ -76,7 +76,7 @@ export function ProductCard({ product, storeId }: ProductCardProps) {
                 </Link>
 
                 <div className="p-4 flex flex-col flex-grow">
-                    <Link href={`/s/${storeId}/p/${product.id}`} className="hover:underline">
+                    <Link href={`/${product.id}`} className="hover:underline">
                         <h3 className="font-semibold text-sm md:text-base line-clamp-1 mb-1">{name}</h3>
                     </Link>
 

@@ -105,7 +105,7 @@ export function CartDrawer({ store }: CartDrawerProps) {
                                     ? 'ابدأ التسوق وأضف منتجات للسلة'
                                     : 'Start shopping and add products to your cart'}
                             </p>
-                            <Link href={`${store.baseUrl ?? `/s/${store.slug}`}/products`} onClick={closeCart}>
+                            <Link href={`products`} onClick={closeCart}>
                                 <Button>
                                     {isRTL ? 'تصفح المنتجات' : 'Browse Products'}
                                 </Button>
@@ -140,7 +140,7 @@ export function CartDrawer({ store }: CartDrawerProps) {
                                         {/* Product Info */}
                                         <div className="flex-1 min-w-0">
                                             <Link
-                                                href={`${store.baseUrl ?? `/s/${store.slug}`}/${item.productId}`}
+                                                href={`${item.productId}`}
                                                 onClick={closeCart}
                                                 className="hover:underline"
                                             >
@@ -233,7 +233,7 @@ export function CartDrawer({ store }: CartDrawerProps) {
                         <Separator />
 
                         {/* Checkout Button */}
-                        <Link href={`${store.baseUrl ?? `/s/${store.slug}`}/checkout`} onClick={closeCart} className="block">
+                        <Link href={`checkout`} onClick={closeCart} className="block">
                             <Button size="lg" className="w-full gap-2 text-base">
                                 {isRTL ? 'إتمام الطلب' : 'Checkout'}
                                 <ArrowRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />

@@ -188,8 +188,8 @@ export function Footer({ data, isEditable = false, onUpdate, store }: { data: Co
                         <ul className="space-y-2">
                             {content.links?.map((link: any, index: number) => {
                                 let resolvedUrl = link.url;
-                                if (resolvedUrl === '/privacy' && store?.slug) resolvedUrl = `/s/${store.slug}/pages/privacy`;
-                                if (resolvedUrl === '/terms' && store?.slug) resolvedUrl = `/s/${store.slug}/pages/terms`;
+                                if (resolvedUrl === '/privacy' && store?.slug) resolvedUrl = `/pages/privacy`;
+                                if (resolvedUrl === '/terms' && store?.slug) resolvedUrl = `/pages/terms`;
 
                                 return (
                                     <li key={index}>

@@ -39,7 +39,7 @@ export default function Header({ settings, blocks = [], sectionId = 'header_1', 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         if (searchQuery.trim() && storeSlug) {
-            router.push(`${storeContext?.store?.baseUrl ?? `/s/${storeSlug}`}/products?q=${encodeURIComponent(searchQuery.trim())}`);
+            router.push(`${storeContext?.store?.baseUrl ?? ''}/products?q=${encodeURIComponent(searchQuery.trim())}`);
             setIsMobileMenuOpen(false);
         }
     };
@@ -74,7 +74,7 @@ export default function Header({ settings, blocks = [], sectionId = 'header_1', 
                 </button>
 
                 {/* Logo */}
-                <Link href={storeSlug ? `/s/${storeSlug}` : '/'} className="shrink-0 flex items-center gap-2">
+                <Link href={storeSlug ? '' : '/'} className="shrink-0 flex items-center gap-2">
                     {settings.logo || store?.logo_url ? (
                         <div className="h-10 md:h-12 w-auto max-w-[150px]">
                             <img src={settings.logo || store?.logo_url} alt={storeName} className="h-full w-auto object-contain" />
