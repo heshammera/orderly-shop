@@ -40,21 +40,30 @@ export const PushNotificationHandler = {
         }
 
         try {
-            const expoTokenResponse = await Notifications.getExpoPushTokenAsync();
+            // Get projectId from app.json (if eas init was run)
+            const Constants = require('expo-constants').default;
+            const projectId =
+                Constants?.expoConfig?.extra?.eas?.projectId ??
+                Constants?.easConfig?.projectId ??
+                '00000000-0000-0000-0000-000000000000'; // Fallback for local testing without EAS
+
+            const expoTokenResponse = await Notifications.getExpoPushTokenAsync({
+                projectId,
+            });
             token = expoTokenResponse.data;
-            console.log('Successfully generated Expo push token');
+            console.log('Successfully generated Expo push token:', token);
         } catch (e) {
-            console.log('Push notification setup: Project ID missing or network issue. Skipping token registration.');
+            console.error('Push notification setup failed:', e);
         }
 
         return token;
     },
 
-    async savePushTokenToServer(storeId, token) {
+    async savePushTokenToServer(storeId, token, baseUrl = 'https://orderlyshops.com') {
         if (!token || !storeId || storeId === '00000000-0000-0000-0000-000000000000') return;
 
         try {
-            const response = await fetch(`${BASE_URL}/api/mobile/push-token`, {
+            const response = await fetch(`${baseUrl}/api/mobile/push-token`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token, storeId }),

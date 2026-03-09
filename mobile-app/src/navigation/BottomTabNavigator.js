@@ -119,7 +119,7 @@ function WebScreen({ route }) {
             setAppMode('admin');
 
             if (storeId && pushToken && !registeredStores.current.has(storeId)) {
-                PushNotificationHandler.savePushTokenToServer(storeId, pushToken);
+                PushNotificationHandler.savePushTokenToServer(storeId, pushToken, baseUrl);
                 registeredStores.current.add(storeId);
             }
         }
