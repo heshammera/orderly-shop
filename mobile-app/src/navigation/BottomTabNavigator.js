@@ -48,12 +48,32 @@ function WebScreen({ route }) {
     // SSO Sync: Ensure EVERY admin hit carries the token in hash to avoid session loss
     // and route via /sso to handle cookie synchronization correctly
     // We only force this on the VERY FIRST source load to avoid loops
-    let fullUri = `${baseUrl}${finalPath}`;
-    if (appMode === 'admin' && session && !globalSsoAttempted) {
-        const encodedPath = encodeURIComponent(finalPath);
-        fullUri = `${baseUrl}/sso?return=${encodedPath}#access_token=${session.access_token}&refresh_token=${session.refresh_token}`;
-        setGlobalSsoAttempted(true);
-    }
+    const [currentUri, setCurrentUri] = useState(() => {
+        if (appMode === 'admin' && session && !globalSsoAttempted) {
+            const encodedPath = encodeURIComponent(finalPath);
+            return `${baseUrl}/sso?return=${encodedPath}#access_token=${session.access_token}&refresh_token=${session.refresh_token}`;
+        }
+        return `${baseUrl}${finalPath}`;
+    });
+
+    useEffect(() => {
+        // Mark SSO as attempted asynchronously to prevent forcing an immediate
+        // re-render that would overwrite the WebView URI prop and abort the network request!
+        if (currentUri.includes('/sso') && !globalSsoAttempted) {
+            setGlobalSsoAttempted(true);
+        }
+    }, [currentUri]);
+
+    // Update the URI only if navigating to a completely new store or base
+    useEffect(() => {
+        // Do not interrupt the SSO bridge process once it starts
+        if (currentUri.includes('/sso')) return;
+
+        const nextUri = `${baseUrl}${finalPath}`;
+        if (currentUri !== nextUri) {
+            setCurrentUri(nextUri);
+        }
+    }, [baseUrl, finalPath]);
 
     // Handle android physical back button
     useEffect(() => {
@@ -119,7 +139,7 @@ function WebScreen({ route }) {
         <WebView
             key={`${screenType}-${staticPath}`} // REMOVED currentDashboardBase from key to stop remount loops
             ref={webViewRef}
-            source={{ uri: fullUri }}
+            source={{ uri: currentUri }}
             style={{ flex: 1 }}
             startInLoadingState={true}
             onNavigationStateChange={handleNavigationStateChange}
