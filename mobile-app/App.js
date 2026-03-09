@@ -65,25 +65,31 @@ export default function App() {
         checkInitialSession();
 
         // 2. Auth Listener
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-            let stores = [];
-            if (session?.user) {
-                try {
-                    const { data } = await supabase
-                        .from('store_members')
-                        .select('role, stores(id, name, slug)')
-                        .eq('user_id', session.user.id);
-                    stores = data?.map(s => ({ ...s.stores, role: s.role })) || [];
-                } catch (e) {
-                    console.warn(e);
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            // Wrap in a fire-and-forget async function so Supabase doesn't await it
+            // and block signInWithPassword internally!
+            const fetchStoresAndSetState = async () => {
+                let stores = [];
+                if (session?.user) {
+                    try {
+                        const { data } = await supabase
+                            .from('store_members')
+                            .select('role, stores(id, name, slug)')
+                            .eq('user_id', session.user.id);
+                        stores = data?.map(s => ({ ...s.stores, role: s.role })) || [];
+                    } catch (e) {
+                        console.warn(e);
+                    }
                 }
-            }
 
-            setAuthState({
-                user: session?.user ?? null,
-                session: session ?? null,
-                stores
-            });
+                setAuthState({
+                    user: session?.user ?? null,
+                    session: session ?? null,
+                    stores
+                });
+            };
+
+            fetchStoresAndSetState();
         });
 
         // 3. Notification Setup
