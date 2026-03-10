@@ -37,7 +37,7 @@ export default function ItemPickerModal({ isOpen, onClose, onSelect, type, store
         try {
             const supabase = createClient();
             const table = type === 'product' ? 'products' : 'categories';
-            const selectCols = type === 'product' ? 'id, name, images' : 'id, name_ar, name_en';
+            const selectCols = type === 'product' ? 'id, name, images' : 'id, name';
 
             const { data, error } = await supabase
                 .from(table)
@@ -51,7 +51,17 @@ export default function ItemPickerModal({ isOpen, onClose, onSelect, type, store
                 let displayName = 'Unnamed';
 
                 if (type === 'category') {
-                    displayName = item.name_ar || item.name_en || 'Unnamed Category';
+                    displayName = item.name;
+                    try {
+                        if (typeof item.name === 'string' && item.name.startsWith('{')) {
+                            const parsed = JSON.parse(item.name);
+                            displayName = parsed.ar || parsed.en || item.name;
+                        } else if (typeof item.name === 'object' && item.name !== null) {
+                            displayName = item.name.ar || item.name.en || 'Unnamed';
+                        }
+                    } catch (e) {
+                        // keep original string
+                    }
                 } else {
                     // product
                     displayName = item.name;

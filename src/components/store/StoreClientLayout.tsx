@@ -171,7 +171,7 @@ export function StoreClientLayout({ children, store, integrations = {}, headerCa
                 <TrackingPixels integrations={integrations} />
                 <CartDrawer store={{ id: store.id, currency: store.currency, slug: store.slug }} />
                 <main className="flex flex-col min-h-screen">
-                    <div className="flex-1">
+                    <div className="flex-grow flex flex-col w-full">
                         {children}
                     </div>
 
@@ -185,7 +185,7 @@ export function StoreClientLayout({ children, store, integrations = {}, headerCa
                                 <p className="text-xl md:text-2xl font-black flex items-center gap-3 justify-center mb-4 transition-transform duration-500 group-hover:scale-105">
                                     <span className="text-slate-300 drop-shadow-sm">تم الإنشاء بواسطة</span>
                                     <a
-                                        href="#"
+                                        href="https://orderlyshops.com"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center justify-center text-white bg-white/10 px-6 py-2 rounded-full border border-white/20 hover:bg-white/20 hover:border-white/40 hover:-translate-y-1 transition-all duration-300 shadow-[0_0_20px_rgba(192,132,252,0.6)] backdrop-blur-sm"
