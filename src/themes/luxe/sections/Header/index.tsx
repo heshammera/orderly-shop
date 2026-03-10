@@ -51,7 +51,19 @@ export default function Header({ settings, blocks = [], sectionId = 'header_1', 
         { settings: { label: 'العطور', url: '/perfume' } },
     ];
 
-    const displayLinks = blocks.length > 0 ? blocks : defaultLinks;
+        // Add dynamic header categories
+    const categoryLinks = (storeContext?.headerCategories || []).map((cat: any) => {
+        const catName = cat.name ? (typeof cat.name === 'string' ? cat.name : cat.name[language] || cat.name.ar || cat.name.en) : 'Category';
+        return {
+            settings: {
+                label: catName,
+                url: `/products?category=${cat.id}`
+            }
+        };
+    });
+
+    const baseLinks = blocks.length > 0 ? blocks : defaultLinks;
+    const displayLinks = [...baseLinks, ...categoryLinks];
 
     return (
         <header className="w-full bg-[#0d0d0d] sticky top-0 z-50 border-b border-zinc-900">

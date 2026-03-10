@@ -48,17 +48,19 @@ export default function Header({ settings, blocks = [], sectionId = 'header_1', 
         { settings: { label: 'الرئيسية', url: '/' } },
     ];
 
-    // If no blocks, try to use headerCategories from storeContext
-    const categoriesAsLinks = storeContext?.headerCategories?.map((cat: any) => ({
-        settings: {
-            label: cat.name.ar || cat.name.en || cat.name,
-            url: `/products?category=${cat.id}`
-        }
-    })) || [];
+    // Add dynamic header categories
+    const categoryLinks = (storeContext?.headerCategories || []).map((cat: any) => {
+        const catName = cat.name ? (typeof cat.name === 'string' ? cat.name : cat.name[language] || cat.name.ar || cat.name.en) : 'Category';
+        return {
+            settings: {
+                label: catName,
+                url: `/products?category=${cat.id}`
+            }
+        };
+    });
 
-    const displayLinks = blocks.length > 0
-        ? blocks
-        : (categoriesAsLinks.length > 0 ? [...defaultLinks, ...categoriesAsLinks] : defaultLinks);
+    const baseLinks = blocks.length > 0 ? blocks : defaultLinks;
+    const displayLinks = [...baseLinks, ...categoryLinks];
 
     return (
         <header className="w-full bg-[#050b15] sticky top-0 z-50 border-b border-cyan-900/30">

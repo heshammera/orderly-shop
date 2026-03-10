@@ -51,7 +51,19 @@ export default function Header({ settings, blocks = [], sectionId = 'header_1', 
         { settings: { label: 'تواصل معنا', url: '/contact' } },
     ];
 
-    const displayLinks = blocks.length > 0 ? blocks : defaultLinks;
+        // Add dynamic header categories
+    const categoryLinks = (storeContext?.headerCategories || []).map((cat: any) => {
+        const catName = cat.name ? (typeof cat.name === 'string' ? cat.name : cat.name[language] || cat.name.ar || cat.name.en) : 'Category';
+        return {
+            settings: {
+                label: catName,
+                url: `/products?category=${cat.id}`
+            }
+        };
+    });
+
+    const baseLinks = blocks.length > 0 ? blocks : defaultLinks;
+    const displayLinks = [...baseLinks, ...categoryLinks];
 
     return (
         <header className="w-full bg-background border-b border-border sticky top-0 z-50 shadow-sm">
