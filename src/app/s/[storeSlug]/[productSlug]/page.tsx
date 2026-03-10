@@ -222,20 +222,27 @@ export default async function ProductPage({ params }: { params: { storeSlug: str
 
     let globalHeaderId = 'header_1';
     let globalFooterId = 'footer_1';
-    let globalHeaderData = DEFAULT_PRODUCT_PAGE_DATA.sections_data['header_1'];
-    let globalFooterData = DEFAULT_PRODUCT_PAGE_DATA.sections_data['footer_1'];
+    let globalHeaderData: any = DEFAULT_PRODUCT_PAGE_DATA.sections_data['header_1'];
+    let globalFooterData: any = DEFAULT_PRODUCT_PAGE_DATA.sections_data['footer_1'];
 
     if (homeOverride?.sections_order) {
-        globalHeaderId = homeOverride.sections_order.find((id: string) => homeOverride.sections_data[id]?.type === 'header') || 'header_1';
-        globalFooterId = homeOverride.sections_order.find((id: string) => homeOverride.sections_data[id]?.type === 'footer') || 'footer_1';
-        if (homeOverride.sections_data[globalHeaderId]) globalHeaderData = homeOverride.sections_data[globalHeaderId];
-        if (homeOverride.sections_data[globalFooterId]) globalFooterData = homeOverride.sections_data[globalFooterId];
+        const foundHeaderId = homeOverride.sections_order.find((id: string) => homeOverride.sections_data[id]?.type === 'header');
+        const foundFooterId = homeOverride.sections_order.find((id: string) => homeOverride.sections_data[id]?.type === 'footer');
+        globalHeaderId = foundHeaderId || 'header_1';
+        globalFooterId = foundFooterId || 'footer_1';
+        globalHeaderData = foundHeaderId ? homeOverride.sections_data[foundHeaderId] : null;
+        globalFooterData = foundFooterId ? homeOverride.sections_data[foundFooterId] : null;
     }
 
     initialPageData.sections_order = initialPageData.sections_order.filter((id: string) => initialPageData.sections_data[id]?.type !== 'header' && initialPageData.sections_data[id]?.type !== 'footer');
-    initialPageData.sections_order = [globalHeaderId, ...initialPageData.sections_order, globalFooterId];
-    initialPageData.sections_data[globalHeaderId] = globalHeaderData;
-    initialPageData.sections_data[globalFooterId] = globalFooterData;
+    if (globalHeaderData) {
+        initialPageData.sections_order = [globalHeaderId, ...initialPageData.sections_order];
+        initialPageData.sections_data[globalHeaderId] = globalHeaderData;
+    }
+    if (globalFooterData) {
+        initialPageData.sections_order = [...initialPageData.sections_order, globalFooterId];
+        initialPageData.sections_data[globalFooterId] = globalFooterData;
+    }
 
     const initialTokens = activeTheme?.global_tokens ? activeTheme.global_tokens : DEFAULT_GLOBAL_TOKENS;
 

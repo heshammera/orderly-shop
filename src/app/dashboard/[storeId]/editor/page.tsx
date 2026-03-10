@@ -152,14 +152,16 @@ export default function EditorPage({ params }: { params: { storeId: string } }) 
                     // Extract Global Sections (Header & Footer) from Home
                     let globalHeaderId = 'header_1';
                     let globalFooterId = 'footer_1';
-                    let globalHeaderData = DEFAULT_PAGE_DATA.sections_data['header_1'];
-                    let globalFooterData = DEFAULT_PAGE_DATA.sections_data['footer_1'];
+                    let globalHeaderData: any = DEFAULT_PAGE_DATA.sections_data['header_1'];
+                    let globalFooterData: any = DEFAULT_PAGE_DATA.sections_data['footer_1'];
 
                     if (homeOverride?.sections_order) {
-                        globalHeaderId = homeOverride.sections_order.find((id: string) => homeOverride.sections_data[id]?.type === 'header') || 'header_1';
-                        globalFooterId = homeOverride.sections_order.find((id: string) => homeOverride.sections_data[id]?.type === 'footer') || 'footer_1';
-                        if (homeOverride.sections_data[globalHeaderId]) globalHeaderData = homeOverride.sections_data[globalHeaderId];
-                        if (homeOverride.sections_data[globalFooterId]) globalFooterData = homeOverride.sections_data[globalFooterId];
+                        const foundHeaderId = homeOverride.sections_order.find((id: string) => homeOverride.sections_data[id]?.type === 'header');
+                        const foundFooterId = homeOverride.sections_order.find((id: string) => homeOverride.sections_data[id]?.type === 'footer');
+                        globalHeaderId = foundHeaderId || 'header_1';
+                        globalFooterId = foundFooterId || 'footer_1';
+                        globalHeaderData = foundHeaderId ? homeOverride.sections_data[foundHeaderId] : null;
+                        globalFooterData = foundFooterId ? homeOverride.sections_data[foundFooterId] : null;
                     }
 
                     // Assemble Base Data for current page
@@ -274,11 +276,16 @@ export default function EditorPage({ params }: { params: { storeId: string } }) 
                         }
                     }
 
-                    // Enforce Global Header and Footer injection
+                    // Enforce Global Header and Footer injection (only if they exist in home)
                     newOrder = newOrder.filter((id: string) => newData[id]?.type !== 'header' && newData[id]?.type !== 'footer');
-                    newOrder = [globalHeaderId, ...newOrder, globalFooterId];
-                    newData[globalHeaderId] = globalHeaderData;
-                    newData[globalFooterId] = globalFooterData;
+                    if (globalHeaderData) {
+                        newOrder = [globalHeaderId, ...newOrder];
+                        newData[globalHeaderId] = globalHeaderData;
+                    }
+                    if (globalFooterData) {
+                        newOrder = [...newOrder, globalFooterId];
+                        newData[globalFooterId] = globalFooterData;
+                    }
 
                     setPageData({
                         sections_order: newOrder,
@@ -440,7 +447,7 @@ export default function EditorPage({ params }: { params: { storeId: string } }) 
                 const globalHeaderId = pageData.sections_order.find((id: string) => pageData.sections_data[id]?.type === 'header');
                 const globalFooterId = pageData.sections_order.find((id: string) => pageData.sections_data[id]?.type === 'footer');
 
-                if (globalHeaderId && globalFooterId) {
+                if (globalHeaderId || globalFooterId) {
                     const { data: homeOverrideData } = await supabase
                         .from('store_theme_templates')
                         .select('settings_data')
@@ -451,8 +458,8 @@ export default function EditorPage({ params }: { params: { storeId: string } }) 
                     if (homeOverrideData && homeOverrideData.settings_data) {
                         const newHomeData = { ...homeOverrideData.settings_data };
                         if (!newHomeData.sections_data) newHomeData.sections_data = {};
-                        newHomeData.sections_data[globalHeaderId] = pageData.sections_data[globalHeaderId];
-                        newHomeData.sections_data[globalFooterId] = pageData.sections_data[globalFooterId];
+                        if (globalHeaderId) newHomeData.sections_data[globalHeaderId] = pageData.sections_data[globalHeaderId];
+                        if (globalFooterId) newHomeData.sections_data[globalFooterId] = pageData.sections_data[globalFooterId];
 
                         await supabase
                             .from('store_theme_templates')
@@ -840,8 +847,8 @@ export default function EditorPage({ params }: { params: { storeId: string } }) 
                 {/* 2. Live Preview Iframe */}
                 <main className="flex-1 h-full bg-slate-100 relative p-0 lg:p-4 flex flex-col items-center overflow-x-hidden overflow-y-auto">
                     <div className={`transition-all duration-300 ease-in-out flex-1 flex flex-col bg-white overflow-hidden lg:rounded-xl lg:shadow-xl lg:border lg:border-slate-200 w-full ${deviceView === 'desktop' ? 'lg:max-w-5xl' :
-                            deviceView === 'tablet' ? 'lg:w-[768px]' :
-                                'lg:w-[375px]'
+                        deviceView === 'tablet' ? 'lg:w-[768px]' :
+                            'lg:w-[375px]'
                         }`}>
                         <div className="w-full h-10 bg-slate-50 border-b items-center px-4 gap-2 shrink-0 hidden lg:flex">
                             <div className="flex gap-1.5">
