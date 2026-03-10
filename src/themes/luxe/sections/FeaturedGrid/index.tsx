@@ -175,7 +175,7 @@ export default function FeaturedGrid({ settings, blocks, storeContext, sectionId
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-6 gap-8 md:h-[800px]">
+                <div className="grid grid-cols-1 md:grid-cols-6 gap-8 md:min-h-[800px]">
                     {products[0] && <GridItem size="full" item={products[0]} onQuickView={() => setQuickViewProduct(products[0].id)} />}
                     <div className="md:col-span-3 grid grid-cols-1 gap-8 md:h-full">
                         {products[1] && <GridItem size="half" item={products[1]} onQuickView={() => setQuickViewProduct(products[1].id)} />}

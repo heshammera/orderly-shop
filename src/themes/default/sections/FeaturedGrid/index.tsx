@@ -166,11 +166,11 @@ export default function FeaturedGrid({ settings, blocks, storeContext, sectionId
 
     let containerClasses = "grid gap-4 h-auto ";
     if (products.length === 1) {
-        containerClasses += "grid-cols-1 md:grid-cols-1 md:grid-rows-1 min-h-[40vh] md:h-[min(50vh,500px)]";
+        containerClasses += "grid-cols-1 md:grid-cols-1 md:grid-rows-1 min-h-[40vh] md:min-h-[min(50vh,500px)]";
     } else if (products.length === 2) {
-        containerClasses += "grid-cols-1 md:grid-cols-2 md:grid-rows-1 min-h-[40vh] md:h-[min(50vh,500px)]";
+        containerClasses += "grid-cols-1 md:grid-cols-2 md:grid-rows-1 min-h-[40vh] md:min-h-[min(50vh,500px)]";
     } else {
-        containerClasses += "grid-cols-1 md:grid-cols-6 md:grid-rows-2 h-auto md:h-[min(60vh,600px)]";
+        containerClasses += "grid-cols-1 md:grid-cols-6 md:grid-rows-2 h-auto md:min-h-[min(60vh,600px)]";
     }
 
     return (
