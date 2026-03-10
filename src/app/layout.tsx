@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { SupportChatWidget } from "@/components/chat/SupportChatWidget";
 import { PlatformTracker } from "@/components/tracking/PlatformTracker";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 
 const tajawal = Tajawal({
   subsets: ["arabic", "latin"],
@@ -56,6 +57,7 @@ export default function RootLayout({
           <Sonner />
           <SupportChatWidget />
           <PlatformTracker />
+          <InstallPrompt />
         </Providers>
       </body>
     </html>
