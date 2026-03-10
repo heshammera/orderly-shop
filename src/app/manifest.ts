@@ -2,23 +2,25 @@ import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
     return {
-        name: 'Social Commerce Hub',
-        short_name: 'StoreHub',
-        description: 'Your premium shopping experience',
+        name: 'Orderly',
+        short_name: 'Orderly',
+        description: 'Build and manage your social commerce store with AI-powered tools',
         start_url: '/',
         display: 'standalone',
         background_color: '#ffffff',
-        theme_color: '#000000',
+        theme_color: '#2563eb',
         icons: [
             {
-                src: '/icons/icon.svg',
+                src: '/icons/icon-192x192.png',
                 sizes: '192x192',
-                type: 'image/svg+xml',
+                type: 'image/png',
+                purpose: 'maskable any' as any,
             },
             {
-                src: '/icons/icon.svg',
+                src: '/icons/icon-512x512.png',
                 sizes: '512x512',
-                type: 'image/svg+xml',
+                type: 'image/png',
+                purpose: 'maskable any' as any,
             },
         ],
     }
