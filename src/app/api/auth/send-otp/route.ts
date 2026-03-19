@@ -57,6 +57,9 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // TEMPORARILY DISABLED — skip actual delivery, OTP still generated in DB
+        console.log('[send-otp] BYPASS MODE: OTP generated but delivery skipped. Code:', otpResult.code);
+        /*
         try {
             if (method === 'whatsapp') {
                 // Send directly to WAHA for WhatsApp (bypass n8n completely)
@@ -127,6 +130,7 @@ export async function POST(request: NextRequest) {
             console.error('[send-otp] delivery error:', deliveryError);
             // Non-blocking — code is still in DB, user can request resend
         }
+        */
 
         return NextResponse.json({
             success: true,

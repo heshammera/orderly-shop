@@ -231,7 +231,9 @@ function SignupFormContent() {
                 if (newUserId) verifyParams.set('uid', newUserId);
                 if (data.email) verifyParams.set('email', data.email);
                 const queryString = verifyParams.toString();
-                router.push(`/email-verify${queryString ? `?${queryString}` : ''}`);
+                // TEMPORARILY DISABLED — was redirecting to /email-verify for OTP verification
+                // router.push(`/email-verify${queryString ? `?${queryString}` : ''}`);
+                router.push(`/login?verified=true&email=${encodeURIComponent(data.email)}`);
             }
         } finally {
             setLoading(false);

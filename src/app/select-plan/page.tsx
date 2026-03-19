@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Check } from 'lucide-react';
+import { Loader2, Check, X } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -22,6 +22,7 @@ export default function SelectPlanPage() {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [plans, setPlans] = useState<any[]>([]);
+    const [featuresDict, setFeaturesDict] = useState<any[]>([]);
     const [storeId, setStoreId] = useState<string | null>(null);
     const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
     const [selectedPlan, setSelectedPlan] = useState<any | null>(null); // For modal
@@ -79,7 +80,22 @@ export default function SelectPlanPage() {
                     .eq('is_active', true)
                     .order('price_monthly', { ascending: true });
 
-                setPlans(plansData || []);
+                // Fetch plan features dictionary & values (same as homepage)
+                const { data: dictData } = await supabase.from('plan_features').select('*').order('group').order('id');
+                setFeaturesDict(dictData || []);
+
+                const { data: valuesData } = await supabase.from('plan_feature_values').select('*');
+
+                const formattedPlans = plansData?.map(plan => {
+                    const planValues = valuesData?.filter(v => v.plan_id === plan.id) || [];
+                    const feature_values = planValues.reduce((acc: any, curr: any) => {
+                        acc[curr.feature_id] = curr.value;
+                        return acc;
+                    }, {} as Record<string, string>);
+                    return { ...plan, feature_values };
+                }) || [];
+
+                setPlans(formattedPlans);
 
                 // Fetch Exchange Rate
                 const { data: rateData } = await supabase.rpc('get_setting', { setting_key: 'exchange_rate_usd_egp' });
@@ -265,7 +281,6 @@ export default function SelectPlanPage() {
 
                 <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
                     {plans.map((plan) => {
-                        const features = typeof plan.features === 'string' ? JSON.parse(plan.features) : plan.features;
                         const isFree = plan.price === 0;
                         const isCurrent = currentPlanId === plan.id;
 
@@ -293,20 +308,34 @@ export default function SelectPlanPage() {
                                     </div>
 
                                     <ul className="space-y-3">
-                                        <li className="flex items-center text-sm">
-                                            <Check className="h-4 w-4 text-green-500 mr-2 ml-2" />
-                                            <span>
-                                                {features.products_limit === -1
-                                                    ? (language === 'ar' ? 'منتجات غير محدودة' : 'Unlimited Products')
-                                                    : (language === 'ar' ? `${features.products_limit} منتج` : `${features.products_limit} Products`)}
-                                            </span>
-                                        </li>
-                                        <li className="flex items-center text-sm">
-                                            <Check className="h-4 w-4 text-green-500 mr-2 ml-2" />
-                                            <span>
-                                                {features.stores_limit} {language === 'ar' ? 'متجر' : 'Store(s)'}
-                                            </span>
-                                        </li>
+                                        {featuresDict.map((feature: any) => {
+                                            const value = plan.feature_values?.[feature.id];
+                                            let isAvailable = false;
+                                            let displayValue = '';
+
+                                            if (feature.type === 'boolean') {
+                                                isAvailable = value === 'true';
+                                            } else if (feature.type === 'integer') {
+                                                isAvailable = value && parseInt(value) > 0 || value === '-1';
+                                                if (value === '-1') displayValue = language === 'ar' ? 'غير محدود' : 'Unlimited';
+                                                else displayValue = value || '0';
+                                            } else {
+                                                isAvailable = !!value && value !== 'none' && value !== '';
+                                                displayValue = value;
+                                            }
+
+                                            return (
+                                                <li key={feature.id} className="flex items-center text-sm">
+                                                    {isAvailable
+                                                        ? <Check className="h-4 w-4 text-green-500 mr-2 ml-2 flex-shrink-0" />
+                                                        : <X className="h-4 w-4 text-muted-foreground mr-2 ml-2 flex-shrink-0" />}
+                                                    <span className={isAvailable ? '' : 'text-muted-foreground line-through opacity-70'}>
+                                                        {language === 'ar' ? feature.name_ar : feature.name_en}
+                                                        {displayValue && isAvailable && <span className="font-bold text-primary ml-1"> ({displayValue})</span>}
+                                                    </span>
+                                                </li>
+                                            );
+                                        })}
                                     </ul>
                                 </CardContent>
                                 <CardFooter>

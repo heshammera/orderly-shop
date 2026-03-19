@@ -60,11 +60,12 @@ export function DashboardLayout({
     const { user, loading } = useAuth();
     const router = useRouter();
 
-    useEffect(() => {
-        if (!loading && user && !user.email_confirmed_at) {
-            router.push('/email-verify');
-        }
-    }, [user, loading, router]);
+    // TEMPORARILY DISABLED — email verification bypass
+    // useEffect(() => {
+    //     if (!loading && user && !user.email_confirmed_at) {
+    //         router.push('/email-verify');
+    //     }
+    // }, [user, loading, router]);
 
     const supabase = createClient();
     const { t, language, setLanguage, dir } = useLanguage();
@@ -119,7 +120,7 @@ export function DashboardLayout({
         },
         {
             icon: BarChart3,
-            label: language === 'ar' ? 'التحليلات' : 'Analytics',
+            label: language === 'ar' ? 'التحليلات والتقارير' : 'Analytics & Reports',
             href: `/dashboard/${storeId}/analytics`,
             show: isAdmin, // Enabled Advanced Analytics
         },
@@ -260,7 +261,7 @@ export function DashboardLayout({
             {!hideSidebar && (
                 <aside
                     className={cn(
-                        "hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col border-e bg-card transition-all duration-300 ease-in-out z-50",
+                        "hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col border-e bg-card transition-all duration-300 ease-in-out z-50 print:!hidden",
                         isCollapsed ? "lg:w-20" : "lg:w-64"
                     )}
                 >
@@ -329,7 +330,7 @@ export function DashboardLayout({
             )}
 
             {/* Mobile Header */}
-            <header className="lg:hidden sticky top-0 z-40 flex items-center gap-4 h-16 px-4 border-b bg-card">
+            <header className="lg:hidden sticky top-0 z-40 flex items-center gap-4 h-16 px-4 border-b bg-card print:!hidden">
                 {!hideSidebar && (
                     <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
                         <SheetTrigger asChild>
@@ -395,11 +396,11 @@ export function DashboardLayout({
             {/* Main Content */}
             <main
                 className={cn(
-                    "transition-all duration-300 ease-in-out",
+                    "transition-all duration-300 ease-in-out print:!w-full print:!p-0 print:!m-0 print:!ps-0",
                     !hideSidebar ? (isCollapsed ? "lg:ps-20" : "lg:ps-64") : "ps-0"
                 )}
             >
-                <div className="hidden lg:flex items-center justify-end gap-2 h-16 px-6 border-b bg-card">
+                <div className="hidden lg:flex items-center justify-end gap-2 h-16 px-6 border-b bg-card print:!hidden">
                     {slug && isAdmin && (
                         <a href={isSubdomain ? '/' : `/s/${slug}`} target="_blank" rel="noopener noreferrer">
                             <Button variant="ghost" size="sm" className='gap-2 hidden md:flex'>
@@ -428,7 +429,7 @@ export function DashboardLayout({
                         </Button>
                     )}
                 </div>
-                <div className="p-6">{children}</div>
+                <div className="p-6 print:!p-0">{children}</div>
             </main>
         </div>
     );

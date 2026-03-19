@@ -62,15 +62,16 @@ function LoginFormContent() {
         try {
             const { error, data: authData } = await signIn(data.email, data.password);
             if (error) {
-                if (error.message.includes('Email not confirmed')) {
-                    toast({
-                        title: t.auth.login.error,
-                        description: 'Please verify your email address.',
-                        variant: 'destructive',
-                    });
-                    router.push(`/email-verify?email=${encodeURIComponent(data.email)}`);
-                    return;
-                }
+                // TEMPORARILY DISABLED — email verification bypass
+                // if (error.message.includes('Email not confirmed')) {
+                //     toast({
+                //         title: t.auth.login.error,
+                //         description: 'Please verify your email address.',
+                //         variant: 'destructive',
+                //     });
+                //     router.push(`/email-verify?email=${encodeURIComponent(data.email)}`);
+                //     return;
+                // }
 
                 toast({
                     title: t.auth.login.error,
@@ -79,17 +80,17 @@ function LoginFormContent() {
                 });
             } else {
 
-                // --- EMAIL VERIFICATION CHECK ---
-                if (authData.user && !authData.user.email_confirmed_at) {
-                    await supabase.auth.signOut();
-                    toast({
-                        title: t.auth.login.error,
-                        description: 'Please verify your email address before logging in.',
-                        variant: 'destructive',
-                    });
-                    router.push(`/email-verify?email=${encodeURIComponent(data.email)}`);
-                    return;
-                }
+                // --- EMAIL VERIFICATION CHECK --- TEMPORARILY DISABLED
+                // if (authData.user && !authData.user.email_confirmed_at) {
+                //     await supabase.auth.signOut();
+                //     toast({
+                //         title: t.auth.login.error,
+                //         description: 'Please verify your email address before logging in.',
+                //         variant: 'destructive',
+                //     });
+                //     router.push(`/email-verify?email=${encodeURIComponent(data.email)}`);
+                //     return;
+                // }
                 // -------------------------------
 
                 // --- SUBDOMAIN ACCESS VALIDATION ---

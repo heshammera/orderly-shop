@@ -113,16 +113,16 @@ export async function middleware(request: NextRequest) {
     // 5. PROTECTED ROUTES & STORE STATUS CHECK
     if (pathname.startsWith('/dashboard') || pathname === '/select-plan' || pathname === '/subscription-success') {
         if (user) {
-            // --- EMAIL VERIFICATION ENFORCEMENT ---
-            const isAuthRoute = pathname.startsWith('/auth') || pathname.startsWith('/login') || pathname.startsWith('/signup');
-            const isPublicRoute = pathname === '/' || pathname.startsWith('/s/');
-            const isVerifyPage = pathname.startsWith('/email-verify');
+            // --- EMAIL VERIFICATION ENFORCEMENT --- TEMPORARILY DISABLED
+            // const isAuthRoute = pathname.startsWith('/auth') || pathname.startsWith('/login') || pathname.startsWith('/signup');
+            // const isPublicRoute = pathname === '/' || pathname.startsWith('/s/');
+            // const isVerifyPage = pathname.startsWith('/email-verify');
 
-            if (!user.email_confirmed_at && !isAuthRoute && !isVerifyPage && !isPublicRoute) {
-                const url = request.nextUrl.clone();
-                url.pathname = '/email-verify';
-                return NextResponse.redirect(url);
-            }
+            // if (!user.email_confirmed_at && !isAuthRoute && !isVerifyPage && !isPublicRoute) {
+            //     const url = request.nextUrl.clone();
+            //     url.pathname = '/email-verify';
+            //     return NextResponse.redirect(url);
+            // }
 
             // Fetch store status efficiently
             let storeId: string | null = null;

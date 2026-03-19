@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
         const { data, error } = await supabase.auth.admin.createUser({
             email,
             password,
-            email_confirm: false, // We will confirm it later via OTP
+            email_confirm: true, // TEMPORARILY auto-confirm — OTP verification disabled (was: false)
             user_metadata: {
                 full_name: fullName,
                 ...metadata,

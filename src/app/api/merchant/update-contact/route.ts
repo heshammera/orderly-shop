@@ -110,6 +110,9 @@ export async function POST(request: NextRequest) {
                 );
             }
 
+            // TEMPORARILY DISABLED — skip delivery
+            console.log('[update-contact] BYPASS MODE: OTP generated but delivery skipped. Code:', otpResult.code);
+            /*
             // Send the code via WAHA (WhatsApp) or n8n (Email)
             try {
                 if (method === 'whatsapp') {
@@ -181,6 +184,7 @@ export async function POST(request: NextRequest) {
             } catch (deliveryError) {
                 console.error('[update-contact] delivery error:', deliveryError);
             }
+            */
 
             return NextResponse.json({
                 success: true,
