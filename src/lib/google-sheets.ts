@@ -120,7 +120,7 @@ export async function appendRow(
     }
 }
 
-export async function checkSheetAccess(serviceAccount: string, sheetId: string): Promise<boolean> {
+export async function checkSheetAccess(serviceAccount: string, sheetId: string): Promise<{ success: boolean; message?: string }> {
     try {
         const token = await getGoogleAuthToken(serviceAccount);
         const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=properties.title`;
@@ -132,14 +132,24 @@ export async function checkSheetAccess(serviceAccount: string, sheetId: string):
         });
 
         if (!response.ok) {
-            // If 403 or 404, it means no access or not found
-            return false;
+            const errorText = await response.text();
+            console.error('Google Sheets API Error:', response.status, errorText);
+            
+            let errorMessage = `Google API Error (${response.status})`;
+            try {
+                const errObj = JSON.parse(errorText);
+                if (errObj.error && errObj.error.message) {
+                    errorMessage = errObj.error.message;
+                }
+            } catch (e) {}
+
+            return { success: false, message: errorMessage };
         }
 
-        return true;
-    } catch (error) {
+        return { success: true };
+    } catch (error: any) {
         console.error('Error checking sheet access:', error);
-        return false;
+        return { success: false, message: error.message || 'Unknown error' };
     }
 }
 

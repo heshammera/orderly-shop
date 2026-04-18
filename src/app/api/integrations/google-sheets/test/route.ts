@@ -8,6 +8,15 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
         const { storeId, serviceAccount, sheetId, tabName } = body;
 
+        console.log('[Sheet Test] Request received:', {
+            storeId,
+            sheetId,
+            sheetIdLength: sheetId?.length,
+            tabName,
+            hasServiceAccount: !!serviceAccount,
+            serviceAccountLength: serviceAccount?.length
+        });
+
         if (!storeId || !sheetId) {
             return NextResponse.json(
                 { success: false, message: 'Missing required fields' },
@@ -25,12 +34,27 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // Check Access
-        const hasAccess = await checkSheetAccess(resolvedServiceAccount, sheetId);
+        // Log which service account email is being used
+        try {
+            const saObj = JSON.parse(resolvedServiceAccount);
+            console.log('[Sheet Test] Using service account email:', saObj.client_email);
+            console.log('[Sheet Test] Testing sheet ID:', sheetId);
+        } catch (e) {
+            console.log('[Sheet Test] Could not parse service account JSON');
+        }
 
-        if (!hasAccess) {
+        // Check Access
+        const accessResult = await checkSheetAccess(resolvedServiceAccount, sheetId);
+
+        console.log('[Sheet Test] Access result:', accessResult);
+
+        if (!accessResult.success) {
             return NextResponse.json(
-                { success: false, message: 'Could not access the Sheet. Please check the link and ensure the Service Account email has Editor access.' },
+                { 
+                    success: false, 
+                    message: `Could not access the Sheet. ${accessResult.message || 'Please check the link and ensure the Service Account email has Editor access.'}`,
+                    debug: { sheetId, sheetIdLength: sheetId.length }
+                },
                 { status: 403 }
             );
         }

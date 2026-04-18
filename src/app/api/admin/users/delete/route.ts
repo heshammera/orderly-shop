@@ -1,17 +1,16 @@
 export const runtime = 'edge';
 
-
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
-// Create a Supabase client with the SERVICE_ROLE_KEY to perform admin actions
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function POST(request: Request) {
     try {
+        // Create client inside the handler so env vars are available at runtime (not build time)
+        const supabaseAdmin = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+        );
+
         const { userId } = await request.json();
 
         if (!userId) {

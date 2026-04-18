@@ -201,15 +201,32 @@ export function IntegrationsManager({ storeId }: IntegrationsManagerProps) {
 
                 if (sheetError) throw sheetError;
 
-                if (sheetData) {
-                    setSheets(sheetData.map(item => ({
-                        id: item.id,
-                        sheet_id: item.config.sheet_id,
-                        tab_name: item.config.tab_name,
-                        mode: item.config.mode || 'all',
-                        product_ids: item.config.product_ids || [],
-                        is_active: item.is_active
-                    })));
+                if (sheetData && sheetData.length > 0) {
+                    // Extract all sheets from all possible records (though usually it will be just one record now)
+                    const allSheets: GoogleSheetConfig[] = [];
+                    
+                    sheetData.forEach(item => {
+                        const config = item.config as any;
+                        if (config.sheets && Array.isArray(config.sheets)) {
+                            // New multi-sheet format
+                            allSheets.push(...config.sheets.map((s: any) => ({
+                                ...s,
+                                is_active: item.is_active // All sheets in this record share the active status for now
+                            })));
+                        } else if (config.sheet_id) {
+                            // Legacy single-sheet format
+                            allSheets.push({
+                                id: item.id,
+                                sheet_id: config.sheet_id,
+                                tab_name: config.tab_name || 'Sheet1',
+                                mode: config.mode || 'all',
+                                product_ids: config.product_ids || [],
+                                is_active: item.is_active
+                            });
+                        }
+                    });
+                    
+                    setSheets(allSheets);
                 }
 
                 // 3. Fetch Products for Selector
@@ -339,8 +356,12 @@ export function IntegrationsManager({ storeId }: IntegrationsManagerProps) {
     const testSheetConnection = async () => {
         if (!editingSheet?.sheet_id) return;
 
-        // Use per-store service account if available, otherwise backend will use global env
-        const serviceAccountToUse = settings.google_service_account || '';
+        // If a global platform service account is configured (NEXT_PUBLIC_GOOGLE_SERVICE_EMAIL),
+        // always let the backend use it (don't send per-store account which may be stale).
+        // Only send per-store service account if NO global account exists.
+        const serviceAccountToUse = process.env.NEXT_PUBLIC_GOOGLE_SERVICE_EMAIL 
+            ? '' 
+            : (settings.google_service_account || '');
 
         setSheetTestStatus('testing');
         setSheetTestMessage('');
@@ -365,7 +386,7 @@ export function IntegrationsManager({ storeId }: IntegrationsManagerProps) {
             } else {
                 setSheetTestStatus('error');
                 setSheetTestMessage(language === 'ar'
-                    ? 'تعذر الوصول للشيت. تأكد من مشاركة الشيت مع الإيميل أعلاه بصلاحية محرر.'
+                    ? `تعذر الوصول للشيت. (${data.message || 'تأكد من الصلاحيات'})`
                     : data.message || 'Could not access the sheet.'
                 );
             }
@@ -388,54 +409,88 @@ export function IntegrationsManager({ storeId }: IntegrationsManagerProps) {
 
         setSaving(true);
         try {
-            const config = {
+            const sheetToSave = {
+                id: editingSheet.id || crypto.randomUUID(),
                 sheet_id: editingSheet.sheet_id,
                 tab_name: editingSheet.tab_name || 'Sheet1',
                 mode: editingSheet.mode || 'all',
                 product_ids: editingSheet.product_ids || []
             };
 
-            if (editingSheet.id) {
-                // Update
-                const { error } = await supabase
+            // 1. Check for existing google_sheets integrations for this store (handle legacy multiple rows)
+            const { data: existingRecords, error: fetchError } = await supabase
+                .from('store_integrations')
+                .select('*')
+                .eq('store_id', storeId)
+                .eq('provider', 'google_sheets');
+
+            if (fetchError) throw fetchError;
+
+            let finalSheets: any[] = [];
+
+            if (existingRecords && existingRecords.length > 0) {
+                const primaryRecord = existingRecords[0];
+                let currentSheets: any[] = [];
+
+                // Collect sheets from ALL existing records
+                existingRecords.forEach(record => {
+                    const currentConfig = record.config as any;
+                    if (currentConfig.sheets && Array.isArray(currentConfig.sheets)) {
+                        currentSheets.push(...currentConfig.sheets);
+                    } else if (currentConfig.sheet_id) {
+                        currentSheets.push({
+                            id: record.id,
+                            sheet_id: currentConfig.sheet_id,
+                            tab_name: currentConfig.tab_name,
+                            mode: currentConfig.mode,
+                            product_ids: currentConfig.product_ids
+                        });
+                    }
+                });
+
+                // If editing existing, replace it. If new, append.
+                if (editingSheet.id) {
+                    finalSheets = currentSheets.map((s: any) => (s.id === editingSheet.id || s.sheet_id === editingSheet.sheet_id) ? sheetToSave : s);
+                } else {
+                    finalSheets = [...currentSheets, sheetToSave];
+                }
+
+                // Update primary record
+                const { error: updateError } = await supabase
                     .from('store_integrations')
                     .update({
-                        config: config,
+                        config: { sheets: finalSheets },
                         updated_at: new Date().toISOString()
                     })
-                    .eq('id', editingSheet.id);
+                    .eq('id', primaryRecord.id);
 
-                if (error) throw error;
+                if (updateError) throw updateError;
 
-                setSheets(prev => prev.map(s => s.id === editingSheet.id ? { ...s, ...config } : s));
-                toast.success(language === 'ar' ? 'تم تحديث الشيت' : 'Sheet updated');
+                // Cleanup legacy duplicate rows if any exist
+                if (existingRecords.length > 1) {
+                    const idsToDelete = existingRecords.slice(1).map(r => r.id);
+                    await supabase.from('store_integrations').delete().in('id', idsToDelete);
+                }
+                
+                toast.success(language === 'ar' ? 'تم حفظ التعديلات' : 'Saved successfully');
             } else {
-                // Insert
-                const { data, error } = await supabase
+                // Create new record
+                finalSheets = [sheetToSave];
+                const { error: insertError } = await supabase
                     .from('store_integrations')
                     .insert({
                         store_id: storeId,
                         provider: 'google_sheets',
-                        config: config,
+                        config: { sheets: finalSheets },
                         is_active: true
-                    })
-                    .select()
-                    .single();
+                    });
 
-                if (error) throw error;
-
-                if (data) {
-                    setSheets(prev => [...prev, {
-                        id: data.id,
-                        sheet_id: config.sheet_id,
-                        tab_name: config.tab_name,
-                        mode: config.mode,
-                        product_ids: config.product_ids,
-                        is_active: true
-                    }]);
-                }
+                if (insertError) throw insertError;
                 toast.success(language === 'ar' ? 'تم إضافة الشيت' : 'Sheet added');
             }
+
+            // Sync UI state
+            setSheets(finalSheets.map(s => ({ ...s, is_active: true })));
             setIsSheetModalOpen(false);
             setEditingSheet(null);
             setSheetTestStatus('idle');
@@ -449,20 +504,67 @@ export function IntegrationsManager({ storeId }: IntegrationsManagerProps) {
         }
     };
 
-    const handleDeleteSheet = async (id: string) => {
+    const handleDeleteSheet = async (id: string, sheetId?: string) => {
         if (!confirm(language === 'ar' ? 'هل أنت متأكد من الحذف؟' : 'Are you sure you want to delete?')) return;
 
         try {
-            const { error } = await supabase
+            // 1. Get existing records
+            const { data: existingRecords, error: fetchError } = await supabase
                 .from('store_integrations')
-                .delete()
-                .eq('id', id);
+                .select('*')
+                .eq('store_id', storeId)
+                .eq('provider', 'google_sheets');
 
-            if (error) throw error;
+            if (fetchError || !existingRecords || existingRecords.length === 0) throw fetchError || new Error('Record not found');
 
-            setSheets(prev => prev.filter(s => s.id !== id));
+            const primaryRecord = existingRecords[0];
+            let currentSheets: any[] = [];
+            
+            // Handle legacy multiple rows
+            existingRecords.forEach(record => {
+                 const currentConfig = record.config as any;
+                 if (currentConfig.sheets && Array.isArray(currentConfig.sheets)) {
+                     currentSheets.push(...currentConfig.sheets);
+                 } else if (currentConfig.sheet_id) {
+                     currentSheets.push({
+                         id: record.id,
+                         sheet_id: currentConfig.sheet_id
+                     });
+                 }
+            });
+
+            // Remove the sheet
+            const updatedSheets = currentSheets.filter((s: any) => s.id !== id && s.sheet_id !== sheetId);
+
+            if (updatedSheets.length === 0) {
+                // If no sheets left, we can delete all integration rows
+                const idsToDelete = existingRecords.map(r => r.id);
+                const { error: deleteError } = await supabase
+                    .from('store_integrations')
+                    .delete()
+                    .in('id', idsToDelete);
+                if (deleteError) throw deleteError;
+                setSheets([]);
+            } else {
+                // Update primary record with filtered list
+                const { error: updateError } = await supabase
+                    .from('store_integrations')
+                    .update({ config: { sheets: updatedSheets } })
+                    .eq('id', primaryRecord.id);
+                if (updateError) throw updateError;
+                
+                // Cleanup other rows if any
+                if (existingRecords.length > 1) {
+                    const idsToDelete = existingRecords.slice(1).map(r => r.id);
+                    await supabase.from('store_integrations').delete().in('id', idsToDelete);
+                }
+                
+                setSheets(prev => prev.filter(s => s.id !== id && s.sheet_id !== sheetId));
+            }
+
             toast.success(language === 'ar' ? 'تم الحذف' : 'Deleted successfully');
         } catch (error) {
+            console.error('Delete error:', error);
             toast.error(language === 'ar' ? 'فشل الحذف' : 'Deletion failed');
         }
     };
@@ -613,9 +715,9 @@ export function IntegrationsManager({ storeId }: IntegrationsManagerProps) {
                                     }}>
                                         <Edit className="w-4 h-4 text-slate-500" />
                                     </Button>
-                                    <Button size="sm" variant="ghost" onClick={() => handleDeleteSheet(sheet.id)}>
-                                        <Trash2 className="w-4 h-4 text-red-500" />
-                                    </Button>
+                                     <Button size="sm" variant="ghost" onClick={() => handleDeleteSheet(sheet.id, sheet.sheet_id)}>
+                                         <Trash2 className="w-4 h-4 text-red-500" />
+                                     </Button>
                                 </div>
                             </div>
                             );

@@ -70,7 +70,8 @@ export async function syncOrderToGoogleSheets(orderId: string, storeId: string):
             };
         }
 
-        const serviceAccount = store.settings?.integrations?.google_service_account || process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+        // Prefer global platform service account; only fall back to per-store if global is not configured
+        const serviceAccount = process.env.GOOGLE_SERVICE_ACCOUNT_JSON || store.settings?.integrations?.google_service_account;
         if (!serviceAccount) {
             return { success: false, message: 'Service Account not configured', results: [] };
         }
@@ -97,118 +98,126 @@ export async function syncOrderToGoogleSheets(orderId: string, storeId: string):
         // 4. Process Each Integration
         for (const integration of integrations) {
             const config = integration.config as any;
-            const sheetId = config.sheet_id;
-            const tabName = config.tab_name || 'Sheet1';
-            const mode = config.mode || 'all';
-            const targetProductIds = config.product_ids || [];
+            
+            // Handle both new multi-sheet format and legacy single-sheet format
+            const sheetsToSync = config.sheets && Array.isArray(config.sheets) 
+                ? config.sheets 
+                : (config.sheet_id ? [config] : []);
 
-            let itemsToExport = [];
-            if (mode === 'all') {
-                itemsToExport = order.order_items;
-            } else if (mode === 'specific' || mode === 'include') {
-                itemsToExport = order.order_items.filter((item: any) =>
-                    targetProductIds.includes(item.product_id)
-                );
-            }
+            for (const sheetConfig of sheetsToSync) {
+                const sheetId = sheetConfig.sheet_id;
+                const tabName = sheetConfig.tab_name || 'Sheet1';
+                const mode = sheetConfig.mode || 'all';
+                const targetProductIds = sheetConfig.product_ids || [];
 
-            if (itemsToExport.length === 0) {
-                results.push({ id: integration.id, status: 'skipped', reason: 'No matching products' });
-                continue;
-            }
-
-            const allProductNames: string[] = [];
-            const allVariants: string[] = [];
-            const allQuantities: string[] = [];
-            const allUnitPrices: string[] = [];
-            const allItemTotals: string[] = [];
-
-            itemsToExport.forEach((item: any) => {
-                const q = Math.max(1, item.quantity || 1);
-                Array.from({ length: q }).forEach((_, pieceIndex) => {
-                    let productName = 'Unknown Product';
-                    try {
-                        const nameData = item.product_snapshot?.name || item.product?.name;
-                        if (nameData) {
-                            const nameObj = typeof nameData === 'string' ? JSON.parse(nameData) : nameData;
-                            productName = nameObj.ar || nameObj.en || (typeof nameData === 'string' ? nameData : 'Product');
-                        }
-                    } catch (e) {
-                        productName = typeof item.product_snapshot?.name === 'string'
-                            ? item.product_snapshot.name
-                            : (item.product?.name || 'Product');
-                    }
-
-                    let variantsStr = '';
-                    try {
-                        const variantsSource = item.product_snapshot?.variants || item.variants;
-                        if (variantsSource && Array.isArray(variantsSource)) {
-                            const isMultiPiece = variantsSource.length > 0 && variantsSource.length % q === 0 && variantsSource.length >= q;
-                            const variantsPerPiece = isMultiPiece ? variantsSource.length / q : variantsSource.length;
-                            const pieceVariants = isMultiPiece
-                                ? variantsSource.slice(pieceIndex * variantsPerPiece, (pieceIndex + 1) * variantsPerPiece)
-                                : variantsSource;
-
-                            variantsStr = pieceVariants
-                                .map((v: any) => {
-                                    const nameData = v.variantName || v.name;
-                                    const labelData = v.optionLabel || v.value;
-                                    let name = 'Variant';
-                                    let label = 'Option';
-                                    if (nameData) {
-                                        if (typeof nameData === 'string') {
-                                            try { const parsed = JSON.parse(nameData); name = parsed.ar || parsed.en || nameData; } catch { name = nameData; }
-                                        } else { name = nameData.ar || nameData.en || 'Variant'; }
-                                    }
-                                    if (labelData) {
-                                        if (typeof labelData === 'string') {
-                                            try { const parsed = JSON.parse(labelData); label = parsed.ar || parsed.en || labelData; } catch { label = labelData; }
-                                        } else { label = labelData.ar || labelData.en || 'Option'; }
-                                    }
-                                    return `${name}: ${label}`;
-                                })
-                                .join(', ');
-                        }
-                    } catch (e) { }
-
-                    allProductNames.push(productName);
-                    allVariants.push(variantsStr || 'None');
-                    allQuantities.push('1');
-                    allUnitPrices.push(String(item.unit_price));
-                    allItemTotals.push(String(item.unit_price));
-                });
-            });
-
-            const rows = [
-                [
-                    order.order_number,
-                    new Date(order.created_at).toLocaleString('en-US'),
-                    order.status,
-                    order.customer_snapshot?.name || order.customer?.name || 'Guest',
-                    order.customer_snapshot?.phone || order.customer?.phone || '',
-                    order.customer_snapshot?.alt_phone || order.customer?.address?.alt_phone || '',
-                    order.shipping_address?.city || '',
-                    order.shipping_address?.address || '',
-                    allProductNames.join('\n'),
-                    allVariants.join('\n'),
-                    allQuantities.join('\n'),
-                    allUnitPrices.join('\n'),
-                    allItemTotals.join('\n'),
-                    order.total,
-                    order.notes || ''
-                ]
-            ];
-
-            try {
-                const existingValues = await getSheetValues(serviceAccount, sheetId, `${tabName}!A1:A1`);
-                const rowsToExport = [...rows];
-                if (!existingValues || existingValues.length === 0) {
-                    rowsToExport.unshift(HEADER_ROW);
+                let itemsToExport = [];
+                if (mode === 'all') {
+                    itemsToExport = order.order_items;
+                } else if (mode === 'specific' || mode === 'include') {
+                    itemsToExport = order.order_items.filter((item: any) =>
+                        targetProductIds.includes(item.product_id)
+                    );
                 }
-                const response = await appendRow(serviceAccount, sheetId, tabName, rowsToExport);
-                results.push({ id: integration.id, status: 'success' });
-            } catch (error: any) {
-                console.error(`Failed to export to sheet ${sheetId}:`, error);
-                results.push({ id: integration.id, status: 'failed', error: error.message });
+
+                if (itemsToExport.length === 0) {
+                    results.push({ id: `${integration.id}-${sheetId}`, status: 'skipped', reason: 'No matching products' });
+                    continue;
+                }
+
+                const allProductNames: string[] = [];
+                const allVariants: string[] = [];
+                const allQuantities: string[] = [];
+                const allUnitPrices: string[] = [];
+                const allItemTotals: string[] = [];
+
+                itemsToExport.forEach((item: any) => {
+                    const q = Math.max(1, item.quantity || 1);
+                    Array.from({ length: q }).forEach((_, pieceIndex) => {
+                        let productName = 'Unknown Product';
+                        try {
+                            const nameData = item.product_snapshot?.name || item.product?.name;
+                            if (nameData) {
+                                const nameObj = typeof nameData === 'string' ? JSON.parse(nameData) : nameData;
+                                productName = nameObj.ar || nameObj.en || (typeof nameData === 'string' ? nameData : 'Product');
+                            }
+                        } catch (e) {
+                            productName = typeof item.product_snapshot?.name === 'string'
+                                ? item.product_snapshot.name
+                                : (item.product?.name || 'Product');
+                        }
+
+                        let variantsStr = '';
+                        try {
+                            const variantsSource = item.product_snapshot?.variants || item.variants;
+                            if (variantsSource && Array.isArray(variantsSource)) {
+                                const isMultiPiece = variantsSource.length > 0 && variantsSource.length % q === 0 && variantsSource.length >= q;
+                                const variantsPerPiece = isMultiPiece ? variantsSource.length / q : variantsSource.length;
+                                const pieceVariants = isMultiPiece
+                                    ? variantsSource.slice(pieceIndex * variantsPerPiece, (pieceIndex + 1) * variantsPerPiece)
+                                    : variantsSource;
+
+                                variantsStr = pieceVariants
+                                    .map((v: any) => {
+                                        const nameData = v.variantName || v.name;
+                                        const labelData = v.optionLabel || v.value;
+                                        let name = 'Variant';
+                                        let label = 'Option';
+                                        if (nameData) {
+                                            if (typeof nameData === 'string') {
+                                                try { const parsed = JSON.parse(nameData); name = parsed.ar || parsed.en || nameData; } catch { name = nameData; }
+                                            } else { name = nameData.ar || nameData.en || 'Variant'; }
+                                        }
+                                        if (labelData) {
+                                            if (typeof labelData === 'string') {
+                                                try { const parsed = JSON.parse(labelData); label = parsed.ar || parsed.en || labelData; } catch { label = labelData; }
+                                            } else { label = labelData.ar || labelData.en || 'Option'; }
+                                        }
+                                        return `${name}: ${label}`;
+                                    })
+                                    .join(', ');
+                            }
+                        } catch (e) { }
+
+                        allProductNames.push(productName);
+                        allVariants.push(variantsStr || 'None');
+                        allQuantities.push('1');
+                        allUnitPrices.push(String(item.unit_price));
+                        allItemTotals.push(String(item.unit_price));
+                    });
+                });
+
+                const rows = [
+                    [
+                        order.order_number,
+                        new Date(order.created_at).toLocaleString('en-US'),
+                        order.status,
+                        order.customer_snapshot?.name || order.customer?.name || 'Guest',
+                        order.customer_snapshot?.phone || order.customer?.phone || '',
+                        order.customer_snapshot?.alt_phone || order.customer?.address?.alt_phone || '',
+                        order.shipping_address?.city || '',
+                        order.shipping_address?.address || '',
+                        allProductNames.join('\n'),
+                        allVariants.join('\n'),
+                        allQuantities.join('\n'),
+                        allUnitPrices.join('\n'),
+                        allItemTotals.join('\n'),
+                        order.total,
+                        order.notes || ''
+                    ]
+                ];
+
+                try {
+                    const existingValues = await getSheetValues(serviceAccount, sheetId, `${tabName}!A1:A1`);
+                    const rowsToExport = [...rows];
+                    if (!existingValues || existingValues.length === 0) {
+                        rowsToExport.unshift(HEADER_ROW);
+                    }
+                    const response = await appendRow(serviceAccount, sheetId, tabName, rowsToExport);
+                    results.push({ id: `${integration.id}-${sheetId}`, status: 'success' });
+                } catch (error: any) {
+                    console.error(`Failed to export to sheet ${sheetId}:`, error);
+                    results.push({ id: `${integration.id}-${sheetId}`, status: 'failed', error: error.message });
+                }
             }
         }
 
