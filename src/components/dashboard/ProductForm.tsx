@@ -696,7 +696,7 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                             onChange={setVariants}
                             standalone={false}
                             storeId={storeId}
-                            basePrice={formData.price}
+                            basePrice={(formData.sale_price && parseFloat(formData.sale_price) > 0) ? formData.sale_price : formData.price}
                             baseStock={formData.stock_quantity}
                             globalIgnoreStock={formData.ignore_stock}
                         />

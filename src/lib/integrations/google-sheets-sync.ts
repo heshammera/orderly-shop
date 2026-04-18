@@ -70,7 +70,7 @@ export async function syncOrderToGoogleSheets(orderId: string, storeId: string):
             };
         }
 
-        const serviceAccount = store.settings?.integrations?.google_service_account;
+        const serviceAccount = store.settings?.integrations?.google_service_account || process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
         if (!serviceAccount) {
             return { success: false, message: 'Service Account not configured', results: [] };
         }

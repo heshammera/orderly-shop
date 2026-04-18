@@ -166,7 +166,7 @@ export function IntegrationsManager({ storeId }: IntegrationsManagerProps) {
     const [isSheetModalOpen, setIsSheetModalOpen] = useState(false);
     const [editingSheet, setEditingSheet] = useState<Partial<GoogleSheetConfig> | null>(null);
     const [products, setProducts] = useState<Product[]>([]);
-    const [sheetTestStatus, setSheetTestStatus] = useState<'idle' | 'testing' | 'success' | 'error' | 'duplicate'>('idle');
+    const [sheetTestStatus, setSheetTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
     const [sheetTestMessage, setSheetTestMessage] = useState('');
 
     useEffect(() => {
@@ -337,7 +337,10 @@ export function IntegrationsManager({ storeId }: IntegrationsManagerProps) {
     };
 
     const testSheetConnection = async () => {
-        if (!editingSheet?.sheet_id || !settings.google_service_account) return;
+        if (!editingSheet?.sheet_id) return;
+
+        // Use per-store service account if available, otherwise backend will use global env
+        const serviceAccountToUse = settings.google_service_account || '';
 
         setSheetTestStatus('testing');
         setSheetTestMessage('');
@@ -348,7 +351,7 @@ export function IntegrationsManager({ storeId }: IntegrationsManagerProps) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     storeId,
-                    serviceAccount: settings.google_service_account,
+                    serviceAccount: serviceAccountToUse,
                     sheetId: editingSheet.sheet_id,
                     tabName: editingSheet.tab_name
                 })
@@ -358,15 +361,13 @@ export function IntegrationsManager({ storeId }: IntegrationsManagerProps) {
 
             if (data.success) {
                 setSheetTestStatus('success');
-                setSheetTestMessage(language === 'ar' ? 'تم الاتصال بنجاح!' : 'Connection successful!');
+                setSheetTestMessage(language === 'ar' ? '✅ تم الاتصال بنجاح! الشيت جاهز.' : '✅ Connection successful! Sheet is ready.');
             } else {
-                if (data.isDuplicate) {
-                    setSheetTestStatus('duplicate');
-                    setSheetTestMessage(data.message);
-                } else {
-                    setSheetTestStatus('error');
-                    setSheetTestMessage(data.message);
-                }
+                setSheetTestStatus('error');
+                setSheetTestMessage(language === 'ar'
+                    ? 'تعذر الوصول للشيت. تأكد من مشاركة الشيت مع الإيميل أعلاه بصلاحية محرر.'
+                    : data.message || 'Could not access the sheet.'
+                );
             }
         } catch (error) {
             setSheetTestStatus('error');
@@ -376,23 +377,13 @@ export function IntegrationsManager({ storeId }: IntegrationsManagerProps) {
 
     const handleSaveSheet = async () => {
         if (!editingSheet?.sheet_id) {
-            toast.error(language === 'ar' ? 'يجب إدخال معرف الشيت' : 'Sheet ID is required');
+            toast.error(language === 'ar' ? 'يجب إدخال رابط الشيت' : 'Sheet link is required');
             return;
         }
 
-        // If untested, test first? Or mostly rely on user.
-        // Let's force a test if it hasn't succeeded yet
+        // Auto-test connection if not yet tested
         if (sheetTestStatus !== 'success') {
             await testSheetConnection();
-            // If after test it's still not success, verify user wants to proceed?
-            // Actually, if duplicate, we should BLOCK.
-            if (sheetTestStatus === 'duplicate') {
-                return; // Block save
-            }
-            // accessing state immediately after set is tricky in React batching.
-            // We'll rely on the user seeing the error. But for creating...
-            // Let's do a quick re-check logic here or assume testSheetConnection works sync enough for the user flow (it doesn't return state).
-            // We can return data from testSheetConnection.
         }
 
         setSaving(true);
@@ -452,12 +443,7 @@ export function IntegrationsManager({ storeId }: IntegrationsManagerProps) {
 
         } catch (error: any) {
             console.error('Error saving sheet:', error);
-            // Handle unique constraint violation if manual check failed
-            if (error.code === '23505') { // Unique violation
-                toast.error(language === 'ar' ? 'هذا الشيت مضاف بالفعل' : 'This sheet is already added');
-            } else {
-                toast.error(language === 'ar' ? 'فشل حفظ الشيت' : 'Failed to save sheet');
-            }
+            toast.error(language === 'ar' ? 'فشل حفظ الشيت' : 'Failed to save sheet');
         } finally {
             setSaving(false);
         }
@@ -575,7 +561,7 @@ export function IntegrationsManager({ storeId }: IntegrationsManagerProps) {
                     <div className="flex-1">
                         <CardTitle className="text-base">{getText('googleSheets', 'Google Sheets Integration')}</CardTitle>
                         <CardDescription className="text-xs">
-                            {getText('googleSheetsDesc', 'Export orders automatically to Google Sheets')}
+                            {language === 'ar' ? 'تصدير الطلبات تلقائياً إلى جداول جوجل' : 'Export orders automatically to Google Sheets'}
                         </CardDescription>
                     </div>
                     <Button
@@ -593,47 +579,19 @@ export function IntegrationsManager({ storeId }: IntegrationsManagerProps) {
                     </Button>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    {/* Service Account Upload */}
-                    <div className="space-y-2 p-4 border rounded-lg bg-slate-50">
-                        <Label htmlFor="service-account" className="flex items-center gap-2">
-                            {language === 'ar' ? 'حساب الخدمة (Service Account JSON)' : 'Service Account JSON'}
-                            {settings.google_service_account ? (
-                                <Badge variant="default" className="bg-green-600 hover:bg-green-700">
-                                    <CheckCircle2 className="w-3 h-3 mr-1" />
-                                    {language === 'ar' ? 'متصل' : 'Connected'}
-                                </Badge>
-                            ) : (
-                                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
-                                    {language === 'ar' ? 'مطلوب' : 'Required'}
-                                </Badge>
-                            )}
-                        </Label>
-                        <div className="flex gap-2">
-                            <Input
-                                id="service-account"
-                                type="file"
-                                accept=".json"
-                                onChange={handleFileUpload}
-                                className="cursor-pointer bg-white"
-                            />
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                            {language === 'ar'
-                                ? 'يستخدم لجميع الجداول. احصل عليه من Google Cloud Console.'
-                                : 'Used for all sheets. Get it from Google Cloud Console.'}
-                        </p>
-                    </div>
 
                     {/* Sheets List */}
                     <div className="space-y-3">
-                        {sheets.map((sheet) => (
+                        {sheets.map((sheet) => {
+                            const displaySheetId = sheet.sheet_id.length > 30 ? `${sheet.sheet_id.slice(0, 15)}...${sheet.sheet_id.slice(-10)}` : sheet.sheet_id;
+                            return (
                             <div key={sheet.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg hover:border-green-200 transition-colors gap-4">
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2">
                                         <FileSpreadsheet className="w-4 h-4 text-green-600" />
-                                        <span className="font-medium text-sm truncate max-w-[200px]" title={sheet.sheet_id}>{sheet.sheet_id}</span>
+                                        <span className="font-medium text-sm truncate max-w-[200px]" title={sheet.sheet_id}>{displaySheetId}</span>
                                         <Badge variant="outline" className="text-xs font-normal">
-                                            {sheet.tab_name || 'Default Tab'}
+                                            {sheet.tab_name || 'Sheet1'}
                                         </Badge>
                                     </div>
                                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -660,7 +618,8 @@ export function IntegrationsManager({ storeId }: IntegrationsManagerProps) {
                                     </Button>
                                 </div>
                             </div>
-                        ))}
+                            );
+                        })}
 
                         {sheets.length === 0 && (
                             <div className="text-center py-8 text-muted-foreground text-sm border-dashed border-2 rounded-lg">
@@ -671,55 +630,155 @@ export function IntegrationsManager({ storeId }: IntegrationsManagerProps) {
                 </CardContent>
             </Card>
 
-            {/* Edit/Add Sheet Dialog */}
+            {/* Edit/Add Sheet Dialog — Professional Stepper */}
             <Dialog open={isSheetModalOpen} onOpenChange={setIsSheetModalOpen}>
-                <DialogContent className="max-w-lg">
-                    <DialogHeader>
-                        <DialogTitle>
-                            {language === 'ar' ? 'إعداد ربط جوجل شيت' : 'Configure Google Sheet'}
+                <DialogContent className="max-w-2xl p-0">
+                    <div dir={language === 'ar' ? 'rtl' : 'ltr'} className="flex flex-col h-full">
+                    <DialogHeader className="p-6 pb-0">
+                        <DialogTitle className="text-right rtl:text-right ltr:text-left">
+                            {editingSheet?.id
+                                ? (language === 'ar' ? 'تعديل ربط جوجل شيت' : 'Edit Google Sheet')
+                                : (language === 'ar' ? 'ربط جوجل شيت جديد' : 'Link New Google Sheet')
+                            }
                         </DialogTitle>
-                        <DialogDescription>
-                            {language === 'ar' ? 'قم بربط شيت جديد وتحديد المنتجات المراد تصديرها إليه.' : 'Link a new sheet and select products to export.'}
+                        <DialogDescription className="text-right rtl:text-right ltr:text-left">
+                            {language === 'ar' ? 'اتبع الخطوات التالية لربط جدول جوجل بمتجرك.' : 'Follow the steps below to link a Google Sheet to your store.'}
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <Label>{language === 'ar' ? 'معرف الشيت (Sheet ID)' : 'Sheet ID'}</Label>
-                            <div className="flex gap-2">
+                    <div className="space-y-5 px-6 py-4">
+                        {/* Step 1: Share with platform email */}
+                        {process.env.NEXT_PUBLIC_GOOGLE_SERVICE_EMAIL && (
+                            <div className="space-y-3 p-4 border rounded-lg bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold shrink-0">1</div>
+                                    <Label className="font-bold text-sm">
+                                        {language === 'ar' ? 'شارك الشيت مع هذا الإيميل' : 'Share the sheet with this email'}
+                                    </Label>
+                                </div>
+                                <div className="flex items-center gap-2 bg-white dark:bg-gray-900 rounded-md border p-2.5">
+                                    <code className="text-xs flex-1 truncate select-all text-green-700 dark:text-green-400 font-mono" dir="ltr">
+                                        {process.env.NEXT_PUBLIC_GOOGLE_SERVICE_EMAIL}
+                                    </code>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="shrink-0 h-7 px-2 text-xs"
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(process.env.NEXT_PUBLIC_GOOGLE_SERVICE_EMAIL || '');
+                                            toast.success(language === 'ar' ? 'تم النسخ!' : 'Copied!');
+                                        }}
+                                    >
+                                        📋 {language === 'ar' ? 'نسخ' : 'Copy'}
+                                    </Button>
+                                </div>
+                                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                    {language === 'ar'
+                                        ? 'افتح جدول جوجل الخاص بك → اضغط "مشاركة" → الصق هذا الايميل → اختر صلاحية "محرر (Editor)" → اضغط إرسال.'
+                                        : 'Open your Google Sheet → Click "Share" → Paste this email → Set permission to "Editor" → Click Send.'
+                                    }
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Legacy: If no global email, show file upload fallback */}
+                        {!process.env.NEXT_PUBLIC_GOOGLE_SERVICE_EMAIL && (
+                            <div className="space-y-2 p-4 border rounded-lg bg-slate-50">
+                                <Label htmlFor="service-account" className="flex items-center gap-2">
+                                    {language === 'ar' ? 'حساب الخدمة (Service Account JSON)' : 'Service Account JSON'}
+                                    {settings.google_service_account ? (
+                                        <Badge variant="default" className="bg-green-600 hover:bg-green-700">
+                                            <CheckCircle2 className="w-3 h-3 mr-1" />
+                                            {language === 'ar' ? 'متصل' : 'Connected'}
+                                        </Badge>
+                                    ) : (
+                                        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
+                                            {language === 'ar' ? 'مطلوب' : 'Required'}
+                                        </Badge>
+                                    )}
+                                </Label>
+                                <div className="flex gap-2">
+                                    <Input
+                                        id="service-account"
+                                        type="file"
+                                        accept=".json"
+                                        onChange={handleFileUpload}
+                                        className="cursor-pointer bg-white"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Step 2: Paste Sheet URL */}
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold shrink-0">
+                                    {process.env.NEXT_PUBLIC_GOOGLE_SERVICE_EMAIL ? '2' : '●'}
+                                </div>
+                                <Label className="font-bold text-sm text-right rtl:text-right ltr:text-left">
+                                    {language === 'ar' ? 'الصق رابط جوجل شيت' : 'Paste Google Sheet link'}
+                                </Label>
+                            </div>
+                            <div className="flex flex-col sm:flex-row gap-2">
                                 <Input
-                                    value={editingSheet?.sheet_id || ''}
-                                    onChange={(e) => setEditingSheet(prev => ({ ...prev, sheet_id: e.target.value }))}
-                                    placeholder="1BxiMVs0XRA5nFMd..."
+                                    value={editingSheet?.sheet_id?.startsWith('http') ? editingSheet.sheet_id : (editingSheet?.sheet_id ? `https://docs.google.com/spreadsheets/d/${editingSheet.sheet_id}/edit` : '')}
+                                    onChange={(e) => {
+                                        const rawValue = e.target.value.trim();
+                                        // Auto-extract Sheet ID from URL
+                                        const urlMatch = rawValue.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+                                        const extractedId = urlMatch ? urlMatch[1] : rawValue;
+                                        setEditingSheet(prev => ({ ...prev, sheet_id: extractedId }));
+                                        // Reset test when URL changes
+                                        setSheetTestStatus('idle');
+                                        setSheetTestMessage('');
+                                    }}
+                                    placeholder={language === 'ar' ? 'https://docs.google.com/spreadsheets/d/...' : 'https://docs.google.com/spreadsheets/d/...'}
+                                    dir="ltr"
+                                    className="text-xs flex-1 min-w-0"
                                 />
-                                <Button variant="outline" onClick={testSheetConnection} disabled={sheetTestStatus === 'testing'}>
-                                    {sheetTestStatus === 'testing' ? <span className="animate-spin">⏳</span> : (language === 'ar' ? 'فحص' : 'Check')}
+                                <Button
+                                    variant="outline"
+                                    onClick={testSheetConnection}
+                                    disabled={sheetTestStatus === 'testing' || !editingSheet?.sheet_id}
+                                    className="shrink-0 h-10 px-4"
+                                >
+                                    {sheetTestStatus === 'testing' ? <span className="animate-spin">⏳</span> : (language === 'ar' ? 'فحص الاتصال' : 'Test Connection')}
                                 </Button>
                             </div>
+                        </div>
 
-                            {/* Validation / Status Message */}
+                            {/* Connection Status Message */}
                             {sheetTestStatus !== 'idle' && (
-                                <div className={`text-xs flex items-center gap-1 ${sheetTestStatus === 'success' ? 'text-green-600' :
-                                    sheetTestStatus === 'duplicate' ? 'text-orange-600 font-medium' :
-                                        'text-red-500'
-                                    }`}>
-                                    {sheetTestStatus === 'success' && <CheckCircle2 className="w-3 h-3" />}
-                                    {sheetTestStatus === 'duplicate' && <AlertTriangle className="w-3 h-3" />}
-                                    {sheetTestStatus === 'error' && <AlertTriangle className="w-3 h-3" />}
+                                <div className={`text-xs flex items-center gap-1.5 p-2 rounded-md ${
+                                    sheetTestStatus === 'success' ? 'text-green-700 bg-green-50 dark:bg-green-950/30' :
+                                    'text-red-600 bg-red-50 dark:bg-red-950/30'
+                                }`}>
+                                    {sheetTestStatus === 'success' && <CheckCircle2 className="w-3.5 h-3.5" />}
+                                    {sheetTestStatus === 'error' && <AlertTriangle className="w-3.5 h-3.5" />}
                                     {sheetTestMessage}
                                 </div>
                             )}
-                        </div>
 
+                            <p className="text-[11px] text-muted-foreground">
+                                {language === 'ar'
+                                    ? 'انسخ رابط الشيت كاملاً من المتصفح والصقه هنا. النظام سيستخرج المعرّف تلقائياً.'
+                                    : 'Copy the full URL from your browser and paste it here. The system will extract the ID automatically.'
+                                }
+                            </p>
+
+                        {/* Tab Name */}
                         <div className="space-y-2">
                             <Label>{language === 'ar' ? 'اسم التبويب (اختياري)' : 'Tab Name (Optional)'}</Label>
                             <Input
                                 value={editingSheet?.tab_name || ''}
                                 onChange={(e) => setEditingSheet(prev => ({ ...prev, tab_name: e.target.value }))}
                                 placeholder="Sheet1"
+                                dir="ltr"
                             />
                         </div>
 
+                        {/* Export Mode */}
                         <div className="space-y-2">
                             <Label>{language === 'ar' ? 'نظام التصدير' : 'Export Mode'}</Label>
                             <Select
@@ -772,14 +831,20 @@ export function IntegrationsManager({ storeId }: IntegrationsManagerProps) {
                         )}
                     </div>
 
-                    <DialogFooter>
+                    <DialogFooter className="px-6 py-4 bg-slate-50/50 dark:bg-slate-900/50 gap-2 flex flex-row justify-end">
                         <Button variant="ghost" onClick={() => setIsSheetModalOpen(false)}>
                             {language === 'ar' ? 'إلغاء' : 'Cancel'}
                         </Button>
-                        <Button onClick={handleSaveSheet} disabled={saving || sheetTestStatus === 'duplicate'}>
-                            {saving ? <span className="animate-spin">⏳</span> : (language === 'ar' ? 'حفظ' : 'Save')}
+                        <Button onClick={handleSaveSheet} disabled={saving || !editingSheet?.sheet_id} className="gap-2">
+                            {saving ? <span className="animate-spin">⏳</span> : (
+                                <>
+                                    <Save className="w-4 h-4" />
+                                    {language === 'ar' ? 'حفظ' : 'Save'}
+                                </>
+                            )}
                         </Button>
                     </DialogFooter>
+                    </div>
                 </DialogContent>
             </Dialog>
         </div>

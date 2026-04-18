@@ -89,13 +89,13 @@ export default function CreateStorePage() {
             // 4. Automatically Apply 'default' Theme
             try {
                 // Fetch the default theme and its latest version
-                const { data: defaultTheme } = await supabase
+                const { data: themesData } = await supabase
                     .from('themes')
-                    .select('id, folder_name, theme_versions(id)')
-                    .eq('folder_name', 'default')
-                    .single();
+                    .select('id, folder_name, theme_versions(id)');
 
-                if (defaultTheme && defaultTheme.theme_versions && defaultTheme.theme_versions.length > 0) {
+                if (themesData && themesData.length > 0) {
+                    const defaultTheme = themesData.find((t: any) => t.folder_name === 'default') || themesData[0];
+                    if (defaultTheme && defaultTheme.theme_versions && defaultTheme.theme_versions.length > 0) {
                     const latestVersionId = defaultTheme.theme_versions[defaultTheme.theme_versions.length - 1].id;
 
                     // Insert active store theme record
@@ -154,6 +154,7 @@ export default function CreateStorePage() {
                             { store_theme_id: newStoreTheme.id, page_type: 'product', settings_data: defaultProductData },
                             { store_theme_id: newStoreTheme.id, page_type: 'checkout', settings_data: defaultCheckoutData }
                         ]);
+                    }
                     }
                 }
             } catch (themeErr) {
