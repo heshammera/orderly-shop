@@ -76,10 +76,10 @@ export function DomainsTab({ store, onSave }: DomainsTabProps) {
             {/* Primary Subdomain Link */}
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-medium">
-                        {language === 'ar' ? 'رابط متجرك' : 'Your Store Link'}
-                    </h3>
-                    <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-medium">
+                    <Label className="text-base font-semibold">
+                        {language === 'ar' ? 'رابط المتجر الأساسي' : 'Primary Store Link'}
+                    </Label>
+                    <span className="text-xs bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-2.5 py-0.5 rounded-full font-medium">
                         {language === 'ar' ? 'نشط' : 'Active'}
                     </span>
                 </div>
@@ -132,10 +132,10 @@ export function DomainsTab({ store, onSave }: DomainsTabProps) {
             <hr className="border-border" />
 
             {/* Custom Domain Section */}
-            <div className="space-y-4">
-                <h3 className="text-lg font-medium">
-                    {language === 'ar' ? 'النطاق المخصص (Custom Domain)' : 'Custom Domain'}
-                </h3>
+            <div className="space-y-4 pt-4">
+                <Label className="text-base font-semibold">
+                    {language === 'ar' ? 'إعدادات النطاق الخاص' : 'Custom Domain Settings'}
+                </Label>
 
                 <Alert>
                     <AlertCircle className="h-4 w-4" />

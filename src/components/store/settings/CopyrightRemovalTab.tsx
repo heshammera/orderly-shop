@@ -30,8 +30,8 @@ export function CopyrightRemovalTab({ store }: { store: any }) {
         setLoading(true);
         try {
             // Fetch Price
-            const { data: priceData } = await supabase.rpc('get_setting_value_only', { setting_key: 'remove_copyright_price' });
-            if (priceData) setPrice(priceData);
+            const { data: priceData } = await supabase.rpc('get_setting', { setting_key: 'remove_copyright_price' });
+            if (priceData) setPrice(String(priceData));
 
             // Fetch Wallets
             const { data: walletsData } = await supabase.rpc('get_setting', { setting_key: 'payment_wallets' });

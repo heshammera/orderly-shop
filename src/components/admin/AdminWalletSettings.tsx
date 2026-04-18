@@ -58,9 +58,9 @@ export function AdminWalletSettings() {
             if (error) throw error;
             setWallets(data?.wallets || []);
 
-            const { data: priceData } = await supabase.rpc('get_setting_value_only', { setting_key: 'remove_copyright_price' });
+            const { data: priceData } = await supabase.rpc('get_setting', { setting_key: 'remove_copyright_price' });
             if (priceData) {
-                setCopyrightPrice(priceData);
+                setCopyrightPrice(String(priceData));
             }
         } catch (error) {
             console.error('Error fetching wallets:', error);

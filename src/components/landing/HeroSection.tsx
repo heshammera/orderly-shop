@@ -160,9 +160,9 @@ export function HeroSection() {
                         animate="visible"
                         className="w-full max-w-5xl mx-auto mt-20 relative px-4 sm:px-0"
                     >
-                        <div className="relative rounded-2xl border border-border/50 bg-background/80 backdrop-blur-xl shadow-2xl overflow-hidden animate-float">
+                        <div className="relative rounded-2xl border border-border/50 bg-background shadow-2xl overflow-hidden hover:shadow-primary/10 transition-all duration-700 hover:-translate-y-2">
                             {/* Browser Header */}
-                            <div className="h-10 border-b border-border/50 bg-muted/30 flex items-center px-4 gap-2">
+                            <div className="h-10 border-b border-border/50 bg-muted/40 flex items-center px-4 gap-2">
                                 <div className="flex gap-1.5">
                                     <div className="w-3 h-3 rounded-full bg-rose-500/80"></div>
                                     <div className="w-3 h-3 rounded-full bg-amber-500/80"></div>
@@ -170,7 +170,7 @@ export function HeroSection() {
                                 </div>
                             </div>
                             {/* Mockup Content - Dynamic Dashboard */}
-                            <div className={cn("aspect-[16/9] w-full bg-background/60 p-6 flex flex-col font-sans relative overflow-hidden", isRtl ? "text-right" : "text-left")} dir={isRtl ? "rtl" : "ltr"}>
+                            <div className={cn("aspect-[16/9] w-full bg-muted/10 p-6 flex flex-col font-sans relative overflow-hidden", isRtl ? "text-right" : "text-left")} dir={isRtl ? "rtl" : "ltr"}>
                                 {/* Dashboard Top Header */}
                                 <div className="flex justify-between items-center w-full mb-6">
                                     <div className="flex items-center gap-3">
@@ -236,7 +236,7 @@ export function HeroSection() {
                                                 <div className="font-semibold text-[10px] md:text-xs mb-4 text-foreground/80 truncate">{dashboard.chartTitle}</div>
                                                 <div className="flex-1 flex items-end gap-1 md:gap-2 relative">
                                                     {/* Y-axis lines */}
-                                                    <div className="absolute inset-0 flex flex-col justify-between border-y border-border/30 z-0">
+                                                    <div className="absolute inset-0 flex flex-col justify-between border-y border-border/30 z-0 text-muted-foreground/30 pointer-events-none">
                                                         <div className="w-full h-px border-b border-dashed border-border/50"></div>
                                                         <div className="w-full h-px border-b border-dashed border-border/50"></div>
                                                         <div className="w-full h-px border-b border-dashed border-border/50"></div>
@@ -244,10 +244,7 @@ export function HeroSection() {
 
                                                     {/* Bars */}
                                                     {[40, 70, 45, 90, 65, 85, 100, 60, 45, 80, 50, 75].map((h, i) => (
-                                                        <div key={i} className={cn("flex-1 bg-primary/20 hover:bg-primary/50 transition-colors z-10 rounded-t-sm relative group cursor-pointer", i > 7 ? "hidden sm:block" : "block")} style={{ height: `${h}%` }}>
-                                                            <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-foreground text-background text-[9px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap hidden md:block">
-                                                                ${(h * 120).toFixed(0)}
-                                                            </div>
+                                                        <div key={i} className={cn("flex-1 bg-primary/20 hover:bg-primary/50 transition-colors z-10 rounded-t-sm relative group cursor-default", i > 7 ? "hidden sm:block" : "block")} style={{ height: `${h}%` }}>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -278,10 +275,6 @@ export function HeroSection() {
                                 </div>
                             </div>
                         </div>
-
-                        {/* Decorative blur elements around the mockup */}
-                        <div className="absolute -z-10 top-1/2 left-0 w-72 h-72 bg-primary/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-                        <div className="absolute -z-10 top-1/2 right-0 w-72 h-72 bg-accent/20 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"></div>
                     </motion.div>
                 </div>
             </section>
