@@ -103,27 +103,34 @@ export function StoreProfileTab({ store, onSave, hideHeader }: StoreProfileTabPr
             <div className="space-y-2">
                 <Label>{language === 'ar' ? 'شعار المتجر' : 'Store Logo'}</Label>
                 <div className="flex items-center gap-4">
-                    <div className="relative w-24 h-24 rounded-lg border-2 border-dashed border-muted-foreground/25 flex items-center justify-center overflow-hidden bg-muted">
-                        {formData.logo_url ? (
-                            <>
-                                <img
-                                    src={formData.logo_url}
-                                    alt="Store logo"
-                                    className="w-full h-full object-cover"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setFormData((prev) => ({ ...prev, logo_url: '' }))}
-                                    className="absolute top-1 end-1 p-1 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                >
-                                    <X className="w-3 h-3" />
-                                </button>
-                            </>
-                        ) : (
-                            <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                    <div className="relative">
+                        <Label htmlFor="logo-upload" className="relative w-24 h-24 rounded-lg border-2 border-dashed border-muted-foreground/25 flex items-center justify-center overflow-hidden bg-muted cursor-pointer hover:border-primary/50 transition-colors">
+                            {formData.logo_url ? (
+                                <>
+                                    <img
+                                        src={formData.logo_url}
+                                        alt="Store logo"
+                                        className="w-full h-full object-cover"
+                                    />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity">
+                                        <Upload className="w-6 h-6 text-white" />
+                                    </div>
+                                </>
+                            ) : (
+                                <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                            )}
+                        </Label>
+                        {formData.logo_url && (
+                            <button
+                                type="button"
+                                onClick={() => setFormData((prev) => ({ ...prev, logo_url: '' }))}
+                                className="absolute -top-2 -end-2 p-1.5 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm z-10"
+                            >
+                                <X className="w-3.5 h-3.5" />
+                            </button>
                         )}
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 space-y-3">
                         <Input
                             type="file"
                             accept="image/*"
@@ -132,7 +139,18 @@ export function StoreProfileTab({ store, onSave, hideHeader }: StoreProfileTabPr
                             className="hidden"
                             id="logo-upload"
                         />
-                        <p className="text-xs text-muted-foreground mt-2">
+                        <Label 
+                            htmlFor="logo-upload" 
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 cursor-pointer transition-colors text-sm font-medium"
+                        >
+                            {uploadingLogo ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <Upload className="w-4 h-4" />
+                            )}
+                            {language === 'ar' ? 'رفع شعار جديد' : 'Upload New Logo'}
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
                             {language === 'ar'
                                 ? 'يُنصح بصورة مربعة بحجم 512×512 بكسل'
                                 : 'Recommended: Square image, 512×512 pixels'}

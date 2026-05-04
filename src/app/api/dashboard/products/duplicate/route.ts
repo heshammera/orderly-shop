@@ -71,23 +71,28 @@ export async function POST(req: Request) {
 
         // 3. Duplicate product
         const getDuplicatedName = (nameObj: any) => {
-            if (!nameObj) return { ar: 'نسخة من منتج', en: 'Copy of Product' };
-            const parsed = typeof nameObj === 'string' ? JSON.parse(nameObj) : nameObj;
+            let parsed = nameObj;
+            try {
+                if (typeof nameObj === 'string') parsed = JSON.parse(nameObj);
+            } catch (e) {
+                parsed = { ar: nameObj, en: nameObj };
+            }
+            
             return {
                 ar: `نسخة من ${parsed?.ar || 'منتج'}`,
                 en: `Copy of ${parsed?.en || 'Product'}`
             };
         };
 
-        const newProductPayload = {
+        const newProductPayload: any = {
             store_id: storeId,
             name: JSON.stringify(getDuplicatedName(originalProduct.name)),
             description: originalProduct.description,
             price: originalProduct.price,
             stock_quantity: originalProduct.stock_quantity,
             sku: originalProduct.sku ? `${originalProduct.sku}-COPY` : null,
-            images: originalProduct.images,
-            status: 'active', // Set as active
+            images: typeof originalProduct.images === 'object' ? JSON.stringify(originalProduct.images) : originalProduct.images,
+            status: 'active',
             metadata: originalProduct.metadata,
             skip_cart: originalProduct.skip_cart,
             free_shipping: originalProduct.free_shipping,
@@ -112,56 +117,58 @@ export async function POST(req: Request) {
 
         const newProductId = newProduct.id;
 
-        // 4. Duplicate product variants
-        const { data: originalVariants } = await supabase
+        // 4. Duplicate product variants and their options
+        const { data: originalVariants, error: fetchVariantsError } = await supabase
             .from('product_variants')
-            .select('*')
+            .select('*, variant_options(*)')
             .eq('product_id', productId);
+
+        const variantErrors: any[] = [];
+        if (fetchVariantsError) variantErrors.push(`Fetch variants error: ${fetchVariantsError.message}`);
 
         if (originalVariants && originalVariants.length > 0) {
             for (const variant of originalVariants) {
-                const newVariantPayload = {
-                    product_id: newProductId,
-                    name: variant.name,
-                    display_type: variant.display_type,
-                    option_type: variant.option_type,
-                    required: variant.required,
-                    sort_order: variant.sort_order,
-                };
-
                 const { data: newVariant, error: vError } = await supabase
                     .from('product_variants')
-                    .insert(newVariantPayload)
+                    .insert({
+                        product_id: newProductId,
+                        name: variant.name,
+                        display_type: variant.display_type,
+                        option_type: variant.option_type,
+                        required: variant.required,
+                        sort_order: variant.sort_order,
+                    })
                     .select()
                     .single();
 
-                if (!vError && newVariant) {
-                    // Fetch and duplicate variant options
-                    const { data: originalOptions } = await supabase
-                        .from('variant_options')
-                        .select('*')
-                        .eq('variant_id', variant.id);
+                if (vError) {
+                    variantErrors.push(`Variant insert error (${variant.name?.ar || 'unnamed'}): ${vError.message}`);
+                    continue;
+                }
 
-                    if (originalOptions && originalOptions.length > 0) {
-                        const newOptionsPayload = originalOptions.map(opt => ({
-                            variant_id: newVariant.id,
-                            label: opt.label,
-                            value: opt.value,
-                            price: opt.price,
-                            stock: opt.stock,
-                            manage_stock: opt.manage_stock,
-                            is_default: opt.is_default,
-                            sort_order: opt.sort_order,
-                            in_stock: opt.in_stock,
-                            sku: opt.sku ? `${opt.sku}-COPY` : null,
-                        }));
+                if (newVariant && variant.variant_options && variant.variant_options.length > 0) {
+                    const newOptionsPayload = variant.variant_options.map((opt: any) => ({
+                        variant_id: newVariant.id,
+                        label: opt.label,
+                        value: opt.value,
+                        price: opt.price,
+                        stock: opt.stock,
+                        manage_stock: opt.manage_stock,
+                        is_default: opt.is_default,
+                        sort_order: opt.sort_order,
+                        in_stock: opt.in_stock,
+                    }));
 
-                        await supabase
-                            .from('variant_options')
-                            .insert(newOptionsPayload);
+                    const { error: optError } = await supabase.from('variant_options').insert(newOptionsPayload);
+                    if (optError) {
+                        variantErrors.push(`Options insert error for variant ${newVariant.id}: ${optError.message}`);
                     }
                 }
             }
+        }
+
+        if (variantErrors.length > 0) {
+            console.error('[Duplicate Product] Variant Errors:', variantErrors);
         }
 
         // 5. Duplicate product categories
@@ -175,12 +182,10 @@ export async function POST(req: Request) {
                 product_id: newProductId,
                 category_id: cat.category_id
             }));
-            await supabase
-                .from('product_categories')
-                .insert(newCategoryPayloads);
+            await supabase.from('product_categories').insert(newCategoryPayloads);
         }
 
-        // 6. Duplicate upsell offers (both sides where product is the main product)
+        // 6. Duplicate upsell offers
         const { data: originalUpsells } = await supabase
             .from('upsell_offers')
             .select('*')
@@ -201,7 +206,14 @@ export async function POST(req: Request) {
         }
 
 
-        return NextResponse.json({ success: true, product: newProduct });
+        return NextResponse.json({ 
+            success: true, 
+            product: newProduct,
+            debug: {
+                variantsProcessed: originalVariants?.length || 0,
+                variantErrors: variantErrors.length > 0 ? variantErrors : null
+            }
+        });
 
     } catch (error: any) {
         console.error('Error duplicating product:', error);

@@ -1,81 +1,45 @@
-import crypto from 'crypto';
-
-interface ServiceAccountCredentials {
-    client_email: string;
-    private_key: string;
-    project_id: string;
-}
-
-interface GoogleToken {
-    access_token: string;
-    expires_in: number;
-    token_type: string;
-}
-
-const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
-const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
-
-function base64UrlEncode(str: string): string {
-    return Buffer.from(str)
-        .toString('base64')
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=+$/, '');
-}
+import { google } from 'googleapis';
 
 async function getGoogleAuthToken(serviceAccountJson: string): Promise<string> {
     try {
-        const credentials = JSON.parse(serviceAccountJson) as ServiceAccountCredentials;
-
-        if (!credentials.client_email || !credentials.private_key) {
-            throw new Error('Invalid Service Account JSON: Missing client_email or private_key');
+        if (!serviceAccountJson) {
+            throw new Error('Service Account JSON is empty');
         }
 
-        const now = Math.floor(Date.now() / 1000);
-        const header = {
-            alg: 'RS256',
-            typ: 'JWT'
-        };
+        const credentials = JSON.parse(serviceAccountJson);
+        
+        // Aggressive normalization and reconstruction for OpenSSL 3.0
+        let rawKey = credentials.private_key
+            .replace(/-----BEGIN PRIVATE KEY-----/g, '')
+            .replace(/-----END PRIVATE KEY-----/g, '')
+            .replace(/\\n/g, '')
+            .replace(/\s/g, ''); // Remove ALL whitespace, newlines, and escapes
 
-        const claimSet = {
-            iss: credentials.client_email,
-            scope: SCOPES.join(' '),
-            aud: GOOGLE_TOKEN_URL,
-            exp: now + 3600,
-            iat: now
-        };
+        // Reconstruct with proper 64-character lines
+        const lines = rawKey.match(/.{1,64}/g) || [];
+        const formattedKey = [
+            '-----BEGIN PRIVATE KEY-----',
+            ...lines,
+            '-----END PRIVATE KEY-----'
+        ].join('\n');
 
-        const encodedHeader = base64UrlEncode(JSON.stringify(header));
-        const encodedClaimSet = base64UrlEncode(JSON.stringify(claimSet));
+        console.log('[Google Sheets] RECONSTRUCTED KEY START:', formattedKey.substring(0, 100));
+        console.log('[Google Sheets] RECONSTRUCTED KEY END:', formattedKey.substring(formattedKey.length - 50));
 
-        const signer = crypto.createSign('RSA-SHA256');
-        signer.update(`${encodedHeader}.${encodedClaimSet}`);
-        const signature = signer.sign(credentials.private_key, 'base64')
-            .replace(/\+/g, '-')
-            .replace(/\//g, '_')
-            .replace(/=+$/, '');
-
-        const jwt = `${encodedHeader}.${encodedClaimSet}.${signature}`;
-
-        const response = await fetch(GOOGLE_TOKEN_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: new URLSearchParams({
-                grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-                assertion: jwt
-            })
+        const auth = new google.auth.JWT({
+            email: credentials.client_email,
+            key: formattedKey,
+            scopes: ['https://www.googleapis.com/auth/spreadsheets']
         });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Failed to get Google Token: ${response.status} ${response.statusText} - ${errorText}`);
+        const token = await auth.authorize();
+        
+        if (!token.access_token) {
+            throw new Error('Failed to get access token from Google');
         }
 
-        const tokenData = await response.json() as GoogleToken;
-        return tokenData.access_token;
-    } catch (error) {
+        return token.access_token;
+    } catch (error: any) {
         console.error('Error getting Google Auth Token:', error);
         throw error;
     }

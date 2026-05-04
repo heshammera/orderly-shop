@@ -53,12 +53,26 @@ export function SalesByCategoryChart({ storeId, dateRange = '30d', currency }: S
             }
 
             // 2. Get order items
-            const { data: orderItems } = await supabase
-                .from('order_items')
-                .select('product_id, total_price')
-                .in('order_id', orderIds);
+            let orderItems: any[] = [];
+            if (orderIds.length > 0) {
+                const chunkSize = 50;
+                const chunks = [];
+                for (let i = 0; i < orderIds.length; i += chunkSize) {
+                    chunks.push(orderIds.slice(i, i + chunkSize));
+                }
 
-            if (!orderItems || orderItems.length === 0) {
+                const results = await Promise.all(
+                    chunks.map(chunk => 
+                        supabase
+                            .from('order_items')
+                            .select('product_id, total_price')
+                            .in('order_id', chunk)
+                    )
+                );
+                orderItems = results.flatMap(res => res.data || []);
+            }
+
+            if (orderItems.length === 0) {
                 setChartData([]);
                 return;
             }
@@ -72,10 +86,24 @@ export function SalesByCategoryChart({ storeId, dateRange = '30d', currency }: S
 
             // 4. Get product category mappings
             const productIds = Array.from(new Set(orderItems.map(i => i.product_id).filter(id => id != null)));
-            const { data: prodCats } = await supabase
-                .from('product_categories')
-                .select('product_id, category_id')
-                .in('product_id', productIds);
+            let prodCats: any[] = [];
+            if (productIds.length > 0) {
+                const chunkSize = 50;
+                const chunks = [];
+                for (let i = 0; i < productIds.length; i += chunkSize) {
+                    chunks.push(productIds.slice(i, i + chunkSize));
+                }
+
+                const results = await Promise.all(
+                    chunks.map(chunk => 
+                        supabase
+                            .from('product_categories')
+                            .select('product_id, category_id')
+                            .in('product_id', chunk)
+                    )
+                );
+                prodCats = results.flatMap(res => res.data || []);
+            }
 
             // 5. Aggregate revenue per category
             const categoryRevenue: Record<string, { name: string, value: number }> = {};

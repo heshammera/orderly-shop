@@ -48,16 +48,30 @@ export function TopProductsWidget({ storeId, currency, dateRange = '30d' }: TopP
             const orderIds = orders.map(o => o.id);
 
             // Get order items for these orders joining live product data
-            const { data: orderItems } = await supabase
-                .from('order_items')
-                .select(`
-                    quantity, 
-                    total_price, 
-                    product_id,
-                    product_snapshot,
-                    product:products(name, images)
-                `)
-                .in('order_id', orderIds);
+            let orderItems: any[] = [];
+            if (orderIds.length > 0) {
+                const chunkSize = 50;
+                const chunks = [];
+                for (let i = 0; i < orderIds.length; i += chunkSize) {
+                    chunks.push(orderIds.slice(i, i + chunkSize));
+                }
+
+                const results = await Promise.all(
+                    chunks.map(chunk => 
+                        supabase
+                            .from('order_items')
+                            .select(`
+                                quantity, 
+                                total_price, 
+                                product_id,
+                                product_snapshot,
+                                product:products(name, images)
+                            `)
+                            .in('order_id', chunk)
+                    )
+                );
+                orderItems = results.flatMap(res => res.data || []);
+            }
 
             // Group by product
             const grouped = orderItems?.reduce((acc: any, item: any) => {

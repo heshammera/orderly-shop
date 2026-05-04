@@ -57,26 +57,36 @@ export async function POST(req: NextRequest) {
                 .maybeSingle();
 
             if (storeBySlug) {
-                const nameObj = typeof storeBySlug.name === 'string' ? JSON.parse(storeBySlug.name) : storeBySlug.name;
-                store_name = nameObj?.ar || nameObj?.en || 'Store';
+                let nameObj = storeBySlug.name;
+                if (typeof nameObj === 'string') {
+                    try {
+                        nameObj = JSON.parse(nameObj);
+                    } catch (e) {
+                        console.warn('[Visits] Failed to parse store name JSON:', nameObj);
+                    }
+                }
+                store_name = typeof nameObj === 'object' ? (nameObj?.ar || nameObj?.en || 'Store') : (nameObj || 'Store');
             }
         }
 
         // Log the visit
+        const visitData = {
+            visitor_id,
+            user_id,
+            page_path,
+            referrer: referrer || null,
+            user_agent: user_agent || null,
+            store_name,
+        };
+
         const { error } = await supabaseAdmin
             .from('platform_visits')
-            .insert({
-                visitor_id,
-                user_id,
-                page_path,
-                referrer: referrer || null,
-                user_agent: user_agent || null,
-                store_name, // Added store_name column to log
-            });
+            .insert(visitData);
 
         if (error) {
-            console.error('Visit logging error:', error);
-            return NextResponse.json({ error: 'Failed to log visit' }, { status: 500 });
+            console.error('Visit logging error:', error.message, error.details, error.hint);
+            // Don't return 500 to the client, just log it. Tracking shouldn't break the UI.
+            return NextResponse.json({ ok: true, warned: true });
         }
 
         return NextResponse.json({ ok: true });

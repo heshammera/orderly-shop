@@ -78,18 +78,28 @@ export function AdvancedAnalyticsStats({ storeId, currency, dateRange = '30d' }:
                 .eq('store_id', storeId)
                 .gte('created_at', currentStart);
 
-            // 4. Products for Cost Price (Profit Calculation)
-            // 4. Products for Cost Price (Profit Calculation)
             // Optimization: Filter by order IDs we already have instead of cross-table join
             const orderIds = orders?.map(o => o.id) || [];
             let orderItems: any[] = [];
 
             if (orderIds.length > 0) {
-                const { data } = await supabase
-                    .from('order_items')
-                    .select('quantity, unit_price, total_price, product:products(cost_price)')
-                    .in('order_id', orderIds);
-                orderItems = data || [];
+                // Chunk the IDs to avoid URL length limits (approx 50 per chunk)
+                const chunkSize = 50;
+                const chunks = [];
+                for (let i = 0; i < orderIds.length; i += chunkSize) {
+                    chunks.push(orderIds.slice(i, i + chunkSize));
+                }
+
+                const results = await Promise.all(
+                    chunks.map(chunk => 
+                        supabase
+                            .from('order_items')
+                            .select('quantity, unit_price, total_price, product:products(cost_price)')
+                            .in('order_id', chunk)
+                    )
+                );
+
+                orderItems = results.flatMap(res => res.data || []);
             }
             // Note: Join might need optimized RLS or direct query if complex
 

@@ -695,10 +695,16 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
         if (!confirm(language === 'ar' ? 'هل أنت متأكد من حذف الطلبات المحددة؟' : 'Are you sure you want to delete selected orders?')) return;
 
         try {
-            const { error } = await supabase
-                .from('orders')
-                .delete()
-                .in('id', selectedOrders);
+            // Chunk the IDs to avoid URL length limits
+            const chunkSize = 50;
+            for (let i = 0; i < selectedOrders.length; i += chunkSize) {
+                const chunk = selectedOrders.slice(i, i + chunkSize);
+                const { error } = await supabase
+                    .from('orders')
+                    .delete()
+                    .in('id', chunk);
+                if (error) throw error;
+            }
 
             if (error) throw error;
             toast.success(language === 'ar' ? 'تم حذف الطلبات' : 'Orders deleted');
