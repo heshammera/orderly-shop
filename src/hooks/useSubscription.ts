@@ -82,6 +82,10 @@ export function useSubscription(storeId: string) {
         return currentCount < limits.products;
     };
 
+    // Check if the store's plan includes custom landing pages
+    // Note: features.landing_pages might be saved as a string 'true' or a boolean true
+    const canUseLandingPages = !!subscription && (features.landing_pages === true || features.landing_pages === 'true');
+
     // Handle localized name (it might be in 'name' JSON or 'name_ar'/'name_en' columns)
     // The new schema has name_ar and name_en columns, plus a name JSON column.
     // We try to be robust.
@@ -96,6 +100,7 @@ export function useSubscription(storeId: string) {
         usage,
         isLoading: subLoading || usageLoading,
         canAddProduct,
+        canUseLandingPages,
         planName,
     };
 }

@@ -22,7 +22,9 @@ import { VariantEditor } from '@/components/dashboard/VariantEditor';
 import { UpsellManager, UpsellFormData } from '@/components/dashboard/UpsellManager';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
-import { Settings2, Zap, Truck, Timer, Users } from 'lucide-react';
+import { Settings2, Zap, Truck, Timer, Users, Rocket } from 'lucide-react';
+import { LandingPageEditor } from '@/components/landing-pages/LandingPageEditor';
+import { useSubscription } from '@/hooks/useSubscription';
 
 interface ProductFormProps {
     storeId: string;
@@ -39,8 +41,10 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
     const [variants, setVariants] = useState<any[]>([]);
     const [upsellOffers, setUpsellOffers] = useState<UpsellFormData[]>([]);
     const [storeCurrency, setStoreCurrency] = useState('SAR');
+    const [storeSlug, setStoreSlug] = useState<string>('');
     const [categories, setCategories] = useState<any[]>([]);
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+    const { canUseLandingPages } = useSubscription(storeId);
 
     // Load initial Upsells
     useEffect(() => {
@@ -102,6 +106,13 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
         };
         fetchAvailableCategories();
     }, [initialData?.id, storeId]);
+
+    // Fetch store slug for landing page links
+    useEffect(() => {
+        if (!storeId) return;
+        supabase.from('stores').select('slug').eq('id', storeId).single()
+            .then(({ data }) => { if (data?.slug) setStoreSlug(data.slug); });
+    }, [storeId]);
 
     // Helper to parse JSON fields safely
     const parseField = (field: any, key: string) => {
@@ -351,12 +362,16 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <Tabs defaultValue={language === 'ar' ? "ar" : "en"} className="w-full">
-                        <TabsList className="grid w-full grid-cols-3">
+                        <TabsList className="grid w-full grid-cols-4">
                             <TabsTrigger value="ar">العربية</TabsTrigger>
                             <TabsTrigger value="en">English</TabsTrigger>
                             <TabsTrigger value="advanced" className="flex items-center gap-2">
                                 <Settings2 className="w-4 h-4" />
-                                {language === 'ar' ? 'إعدادات متقدمة' : 'Advanced'}
+                                {language === 'ar' ? 'متقدم' : 'Advanced'}
+                            </TabsTrigger>
+                            <TabsTrigger value="landing" className="flex items-center gap-2">
+                                🚀
+                                {language === 'ar' ? 'صفحة الهبوط' : 'Landing Page'}
                             </TabsTrigger>
                         </TabsList>
                         <TabsContent value="ar" className="space-y-4">
@@ -547,6 +562,28 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                                     </CardContent>
                                 </Card>
                             </div>
+                        </TabsContent>
+
+                        {/* Landing Page Tab — only renders if product already saved (has id) */}
+                        <TabsContent value="landing" className="pt-2">
+                            {initialData?.id ? (
+                                <LandingPageEditor
+                                    productId={initialData.id}
+                                    storeId={storeId}
+                                    storeSlug={storeSlug}
+                                    productName={{ ar: formData.name_ar, en: formData.name_en }}
+                                    productPrice={parseFloat(formData.price) || 0}
+                                    productSalePrice={formData.sale_price ? parseFloat(formData.sale_price) : undefined}
+                                    productImages={formData.images as string[]}
+                                    productCurrency={storeCurrency}
+                                    canUseLandingPages={canUseLandingPages}
+                                />
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground gap-2">
+                                    <span className="text-4xl">💾</span>
+                                    <p className="font-medium">{language === 'ar' ? 'احفظ المنتج أولاً لتتمكن من إنشاء صفحة الهبوط' : 'Save the product first to create a landing page'}</p>
+                                </div>
+                            )}
                         </TabsContent>
                     </Tabs>
 

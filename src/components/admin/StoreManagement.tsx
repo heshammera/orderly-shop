@@ -183,8 +183,11 @@ export function StoreManagement() {
 
     const deleteStoreMutation = useMutation({
         mutationFn: async (id: string) => {
-            const { error } = await supabase.from('stores').delete().eq('id', id);
-            if (error) throw error;
+            const res = await fetch(`/api/admin/stores/${id}`, {
+                method: 'DELETE',
+            });
+            const result = await res.json();
+            if (!res.ok) throw new Error(result.error || 'Failed to delete store');
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin-stores'] });

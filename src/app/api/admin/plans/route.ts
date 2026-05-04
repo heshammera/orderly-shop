@@ -51,8 +51,14 @@ export async function POST(req: Request) {
             // Sync features JSONB on plans table (used by enforcement triggers like check_product_limit)
             const featuresJsonb: Record<string, any> = {}
             for (const [key, val] of Object.entries(features)) {
-                const numVal = Number(val)
-                featuresJsonb[key] = isNaN(numVal) ? val : numVal
+                if (val === 'true') {
+                    featuresJsonb[key] = true;
+                } else if (val === 'false') {
+                    featuresJsonb[key] = false;
+                } else {
+                    const numVal = Number(val)
+                    featuresJsonb[key] = isNaN(numVal) ? val : numVal
+                }
             }
             const { error: syncError } = await supabase
                 .from('plans')
