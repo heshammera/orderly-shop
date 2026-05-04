@@ -105,7 +105,7 @@ export function AdminVisitStats() {
                         </CardHeader>
                         <CardContent>
                             <div className="text-3xl font-bold tracking-tight" dir="ltr">
-                                {card.value.toLocaleString('ar-EG')}
+                                {card.value.toLocaleString('en-US')}
                             </div>
                             <p className="text-xs text-muted-foreground mt-1">زيارة</p>
                         </CardContent>
@@ -146,7 +146,7 @@ export function AdminVisitStats() {
                                     allowDecimals={false}
                                 />
                                 <Tooltip
-                                    formatter={(value: number) => [value.toLocaleString('ar-EG'), 'زيارة']}
+                                    formatter={(value: number) => [value.toLocaleString('en-US'), 'زيارة']}
                                     labelStyle={{ color: 'black', fontWeight: 'bold' }}
                                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                                 />

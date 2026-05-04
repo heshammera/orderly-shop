@@ -100,6 +100,11 @@ export function AdminSidebar() {
             label: language === 'ar' ? 'طلبات إزالة الحقوق' : 'Copyright Requests',
             href: '/admin/copyright-requests',
         },
+        {
+            icon: Settings,
+            label: language === 'ar' ? 'إعدادات الأمان' : 'Security Settings',
+            href: '/admin/settings',
+        },
     ];
 
     const NavContent = () => (
