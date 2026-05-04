@@ -48,7 +48,7 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 
 function SignupFormContent() {
     const { t, language } = useLanguage();
-    const { signUp } = useAuth();
+    const { signUp, signIn } = useAuth();
     const { toast } = useToast();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -221,19 +221,17 @@ function SignupFormContent() {
                     className: 'bg-green-50 border-green-200 text-green-800'
                 });
 
-                // Redirect to Verify Page with userId, phone (if provided)
-                const redirectParam = searchParams.get('redirect');
-                const verifyParams = new URLSearchParams();
-                if (redirectParam) verifyParams.set('redirect', redirectParam);
-                if (data.phone) verifyParams.set('phone', data.phone);
-                // Pass userId and email so verify page can send OTP without needing a session
-                const newUserId = (signUpData as any)?.user?.id;
-                if (newUserId) verifyParams.set('uid', newUserId);
-                if (data.email) verifyParams.set('email', data.email);
-                const queryString = verifyParams.toString();
-                // TEMPORARILY DISABLED — was redirecting to /email-verify for OTP verification
-                // router.push(`/email-verify${queryString ? `?${queryString}` : ''}`);
-                router.push(`/login?verified=true&email=${encodeURIComponent(data.email)}`);
+                // Auto-login after successful registration
+                const { error: signInError } = await signIn(data.email, data.password);
+                
+                if (signInError) {
+                    console.error('[Signup] Auto-login failed:', signInError);
+                    // If auto-login fails, redirect to login page as fallback
+                    router.push(`/login?verified=true&email=${encodeURIComponent(data.email)}`);
+                } else {
+                    // Redirect to plan selection
+                    router.push('/select-plan');
+                }
             }
         } finally {
             setLoading(false);

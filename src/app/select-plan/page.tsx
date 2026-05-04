@@ -49,7 +49,6 @@ export default function SelectPlanPage() {
                     router.push('/login');
                     return;
                 }
-
                 // Get Pending/Unpaid Store
                 const { data: store } = await supabase
                     .from('stores')
@@ -71,6 +70,12 @@ export default function SelectPlanPage() {
                     if (subData && subData.has_plan) {
                         setCurrentPlanId(subData.plan.id);
                     }
+                } else {
+                    // Safety check: if user is logged in but no store is found (trigger delay or failure)
+                    // Redirect to new-store creation so they aren't stuck
+                    console.warn('[SelectPlan] No store found for user, redirecting to creation');
+                    router.push('/dashboard/new-store');
+                    return;
                 }
 
                 // Fetch Plans
@@ -182,17 +187,14 @@ export default function SelectPlanPage() {
                 p_keep_store_ids: keepIds
             });
 
-            if (error) throw error;
-
             toast({
                 title: language === 'ar' ? 'تم الاشتراك بنجاح' : 'Subscribed Successfully',
-                description: language === 'ar' ? 'تم تفعيل باقتك المجانية. يرجى تسجيل الدخول الآن للبدء.' : 'Your free plan is now active. Please log in to start.',
+                description: language === 'ar' ? 'تم تفعيل باقتك المجانية بنجاح.' : 'Your free plan is now active.',
                 className: 'bg-green-50 border-green-200 text-green-800'
             });
 
-            // Sign out the pseudo-session used for setup and force a fresh login
-            await supabase.auth.signOut();
-            router.push('/login');
+            // Redirect directly to the store dashboard
+            router.push(`/dashboard/${storeId}`);
         } catch (err: any) {
             toast({ title: 'Error', description: err.message, variant: 'destructive' });
         } finally {
