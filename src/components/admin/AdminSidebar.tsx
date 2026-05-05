@@ -17,7 +17,8 @@ import {
     DollarSign,
     FileText,
     PlayCircle,
-    MessageSquare
+    MessageSquare,
+    Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -99,6 +100,11 @@ export function AdminSidebar() {
             icon: Store,
             label: language === 'ar' ? 'طلبات إزالة الحقوق' : 'Copyright Requests',
             href: '/admin/copyright-requests',
+        },
+        {
+            icon: Sparkles,
+            label: language === 'ar' ? 'الخدمات الإضافية' : 'Add-on Services',
+            href: '/admin/add-ons',
         },
         {
             icon: Settings,

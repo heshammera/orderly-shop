@@ -44,7 +44,7 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
     const [storeSlug, setStoreSlug] = useState<string>('');
     const [categories, setCategories] = useState<any[]>([]);
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-    const { canUseLandingPages } = useSubscription(storeId);
+    const { canUseLandingPages, canUseAI } = useSubscription(storeId);
 
     // Load initial Upsells
     useEffect(() => {
@@ -356,7 +356,7 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                             <CardDescription>{language === 'ar' ? 'أضف تفاصيل المنتج بالعربية والإنجليزية' : 'Add product details in Arabic and English'}</CardDescription>
                         </div>
                         <div className="flex gap-2">
-                            <AIProductGenerator onGenerated={handleAIGenerated} />
+                            {canUseAI && <AIProductGenerator storeId={storeId} onGenerated={handleAIGenerated} />}
                         </div>
                     </div>
                 </CardHeader>
@@ -378,10 +378,13 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                             <div className="space-y-2">
                                 <div className="flex justify-between items-center">
                                     <Label htmlFor="name_ar">{language === 'ar' ? 'اسم المنتج (بالعربية) *' : 'Product Name (Arabic) *'}</Label>
-                                    <AITranslator
-                                        initialText={formData.name_en}
-                                        onTranslated={(text) => setFormData(prev => ({ ...prev, name_ar: text }))}
-                                    />
+                                    {canUseAI && (
+                                        <AITranslator
+                                            storeId={storeId}
+                                            initialText={formData.name_en}
+                                            onTranslated={(text) => setFormData(prev => ({ ...prev, name_ar: text }))}
+                                        />
+                                    )}
                                 </div>
                                 <Input
                                     id="name_ar"
@@ -394,10 +397,13 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                             <div className="space-y-2">
                                 <div className="flex justify-between items-center">
                                     <Label htmlFor="description_ar">{language === 'ar' ? 'الوصف (بالعربية) *' : 'Description (Arabic) *'}</Label>
-                                    <AITranslator
-                                        initialText={formData.description_en}
-                                        onTranslated={(text) => setFormData(prev => ({ ...prev, description_ar: text }))}
-                                    />
+                                    {canUseAI && (
+                                        <AITranslator
+                                            storeId={storeId}
+                                            initialText={formData.description_en}
+                                            onTranslated={(text) => setFormData(prev => ({ ...prev, description_ar: text }))}
+                                        />
+                                    )}
                                 </div>
                                 <Textarea
                                     id="description_ar"
@@ -413,10 +419,13 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                             <div className="space-y-2">
                                 <div className="flex justify-between items-center">
                                     <Label htmlFor="name_en">{language === 'ar' ? 'اسم المنتج (بالإنجليزية) *' : 'Product Name (English) *'}</Label>
-                                    <AITranslator
-                                        initialText={formData.name_ar}
-                                        onTranslated={(text) => setFormData(prev => ({ ...prev, name_en: text }))}
-                                    />
+                                    {canUseAI && (
+                                        <AITranslator
+                                            storeId={storeId}
+                                            initialText={formData.name_ar}
+                                            onTranslated={(text) => setFormData(prev => ({ ...prev, name_en: text }))}
+                                        />
+                                    )}
                                 </div>
                                 <Input
                                     id="name_en"
@@ -429,10 +438,13 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                             <div className="space-y-2">
                                 <div className="flex justify-between items-center">
                                     <Label htmlFor="description_en">{language === 'ar' ? 'الوصف (بالإنجليزية) *' : 'Description (English) *'}</Label>
-                                    <AITranslator
-                                        initialText={formData.description_ar}
-                                        onTranslated={(text) => setFormData(prev => ({ ...prev, description_en: text }))}
-                                    />
+                                    {canUseAI && (
+                                        <AITranslator
+                                            storeId={storeId}
+                                            initialText={formData.description_ar}
+                                            onTranslated={(text) => setFormData(prev => ({ ...prev, description_en: text }))}
+                                        />
+                                    )}
                                 </div>
                                 <Textarea
                                     id="description_en"
@@ -688,11 +700,14 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                     <div className="border-t pt-6">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-medium">{language === 'ar' ? 'إعدادات تحسين محركات البحث (SEO)' : 'SEO Settings'}</h3>
-                            <AISeoGenerator
-                                onGenerated={handleSeoGenerated}
-                                initialProductName={formData.name_en || formData.name_ar}
-                                initialDescription={formData.description_en || formData.description_ar}
-                            />
+                            {canUseAI && (
+                                <AISeoGenerator
+                                    storeId={storeId}
+                                    onGenerated={handleSeoGenerated}
+                                    initialProductName={formData.name_en || formData.name_ar}
+                                    initialDescription={formData.description_en || formData.description_ar}
+                                />
+                            )}
                         </div>
                         <div className="space-y-4">
                             <div className="space-y-2">

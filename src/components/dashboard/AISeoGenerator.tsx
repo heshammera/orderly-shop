@@ -18,6 +18,7 @@ import { Search, Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AISeoGeneratorProps {
+    storeId: string;
     onGenerated: (data: {
         metaTitle: string;
         metaDescription: string;
@@ -27,7 +28,7 @@ interface AISeoGeneratorProps {
     initialDescription?: string;
 }
 
-export function AISeoGenerator({ onGenerated, initialProductName = '', initialDescription = '' }: AISeoGeneratorProps) {
+export function AISeoGenerator({ storeId, onGenerated, initialProductName = '', initialDescription = '' }: AISeoGeneratorProps) {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [productName, setProductName] = useState(initialProductName);
@@ -46,6 +47,7 @@ export function AISeoGenerator({ onGenerated, initialProductName = '', initialDe
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     action: 'generate-seo',
+                    storeId,
                     name: productName,
                     description,
                 }),

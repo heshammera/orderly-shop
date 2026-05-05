@@ -197,11 +197,12 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 
--- 4. [NEW] RPC: Get Owner Effective Plan
-CREATE OR REPLACE FUNCTION get_owner_effective_plan(p_owner_id UUID)
+-- 4. [NEW] RPC: Get Owner Effective Plan (Updated to include Add-ons)
+CREATE OR REPLACE FUNCTION get_owner_effective_plan(p_owner_id UUID, p_store_id UUID DEFAULT NULL)
 RETURNS JSON AS $$
 DECLARE
     v_best_sub RECORD;
+    v_full_features JSONB;
 BEGIN
     SELECT 
         ss.status,
@@ -222,6 +223,13 @@ BEGIN
     ORDER BY p.price_monthly DESC
     LIMIT 1;
 
+    -- Get full features for the specific store (Plan + Add-ons)
+    IF p_store_id IS NOT NULL THEN
+        v_full_features := get_store_full_features(p_store_id);
+    ELSE
+        v_full_features := COALESCE(v_best_sub.features, '{}'::jsonb);
+    END IF;
+
     -- If found, return details
     IF FOUND THEN
         RETURN json_build_object(
@@ -229,7 +237,8 @@ BEGIN
             'plan', json_build_object(
                 'id', v_best_sub.plan_id,
                 'name', json_build_object('ar', v_best_sub.name_ar, 'en', v_best_sub.name_en),
-                'features', v_best_sub.features
+                'features', v_best_sub.features,
+                'full_features', v_full_features -- [NEW] Merged features
             ),
             'subscription', json_build_object(
                 'status', v_best_sub.status,
@@ -239,7 +248,19 @@ BEGIN
         );
     END IF;
 
-    -- If no plan found
+    -- If no plan found, still check for store-specific add-ons
+    IF p_store_id IS NOT NULL THEN
+        v_full_features := get_store_full_features(p_store_id);
+        IF v_full_features != '{}'::jsonb THEN
+             RETURN json_build_object(
+                'has_plan', false,
+                'plan', json_build_object(
+                    'full_features', v_full_features
+                )
+            );
+        END IF;
+    END IF;
+
     RETURN json_build_object('has_plan', false);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -251,6 +272,6 @@ DECLARE
     v_owner_id UUID;
 BEGIN
     SELECT owner_id INTO v_owner_id FROM stores WHERE id = p_store_id;
-    RETURN get_owner_effective_plan(v_owner_id);
+    RETURN get_owner_effective_plan(v_owner_id, p_store_id);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

@@ -82,7 +82,23 @@ export default async function Layout({
     // Fetch Store Data using admin privileges
     const { data: store, error: storeError } = await supabaseAdmin
         .from('stores')
-        .select('id, name, description, logo_url, currency, settings, slug, status, has_removed_copyright')
+        .select(`
+            id, 
+            name, 
+            description, 
+            logo_url, 
+            currency, 
+            settings, 
+            slug, 
+            status, 
+            has_removed_copyright,
+            subscriptions (
+                status,
+                plans (
+                    features
+                )
+            )
+        `)
         .eq('slug', params.storeSlug)
         .single();
 
@@ -120,8 +136,20 @@ export default async function Layout({
     // Get integrations from store settings
     const integrations = store?.settings?.integrations || {};
 
+    // Check AI Features
+    const activeSubscription = store?.subscriptions?.find((s: any) => s.status === 'active' || s.status === 'trialing');
+    const planFeatures = activeSubscription?.plans?.features || {};
+    const canUseAI = planFeatures.ai_features === true || planFeatures.ai_features === 'true';
+    const hasApiKey = !!store?.settings?.ai?.gemini_api_key;
+    const hasAIEnabled = canUseAI && hasApiKey;
+
     return (
-        <StoreClientLayout store={parsedStore} integrations={integrations} headerCategories={parsedHeaderCategories}>
+        <StoreClientLayout 
+            store={parsedStore} 
+            integrations={integrations} 
+            headerCategories={parsedHeaderCategories}
+            hasAIEnabled={hasAIEnabled}
+        >
             <AffiliateTracker storeId={store.id} />
             <VisitLogger storeId={store.id} />
             {children}

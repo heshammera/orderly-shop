@@ -34,7 +34,10 @@ export function useSubscription(storeId: string) {
 
             // Map RPC result to partial SubscriptionData structure
             return {
-                plan: data.plan,
+                plan: {
+                    ...data.plan,
+                    features: data.plan.full_features || data.plan.features || {}
+                },
                 status: data.subscription.status,
                 current_period_end: data.subscription.current_period_end,
                 source_store_id: data.subscription.source_store_id
@@ -86,6 +89,15 @@ export function useSubscription(storeId: string) {
     // Note: features.landing_pages might be saved as a string 'true' or a boolean true
     const canUseLandingPages = !!subscription && (features.landing_pages === true || features.landing_pages === 'true');
 
+    // Check if the store's plan includes AI features
+    const subStatus = subscription?.status || subscription?.subscription?.status;
+    const isSubActive = subStatus === 'active' || subStatus === 'trialing';
+    
+    // Check in features object (could be nested or flat depending on how it's returned)
+    const aiFlag = features.ai_features ?? subscription?.plan?.ai_features;
+    
+    const canUseAI = isSubActive && (aiFlag === true || aiFlag === 'true');
+
     // Handle localized name (it might be in 'name' JSON or 'name_ar'/'name_en' columns)
     // The new schema has name_ar and name_en columns, plus a name JSON column.
     // We try to be robust.
@@ -101,6 +113,7 @@ export function useSubscription(storeId: string) {
         isLoading: subLoading || usageLoading,
         canAddProduct,
         canUseLandingPages,
+        canUseAI,
         planName,
     };
 }

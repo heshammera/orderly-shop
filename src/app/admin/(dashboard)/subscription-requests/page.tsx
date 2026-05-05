@@ -26,7 +26,9 @@ interface SubscriptionRequest {
     created_at: string;
     store: { name: string; slug: string };
     user: { email: string; full_name: string }; // Assuming we join this
-    plan: { name_ar: string; name_en: string };
+    plan: { name_ar: string; name_en: string } | null;
+    add_on_id: string | null;
+    add_on: { name_ar: string; name_en: string } | null;
 }
 
 export default function SubscriptionRequestsPage() {
@@ -54,7 +56,8 @@ export default function SubscriptionRequestsPage() {
                 .select(`
                     *,
                     store:stores(name, slug),
-                    plan:plans(name_ar, name_en)
+                    plan:plans(name_ar, name_en),
+                    add_on:add_ons(name_ar, name_en)
                 `)
                 .eq('status', 'pending')
                 .order('created_at', { ascending: false });
@@ -72,43 +75,38 @@ export default function SubscriptionRequestsPage() {
         fetchRequests();
     }, []);
 
-    const handleApprove = async (id: string, storeId: string, planId: string) => {
-        setProcessingId(id);
+    const handleApprove = async (req: SubscriptionRequest) => {
+        setProcessingId(req.id);
         try {
-            // Updated Logic: Check for Downgrade Impact
-            // We assume the RPC 'check_plan_downgrade_impact' exists.
-
-            // 1. Check for conflict
-            const { data: conflictData, error: conflictError } = await supabase.rpc('check_plan_downgrade_impact', {
-                p_store_id: storeId,
-                p_new_plan_id: planId
-            });
-
-            if (conflictError) {
-                // If RPC doesn't exist yet (migration not run), fallback to old behavior BUT warn
-                console.warn("Downgrade check failed (maybe RPC missing):", conflictError);
-                // Fallback: Proceed normally? Or stop?
-                // Let's proceed but warn. Or we could throw. 
-                // Ideally in production we throw, but dev might be partial.
-                // Let's assume it works.
-                throw conflictError;
-            }
-
-            if (conflictData && conflictData.status === 'conflict') {
-                // Open Dialog
-                setDowngradeConflict(conflictData.conflicts);
-                setDowngradeRequestId(id);
-                setShowDowngradeDialog(true);
-                setProcessingId(null); // Stop spinner on button
+            // Check if it's an add-on request
+            if (req.add_on_id) {
+                const { error } = await supabase.rpc('approve_add_on_request', { p_request_id: req.id });
+                if (error) throw error;
+                toast({ title: 'Success', description: 'Add-on approved successfully.' });
+                fetchRequests();
                 return;
             }
 
-            // 2. No conflict, approve normally
-            const { error } = await supabase.rpc('approve_subscription_request', { p_request_id: id, p_keep_store_ids: null });
+            // Normal plan approval
+            const { data: conflictData, error: conflictError } = await supabase.rpc('check_plan_downgrade_impact', {
+                p_store_id: req.store_id,
+                p_new_plan_id: req.plan_id
+            });
+            
+            // ... (rest of the logic)
+            if (conflictData && conflictData.status === 'conflict') {
+                setDowngradeConflict(conflictData.conflicts);
+                setDowngradeRequestId(req.id);
+                setShowDowngradeDialog(true);
+                setProcessingId(null);
+                return;
+            }
+
+            const { error } = await supabase.rpc('approve_subscription_request', { p_request_id: req.id, p_keep_store_ids: null });
             if (error) throw error;
 
             toast({ title: 'Success', description: 'Subscription approved successfully.' });
-            fetchRequests(); // Refresh
+            fetchRequests();
         } catch (error: any) {
             toast({ title: 'Error', description: error.message, variant: 'destructive' });
         } finally {
@@ -219,7 +217,15 @@ export default function SubscriptionRequestsPage() {
                                             <div className="font-medium">{getStoreName(req.store?.name)}</div>
                                             <div className="text-xs text-muted-foreground">{req.store?.slug}</div>
                                         </TableCell>
-                                        <TableCell>{req.plan?.name_en}</TableCell>
+                                        <TableCell>
+                                            {req.add_on_id ? (
+                                                <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">
+                                                    {req.add_on?.name_en} (Add-on)
+                                                </Badge>
+                                            ) : (
+                                                req.plan?.name_en
+                                            )}
+                                        </TableCell>
                                         <TableCell>{req.amount} EGP</TableCell>
                                         <TableCell>
                                             <div className="flex flex-col">
@@ -239,7 +245,7 @@ export default function SubscriptionRequestsPage() {
                                                 className="bg-green-600 hover:bg-green-700"
                                                 disabled={!!processingId}
                                                 // Updated call signature
-                                                onClick={() => handleApprove(req.id, req.store_id, req.plan_id)}
+                                                onClick={() => handleApprove(req)}
                                             >
                                                 {processingId === req.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                                             </Button>

@@ -43,6 +43,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ManageAddOnsDialog } from './ManageAddOnsDialog';
 
 export function StoreManagement() {
     const { language } = useLanguage();
@@ -70,6 +71,7 @@ export function StoreManagement() {
     const [statusEditStore, setStatusEditStore] = useState<any>(null); // For Status/Plan
     const [deleteStore, setDeleteStore] = useState<any>(null); // For Deletion
     const [rechargeStore, setRechargeStore] = useState<any>(null);
+    const [addOnsStore, setAddOnsStore] = useState<any>(null);
     const [rechargeAmount, setRechargeAmount] = useState('');
     const [rechargeType, setRechargeType] = useState<'add' | 'deduct'>('add');
 
@@ -400,6 +402,9 @@ export function StoreManagement() {
                                                 <DropdownMenuItem onClick={() => handleRechargeClick(store)}>
                                                     <CreditCard className="ml-2 h-4 w-4" /> {language === 'ar' ? 'شحن رصيد/خصم' : 'Recharge/Deduct'}
                                                 </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => setAddOnsStore(store)}>
+                                                    <Sparkles className="ml-2 h-4 w-4 text-primary" /> {language === 'ar' ? 'إدارة الخدمات الإضافية' : 'Manage Add-ons'}
+                                                </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuItem onClick={() => handleStatusEditClick(store)}>
                                                     <ShieldAlert className="ml-2 h-4 w-4" /> {language === 'ar' ? 'تعديل الحالة/الباقة' : 'Edit Status/Plan'}
@@ -672,6 +677,13 @@ export function StoreManagement() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+            {/* Manage Add-ons Dialog */}
+            <ManageAddOnsDialog
+                open={!!addOnsStore}
+                onOpenChange={(open) => !open && setAddOnsStore(null)}
+                storeId={addOnsStore?.id}
+                storeName={addOnsStore ? (typeof addOnsStore.name === 'object' ? (language === 'ar' ? addOnsStore.name.ar : addOnsStore.name.en) : addOnsStore.name) : ''}
+            />
         </div>
     );
 }

@@ -24,6 +24,7 @@ import { Sparkles, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AIProductGeneratorProps {
+    storeId: string;
     onGenerated: (data: {
         title_ar: string;
         title_en: string;
@@ -33,7 +34,7 @@ interface AIProductGeneratorProps {
     }) => void;
 }
 
-export function AIProductGenerator({ onGenerated }: AIProductGeneratorProps) {
+export function AIProductGenerator({ storeId, onGenerated }: AIProductGeneratorProps) {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [productName, setProductName] = useState('');
@@ -54,6 +55,7 @@ export function AIProductGenerator({ onGenerated }: AIProductGeneratorProps) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     action: 'generate-product', // Added action
+                    storeId,
                     productName,
                     keywords,
                     tone,

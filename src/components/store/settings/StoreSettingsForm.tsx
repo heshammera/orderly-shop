@@ -13,10 +13,13 @@ import { CopyrightRemovalTab } from './CopyrightRemovalTab';
 import { PagesTab } from './PagesTab';
 import { SecurityTab } from './SecurityTab';
 import { IntegrationsManager } from '@/components/dashboard/IntegrationsManager';
-import { Store, Phone, Truck, Shield, Globe, Link, Search, FileText, Stamp } from 'lucide-react';
+import { Store, Phone, Truck, Shield, Globe, Link, Search, FileText, Stamp, Sparkles, CreditCard } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { useSubscription } from '@/hooks/useSubscription';
+import { AITab } from './AITab';
+import { BillingTab } from './BillingTab';
 import { useToast } from '@/components/ui/use-toast';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Separator } from '@/components/ui/separator';
 
 export interface StoreData {
@@ -45,6 +48,9 @@ export function StoreSettingsForm({ store: initialStore }: StoreSettingsFormProp
     const { toast } = useToast();
     const router = useRouter();
     const supabase = createClient();
+    const searchParams = useSearchParams();
+    const activeTab = searchParams.get('tab') || 'store';
+    const { canUseAI } = useSubscription(initialStore.id);
 
     const handleSave = async (data: Partial<StoreData>) => {
         try {
@@ -119,10 +125,26 @@ export function StoreSettingsForm({ store: initialStore }: StoreSettingsFormProp
             label: language === 'ar' ? 'الأمان' : 'Security',
             icon: Shield,
         },
+        {
+            value: 'ai',
+            label: language === 'ar' ? 'الذكاء الاصطناعي 🤖' : 'AI Hub 🤖',
+            icon: Sparkles,
+        },
+        {
+            value: 'billing',
+            label: language === 'ar' ? 'الباقات والاشتراك' : 'Plans & Billing',
+            icon: CreditCard,
+        },
     ];
 
     return (
-        <Tabs defaultValue="store" className="flex flex-col md:flex-row gap-8 lg:gap-12" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+        <Tabs 
+            defaultValue="store" 
+            value={activeTab} 
+            onValueChange={(val) => router.push(`/dashboard/${initialStore.id}/settings?tab=${val}`)}
+            className="flex flex-col md:flex-row gap-8 lg:gap-12" 
+            dir={language === 'ar' ? 'rtl' : 'ltr'}
+        >
             
             {/* Sidebar Navigation */}
             <TabsList className="flex flex-col w-full md:w-64 h-auto bg-transparent p-0 gap-2 items-stretch shrink-0 md:sticky md:top-24 self-start">
@@ -288,6 +310,31 @@ export function StoreSettingsForm({ store: initialStore }: StoreSettingsFormProp
                         </Card>
                     </div>
                 </TabsContent>
+
+                {/* ── Tab 10: AI Hub ── */}
+                <TabsContent value="ai" className="m-0 focus-visible:outline-none focus-visible:ring-0 animate-in fade-in-50 slide-in-from-bottom-2 duration-300">
+                    <div className="space-y-6">
+                        <div>
+                            <h2 className="text-2xl font-semibold tracking-tight">{language === 'ar' ? 'مركز الذكاء الاصطناعي' : 'AI Hub'}</h2>
+                            <p className="text-muted-foreground">{language === 'ar' ? 'إدارة قدرات الذكاء الاصطناعي لمتجرك.' : 'Manage AI capabilities for your store.'}</p>
+                        </div>
+                        <Separator />
+                        <AITab storeId={initialStore.id} canUseAI={canUseAI} initialApiKey={initialStore.settings?.ai?.gemini_api_key} />
+                    </div>
+                </TabsContent>
+
+                {/* ── Tab 11: Billing ── */}
+                <TabsContent value="billing" className="m-0 focus-visible:outline-none focus-visible:ring-0 animate-in fade-in-50 slide-in-from-bottom-2 duration-300">
+                    <div className="space-y-6">
+                        <div>
+                            <h2 className="text-2xl font-semibold tracking-tight">{language === 'ar' ? 'الباقات والاشتراك' : 'Plans & Subscription'}</h2>
+                            <p className="text-muted-foreground">{language === 'ar' ? 'إدارة خطة اشتراك متجرك والترقية.' : 'Manage your store subscription plan and upgrades.'}</p>
+                        </div>
+                        <Separator />
+                        <BillingTab storeId={initialStore.id} />
+                    </div>
+                </TabsContent>
+
             </div>
         </Tabs>
     );

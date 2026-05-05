@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AIService } from '@/lib/ai/service'; // Assuming service is created here
+import { AIService } from '@/lib/ai/service';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
@@ -27,7 +27,21 @@ export async function POST(request: NextRequest) {
 
         // 2. Parse Request
         const body = await request.json();
-        const { action, ...params } = body;
+        const { action, storeId, ...params } = body;
+
+        // 3. Fetch Store's API Key
+        let merchantApiKey: string | undefined;
+        if (storeId) {
+            const { data: storeData } = await supabase
+                .from('stores')
+                .select('settings')
+                .eq('id', storeId)
+                .single();
+            
+            if (storeData && storeData.settings && storeData.settings.ai && storeData.settings.ai.gemini_api_key) {
+                merchantApiKey = storeData.settings.ai.gemini_api_key;
+            }
+        }
 
         let result;
 
@@ -35,17 +49,37 @@ export async function POST(request: NextRequest) {
             case 'generate-product':
                 const { productName, keywords, tone, category } = params;
                 if (!productName) throw new Error('Product name is required');
-                result = await AIService.generateProductContent(productName, keywords, category, tone);
+                result = await AIService.generateProductContent(productName, keywords, category, tone, merchantApiKey);
                 break;
 
             case 'generate-seo':
                 const { name, description } = params;
-                result = await AIService.generateSEO(name, description);
+                result = await AIService.generateSEO(name, description, merchantApiKey);
                 break;
 
             case 'translate':
                 const { text, targetLang } = params;
-                result = await AIService.translateContent(text, targetLang);
+                result = await AIService.translateContent(text, targetLang, merchantApiKey);
+                break;
+
+            case 'generate-campaign':
+                const { products, platform, campaignTone } = params;
+                result = await AIService.generateMarketingCampaign(products, platform, campaignTone, merchantApiKey);
+                break;
+
+            case 'analyze-reviews':
+                const { reviews } = params;
+                result = await AIService.analyzeReviews(reviews, merchantApiKey);
+                break;
+
+            case 'generate-response':
+                const { message, storeName, responseTone } = params;
+                result = await AIService.generateCustomerResponse(message, storeName, responseTone, merchantApiKey);
+                break;
+
+            case 'generate-email':
+                const { emailType, data } = params;
+                result = await AIService.generateEmail(emailType, data, merchantApiKey);
                 break;
 
             default:
@@ -60,8 +94,8 @@ export async function POST(request: NextRequest) {
         // Check for specific API errors
         if (error?.status === 401 || error?.status === 403) {
             return NextResponse.json(
-                { error: 'Gemini API Key is invalid. Please check aistudio.google.com' },
-                { status: error.status }
+                { error: 'Gemini API Key is invalid. Please check your AI settings.' },
+                { status: error.status || 401 }
             );
         }
 
@@ -74,7 +108,7 @@ export async function POST(request: NextRequest) {
 
         if (error?.status === 429 || error?.code === 'insufficient_quota') {
             return NextResponse.json(
-                { error: 'AI usage quota exceeded. Please check your billing details.' },
+                { error: 'AI usage quota exceeded. Please check your AI API key billing details.' },
                 { status: 429 }
             );
         }

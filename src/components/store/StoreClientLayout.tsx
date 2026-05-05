@@ -12,6 +12,7 @@ import { CartRecoveryHandler } from '@/components/store/CartRecoveryHandler';
 import { CartDrawer } from '@/components/store/CartDrawer';
 import { TrackingPixels } from '@/components/store/TrackingPixels';
 import { StoreDashboardLink } from '@/components/store/StoreDashboardLink';
+import { AIStoreChatbot } from '@/components/store/AIStoreChatbot';
 import { COMPONENT_DEFAULTS } from '@/lib/store-builder/types';
 
 interface StoreData {
@@ -42,6 +43,7 @@ interface StoreLayoutProps {
         google_analytics_ids?: string[];
     };
     headerCategories?: { id: string; name: { ar: string; en: string } | any }[];
+    hasAIEnabled?: boolean;
 }
 
 function StoreHeader({ store, headerCategories = [] }: { store: StoreData, headerCategories?: { id: string; name: any }[] }) {
@@ -161,8 +163,9 @@ function StoreHeader({ store, headerCategories = [] }: { store: StoreData, heade
 
 
 
-export function StoreClientLayout({ children, store, integrations = {}, headerCategories = [] }: StoreLayoutProps) {
-    const { dir } = useLanguage();
+export function StoreClientLayout({ children, store, integrations = {}, headerCategories = [], hasAIEnabled = false }: StoreLayoutProps) {
+    const { dir, language } = useLanguage();
+    const storeName = store.name[language] || store.name.ar || store.name.en || 'المتجر';
 
     return (
         <div className="min-h-screen bg-background" dir={dir}>
@@ -170,6 +173,7 @@ export function StoreClientLayout({ children, store, integrations = {}, headerCa
                 <CartRecoveryHandler storeSlug={store.slug} />
                 <TrackingPixels integrations={integrations} />
                 <CartDrawer store={{ id: store.id, currency: store.currency, slug: store.slug }} />
+                {hasAIEnabled && <AIStoreChatbot storeSlug={store.slug} storeName={storeName} />}
                 <main className="flex flex-col min-h-screen">
                     <div className="flex-grow flex flex-col w-full">
                         {children}

@@ -24,11 +24,12 @@ import { Languages, Loader2, Sparkles, Copy, Type } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AITranslatorProps {
+    storeId: string;
     onTranslated?: (text: string) => void;
     initialText?: string;
 }
 
-export function AITranslator({ onTranslated, initialText = '' }: AITranslatorProps) {
+export function AITranslator({ storeId, onTranslated, initialText = '' }: AITranslatorProps) {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [text, setText] = useState(initialText);
@@ -48,6 +49,7 @@ export function AITranslator({ onTranslated, initialText = '' }: AITranslatorPro
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     action: 'translate',
+                    storeId,
                     text,
                     targetLang,
                 }),

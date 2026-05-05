@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import DowngradeConflictModal from '@/components/subscription/DowngradeConflictModal';
 
 export default function SelectPlanPage() {
@@ -34,6 +35,7 @@ export default function SelectPlanPage() {
     const [openPaymentModal, setOpenPaymentModal] = useState(false);
 
     const [exchangeRate, setExchangeRate] = useState(50);
+    const [storeCurrency, setStoreCurrency] = useState('EGP');
 
     const [conflictData, setConflictData] = useState<any | null>(null);
     const [showConflictModal, setShowConflictModal] = useState(false);
@@ -102,10 +104,23 @@ export default function SelectPlanPage() {
 
                 setPlans(formattedPlans);
 
-                // Fetch Exchange Rate
-                const { data: rateData } = await supabase.rpc('get_setting', { setting_key: 'exchange_rate_usd_egp' });
+                // Fetch Store Currency
+                const { data: storeData } = await supabase.from('stores').select('currency').eq('id', store.id).maybeSingle();
+                const currency = storeData?.currency || 'EGP';
+                setStoreCurrency(currency);
+
+                // Fetch Exchange Rate dynamically for the store currency
+                const rateKey = `exchange_rate_usd_${currency.toLowerCase()}`;
+                const { data: rateData } = await supabase.rpc('get_setting', { setting_key: rateKey });
+                
                 if (rateData && rateData.rate) {
                     setExchangeRate(rateData.rate);
+                } else {
+                    // Fallback to EGP
+                    const { data: fallbackData } = await supabase.rpc('get_setting', { setting_key: 'exchange_rate_usd_egp' });
+                    if (fallbackData && fallbackData.rate) {
+                        setExchangeRate(fallbackData.rate);
+                    }
                 }
 
                 // Fetch Wallet Settings
@@ -300,13 +315,20 @@ export default function SelectPlanPage() {
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="flex-1 space-y-6">
-                                    <div className="flex items-baseline">
-                                        <span className="text-4xl font-extrabold tracking-tight">
-                                            {plan.price}
-                                        </span>
-                                        <span className="text-muted-foreground ml-1 mr-1">
-                                            {language === 'ar' ? 'ج.م' : 'EGP'} / {language === 'ar' ? (plan.interval === 'monthly' ? 'شهر' : 'سنة') : plan.interval}
-                                        </span>
+                                    <div className="flex flex-col">
+                                        <div className="flex items-baseline">
+                                            <span className="text-4xl font-extrabold tracking-tight">
+                                                ${plan.price}
+                                            </span>
+                                            <span className="text-muted-foreground ml-1 mr-1">
+                                                / {language === 'ar' ? (plan.interval === 'monthly' ? 'شهر' : 'سنة') : plan.interval}
+                                            </span>
+                                        </div>
+                                        {plan.price > 0 && (
+                                            <div className="text-sm text-primary font-medium mt-1">
+                                                ≈ {(plan.price * exchangeRate).toFixed(2)} {storeCurrency}
+                                            </div>
+                                        )}
                                     </div>
 
                                     <ul className="space-y-3">
@@ -368,13 +390,16 @@ export default function SelectPlanPage() {
                         <DialogTitle>{language === 'ar' ? 'تأكيد الاشتراك والدفع' : 'Confirm Subscription & Payment'}</DialogTitle>
                         <DialogDescription>
                             {language === 'ar'
-                                ? `أنت على وشك الاشتراك في باقة ${selectedPlan?.name_ar}. يرجى تحويل مبلغ ${selectedPlan?.price} ج.م وإرفاق الإيصال.`
-                                : `You are subscribing to ${selectedPlan?.name_en}. Please transfer ${selectedPlan?.price} EGP and upload the receipt.`}
+                                ? `أنت على وشك الاشتراك في باقة ${selectedPlan?.name_ar}. المبلغ المطلوب هو ${selectedPlan?.price}$ (ما يعادل ${(selectedPlan?.price * exchangeRate).toFixed(2)} ${storeCurrency}).`
+                                : `You are subscribing to ${selectedPlan?.name_en}. Amount due is $${selectedPlan?.price} (Equivalent to ${(selectedPlan?.price * exchangeRate).toFixed(2)} ${storeCurrency}).`}
                         </DialogDescription>
                     </DialogHeader>
 
                     <div className="space-y-4 py-4">
                         <div className="p-4 bg-muted rounded-lg text-sm space-y-2">
+                            <p className="font-semibold">{language === 'ar' ? `المبلغ المطلوب بالـ ${storeCurrency}:` : `Amount Due in ${storeCurrency}:`}</p>
+                            <p className="text-2xl font-bold text-primary">{(selectedPlan?.price * exchangeRate).toFixed(2)} {storeCurrency}</p>
+                            <Separator className="my-2" />
                             <p className="font-semibold">{language === 'ar' ? 'بيانات المحفظة الإلكترونية:' : 'Electronic Wallet Details:'}</p>
                             {activeWallets.length > 0 ? (
                                 <>

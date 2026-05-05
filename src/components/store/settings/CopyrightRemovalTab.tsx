@@ -21,6 +21,8 @@ export function CopyrightRemovalTab({ store }: { store: any }) {
     const [submitting, setSubmitting] = useState(false);
     const [file, setFile] = useState<File | null>(null);
     const [existingRequest, setExistingRequest] = useState<any>(null);
+    const [exchangeRate, setExchangeRate] = useState<number>(50);
+    const [storeCurrency, setStoreCurrency] = useState<string>('EGP');
 
     useEffect(() => {
         fetchData();
@@ -50,6 +52,22 @@ export function CopyrightRemovalTab({ store }: { store: any }) {
 
             if (requestData) {
                 setExistingRequest(requestData);
+            }
+            // Fetch Exchange Rate dynamically for the store currency
+            const currency = store?.currency || 'EGP';
+            setStoreCurrency(currency);
+
+            const rateKey = `exchange_rate_usd_${currency.toLowerCase()}`;
+            const { data: rateData } = await supabase.rpc('get_setting', { setting_key: rateKey });
+            
+            if (rateData && rateData.rate) {
+                setExchangeRate(rateData.rate);
+            } else {
+                // Fallback to EGP rate
+                const { data: fallbackData } = await supabase.rpc('get_setting', { setting_key: 'exchange_rate_usd_egp' });
+                if (fallbackData && fallbackData.rate) {
+                    setExchangeRate(fallbackData.rate);
+                }
             }
         } catch (error) {
             console.error("Error fetching copyright removal data:", error);
@@ -223,10 +241,13 @@ export function CopyrightRemovalTab({ store }: { store: any }) {
                             ? 'بشكل افتراضي، يظهر في أسفل متجرك عبارة تدل على استخدامك لمنصتنا. يمكنك إزالة هذا النص نهائياً وجعل المتجر بعلامتك التجارية الخالصة 100% مقابل رسوم لمرة واحدة فقط.'
                             : 'By default, your store displays a "Powered by Orderly" badge in the footer. You can remove this text permanently for a one-time fee to make your store 100% white-labeled.'}
                     </p>
-                    <div className="flex items-center gap-2 mt-4">
-                        <Badge variant="secondary" className="text-lg px-4 py-1">
+                    <div className="flex flex-col gap-1 mt-4">
+                        <Badge variant="secondary" className="text-lg px-4 py-1 w-fit">
                             {language === 'ar' ? 'تكلفة الإزالة: ' : 'Removal Fee: '} ${price}
                         </Badge>
+                        <div className="text-sm text-muted-foreground font-medium">
+                            ≈ {(parseFloat(price) * exchangeRate).toFixed(2)} {storeCurrency}
+                        </div>
                     </div>
                 </AlertDescription>
             </Alert>
@@ -238,9 +259,14 @@ export function CopyrightRemovalTab({ store }: { store: any }) {
 
                 <div className="space-y-4 text-sm">
                     <p>
-                        <span className="font-bold flex items-center gap-2">
-                            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs">1</span>
-                            {language === 'ar' ? 'قم بتحويل المبلغ المذكور أعلاه إلى إحدى المحافظ التالية:' : 'Transfer the specified amount to one of the following wallets:'}
+                        <span className="font-bold flex flex-col gap-1">
+                            <span className="flex items-center gap-2">
+                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs">1</span>
+                                {language === 'ar' ? 'قم بتحويل المبلغ التالي:' : 'Transfer the following amount:'}
+                            </span>
+                            <span className="text-2xl font-bold text-primary mr-8 ml-8">
+                                {(parseFloat(price) * exchangeRate).toFixed(2)} {storeCurrency}
+                            </span>
                         </span>
                     </p>
 

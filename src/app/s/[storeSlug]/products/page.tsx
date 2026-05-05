@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { notFound } from 'next/navigation';
 import ThemePreviewManager from '@/components/ThemeEngine/ThemePreviewManager';
+import { AISemanticSearch } from '@/components/store/AISemanticSearch';
 import { Metadata } from 'next';
 import { cache } from 'react';
 
@@ -27,7 +28,21 @@ export default async function ProductsPage({ params }: { params: { storeSlug: st
     // Fetch Store
     const { data: store, error: storeError } = await supabaseAdmin
         .from('stores')
-        .select('id, name, logo_url, description, currency, settings, slug')
+        .select(`
+            id, 
+            name, 
+            logo_url, 
+            description, 
+            currency, 
+            settings, 
+            slug,
+            subscriptions (
+                status,
+                plans (
+                    features
+                )
+            )
+        `)
         .eq('slug', params.storeSlug)
         .eq('status', 'active')
         .single();
@@ -153,8 +168,20 @@ export default async function ProductsPage({ params }: { params: { storeSlug: st
         }
     };
 
+    // Check AI Features
+    const activeSubscription = store?.subscriptions?.find((s: any) => s.status === 'active' || s.status === 'trialing');
+    const planFeatures = activeSubscription?.plans?.features || {};
+    const canUseAI = planFeatures.ai_features === true || planFeatures.ai_features === 'true';
+    const hasApiKey = !!store?.settings?.ai?.gemini_api_key;
+    const hasAIEnabled = canUseAI && hasApiKey;
+
     return (
-        <main>
+        <main className="flex flex-col min-h-screen">
+            {hasAIEnabled && (
+                <div className="container mx-auto px-4 py-8 max-w-4xl">
+                    <AISemanticSearch storeSlug={store.slug} />
+                </div>
+            )}
             <ThemePreviewManager
                 initialPageData={initialPageData}
                 initialTokens={initialTokens}

@@ -33,8 +33,10 @@ import {
     ShoppingBag,
     PlayCircle,
     MessageSquare,
+    Sparkles,
 } from 'lucide-react';
 import { useStoreRole } from '@/hooks/useStoreRole';
+import { useSubscription } from '@/hooks/useSubscription';
 import { StoreSwitcher } from './StoreSwitcher';
 import { NotificationBell } from './NotificationBell';
 
@@ -70,6 +72,7 @@ export function DashboardLayout({
     const supabase = createClient();
     const { t, language, setLanguage, dir } = useLanguage();
     const { isAdmin, isEditor, isOwner } = useStoreRole(storeId);
+    const { canUseAI } = useSubscription(storeId);
     const { signOut } = useAuth();
     const pathname = usePathname();
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -141,6 +144,12 @@ export function DashboardLayout({
             label: language === 'ar' ? 'التقييمات والمراجعات' : 'Product Reviews',
             href: `/dashboard/${storeId}/reviews`,
             show: isEditor,
+        },
+        {
+            icon: Sparkles,
+            label: language === 'ar' ? 'مركز الذكاء الاصطناعي 🤖' : 'AI Hub 🤖',
+            href: `/dashboard/${storeId}/ai`,
+            show: isEditor && canUseAI,
         },
         {
             icon: FolderTree,
