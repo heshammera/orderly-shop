@@ -73,7 +73,7 @@ export function AdminSidebar() {
         },
         {
             icon: Wallet,
-            label: language === 'ar' ? 'المحافظ ورسوم المنصة' : 'Wallets & Platform Fees',
+            label: language === 'ar' ? 'المحافظ الإلكترونية' : 'Electronic Wallets',
             href: '/admin/wallet-settings',
         },
         {

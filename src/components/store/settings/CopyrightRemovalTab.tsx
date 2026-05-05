@@ -16,7 +16,7 @@ export function CopyrightRemovalTab({ store }: { store: any }) {
     const { toast } = useToast();
     const supabase = createClient();
     const [loading, setLoading] = useState(true);
-    const [price, setPrice] = useState('50');
+    const [price, setPrice] = useState('25'); // Default to 25 as a sane fallback
     const [wallets, setWallets] = useState<any[]>([]);
     const [submitting, setSubmitting] = useState(false);
     const [file, setFile] = useState<File | null>(null);
@@ -31,9 +31,16 @@ export function CopyrightRemovalTab({ store }: { store: any }) {
     const fetchData = async () => {
         setLoading(true);
         try {
-            // Fetch Price
-            const { data: priceData } = await supabase.rpc('get_setting', { setting_key: 'remove_copyright_price' });
-            if (priceData) setPrice(String(priceData));
+            // Fetch Price from Add-ons table using feature_id
+            const { data: addonData } = await supabase
+                .from('add_ons')
+                .select('price')
+                .eq('feature_id', 'remove_branding')
+                .maybeSingle();
+                
+            if (addonData) {
+                setPrice(String(addonData.price));
+            }
 
             // Fetch Wallets
             const { data: walletsData } = await supabase.rpc('get_setting', { setting_key: 'payment_wallets' });

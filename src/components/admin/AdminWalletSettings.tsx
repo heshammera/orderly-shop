@@ -45,7 +45,6 @@ export function AdminWalletSettings() {
         name_ar: '',
         active: true
     });
-    const [copyrightPrice, setCopyrightPrice] = useState<string>('50');
     const [savingPrice, setSavingPrice] = useState(false);
 
     useEffect(() => {
@@ -57,11 +56,6 @@ export function AdminWalletSettings() {
             const { data, error } = await supabase.rpc('get_setting', { setting_key: 'payment_wallets' });
             if (error) throw error;
             setWallets(data?.wallets || []);
-
-            const { data: priceData } = await supabase.rpc('get_setting', { setting_key: 'remove_copyright_price' });
-            if (priceData) {
-                setCopyrightPrice(String(priceData));
-            }
         } catch (error) {
             console.error('Error fetching wallets:', error);
         } finally {
@@ -69,29 +63,7 @@ export function AdminWalletSettings() {
         }
     };
 
-    const saveCopyrightPrice = async () => {
-        setSavingPrice(true);
-        try {
-            await supabase.rpc('set_setting', {
-                setting_key: 'remove_copyright_price',
-                setting_value: copyrightPrice,
-                setting_description: 'Price to remove the Powered by Orderly copyright from the store footer'
-            });
 
-            toast({
-                title: language === 'ar' ? '✅ تم الحفظ' : '✅ Saved Successfully',
-                description: language === 'ar' ? 'تم تحديث سعر إزالة الحقوق' : 'Copyright removal price updated',
-            });
-        } catch (error: any) {
-            toast({
-                title: language === 'ar' ? 'خطأ' : 'Error',
-                description: error.message,
-                variant: 'destructive'
-            });
-        } finally {
-            setSavingPrice(false);
-        }
-    };
 
     const saveWallets = async (updatedWallets: PaymentWallet[]) => {
         try {
@@ -188,7 +160,7 @@ export function AdminWalletSettings() {
                         <div>
                             <CardTitle className="flex items-center gap-2">
                                 <Wallet className="w-5 h-5" />
-                                {language === 'ar' ? 'إعدادات محافظ الدفع' : 'Payment Wallet Settings'}
+                                {language === 'ar' ? 'المحافظ الإلكترونية' : 'Electronic Wallets'}
                             </CardTitle>
                             <CardDescription>
                                 {language === 'ar'
@@ -312,38 +284,6 @@ export function AdminWalletSettings() {
                 </CardContent>
             </Card>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <DollarSign className="w-5 h-5" />
-                        {language === 'ar' ? 'رسوم المنصة الإضافية' : 'Platform Additional Fees'}
-                    </CardTitle>
-                    <CardDescription>
-                        {language === 'ar'
-                            ? 'حدد الأسعار والمقابل المادي للخدمات الإضافية مثل إزالة حقوق النشر المتواجدة أسفل كل متجر'
-                            : 'Set prices and fees for additional services like removing the storefront copyright'}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <Label>{language === 'ar' ? 'سعر إزالة الحقوق (Powered by Orderly)' : 'Copyright Removal Price'}</Label>
-                            <div className="flex items-center gap-3">
-                                <Input
-                                    type="number"
-                                    value={copyrightPrice}
-                                    onChange={(e) => setCopyrightPrice(e.target.value)}
-                                    placeholder="50"
-                                />
-                                <Button onClick={saveCopyrightPrice} disabled={savingPrice}>
-                                    {savingPrice && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                                    {language === 'ar' ? 'حفظ السعر' : 'Save Price'}
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
         </div>
     );
 }
