@@ -403,9 +403,16 @@ export default function SelectPlanPage() {
                             <p className="font-semibold">{language === 'ar' ? 'بيانات المحفظة الإلكترونية:' : 'Electronic Wallet Details:'}</p>
                             {activeWallets.length > 0 ? (
                                 <>
-                                    <div className="space-y-2 py-2">
+                                    <div className="space-y-3 py-2">
                                         {activeWallets.map((wallet: any, index: number) => (
-                                            <p key={index} className="text-xl font-bold font-mono text-primary" dir="ltr">{wallet.number}</p>
+                                            <div key={index} className="border-b border-muted-foreground/10 pb-2 last:border-0">
+                                                <p className="text-xl font-bold font-mono text-primary" dir="ltr">{wallet.number}</p>
+                                                {wallet.owner && (
+                                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                                        {language === 'ar' ? 'صاحب المحفظة: ' : 'Owner: '} <span className="font-semibold">{wallet.owner}</span>
+                                                    </p>
+                                                )}
+                                            </div>
                                         ))}
                                     </div>
                                     <p className="text-sm text-gray-500">

@@ -27,6 +27,7 @@ interface PaymentWallet {
     number: string;
     name: string;
     name_ar: string;
+    owner: string;
     active: boolean;
 }
 
@@ -40,9 +41,9 @@ export function AdminWalletSettings() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingWallet, setEditingWallet] = useState<PaymentWallet | null>(null);
     const [formData, setFormData] = useState({
-        number: '',
         name: '',
         name_ar: '',
+        owner: '',
         active: true
     });
     const [savingPrice, setSavingPrice] = useState(false);
@@ -105,7 +106,7 @@ export function AdminWalletSettings() {
 
         saveWallets([...wallets, newWallet]);
         setDialogOpen(false);
-        setFormData({ number: '', name: '', name_ar: '', active: true });
+        setFormData({ number: '', name: '', name_ar: '', owner: '', active: true });
     };
 
     const handleEdit = (wallet: PaymentWallet) => {
@@ -114,6 +115,7 @@ export function AdminWalletSettings() {
             number: wallet.number,
             name: wallet.name,
             name_ar: wallet.name_ar,
+            owner: wallet.owner || '',
             active: wallet.active
         });
         setDialogOpen(true);
@@ -129,7 +131,7 @@ export function AdminWalletSettings() {
         saveWallets(updatedWallets);
         setDialogOpen(false);
         setEditingWallet(null);
-        setFormData({ number: '', name: '', name_ar: '', active: true });
+        setFormData({ number: '', name: '', name_ar: '', owner: '', active: true });
     };
 
     const handleDelete = (id: string) => {
@@ -170,7 +172,7 @@ export function AdminWalletSettings() {
                         </div>
                         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                             <DialogTrigger asChild>
-                                <Button onClick={() => { setEditingWallet(null); setFormData({ number: '', name: '', name_ar: '', active: true }); }}>
+                                <Button onClick={() => { setEditingWallet(null); setFormData({ number: '', name: '', name_ar: '', owner: '', active: true }); }}>
                                     <Plus className="w-4 h-4 mr-2" />
                                     {language === 'ar' ? 'إضافة محفظة' : 'Add Wallet'}
                                 </Button>
@@ -210,6 +212,14 @@ export function AdminWalletSettings() {
                                             value={formData.name_ar}
                                             onChange={(e) => setFormData({ ...formData, name_ar: e.target.value })}
                                             placeholder="المحفظة الأساسية"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label>{language === 'ar' ? 'صاحب المحفظة' : 'Wallet Owner'}</Label>
+                                        <Input
+                                            value={formData.owner}
+                                            onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
+                                            placeholder={language === 'ar' ? 'اسم صاحب المحفظة' : 'Owner Name'}
                                         />
                                     </div>
                                     <div className="flex items-center justify-between">

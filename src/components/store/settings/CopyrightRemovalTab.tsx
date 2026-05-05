@@ -284,6 +284,11 @@ export function CopyrightRemovalTab({ store }: { store: any }) {
                                     <div>
                                         <p className="font-medium text-xs text-muted-foreground">{language === 'ar' ? wallet.name_ar : wallet.name}</p>
                                         <p className="font-mono text-sm mt-1" dir="ltr">{wallet.number}</p>
+                                        {wallet.owner && (
+                                            <p className="text-[10px] text-primary/70 mt-0.5">
+                                                {language === 'ar' ? 'صاحب المحفظة: ' : 'Owner: '} {wallet.owner}
+                                            </p>
+                                        )}
                                     </div>
                                     <Button variant="ghost" size="icon" onClick={() => handleCopy(wallet.number)}>
                                         <Copy className="w-4 h-4 text-muted-foreground" />
