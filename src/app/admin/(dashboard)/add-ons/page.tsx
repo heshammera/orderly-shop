@@ -191,7 +191,7 @@ export default function AddOnsPage() {
                                 <SelectContent>
                                     {features.map(f => (
                                         <SelectItem key={f.id} value={f.id}>
-                                            {f.name_en} ({f.id})
+                                            {language === 'ar' ? f.name_ar : f.name_en} ({f.id})
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
