@@ -19,6 +19,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 const planSchema = z.object({
     slug: z.string().min(2, "Slug is required"),
@@ -32,9 +33,9 @@ const planSchema = z.object({
     orders_limit: z.coerce.number().default(0),
     stores_limit: z.coerce.number().default(1),
     is_active: z.boolean().default(true),
-    display_features_ar: z.string().optional(),
-    display_features_en: z.string().optional(),
-    features: z.record(z.string()).optional(),
+    display_features_ar: z.string().optional().nullable(),
+    display_features_en: z.string().optional().nullable(),
+    features: z.record(z.string().optional().nullable()).optional(),
 });
 
 type PlanFormValues = z.infer<typeof planSchema>;
@@ -77,7 +78,13 @@ export function PlanForm({ defaultValues, onSubmit, isSubmitting, featuresList }
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form 
+                onSubmit={form.handleSubmit(onSubmit, (errors) => {
+                    console.error('PlanForm Validation Errors:', errors);
+                    toast.error(language === 'ar' ? 'يرجى التحقق من الحقول المطلوبة' : 'Please check required fields');
+                })} 
+                className="space-y-6"
+            >
                 <div className="max-h-[60vh] overflow-y-auto px-1 space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                         <FormField
@@ -262,7 +269,7 @@ export function PlanForm({ defaultValues, onSubmit, isSubmitting, featuresList }
                                                                     onCheckedChange={(checked) => field.onChange(checked ? 'true' : 'false')}
                                                                 />
                                                             ) : feat.type === 'integer' ? (
-                                                                <Input type="number" {...field} value={field.value || ''} onChange={(e) => field.onChange(e.target.value)} />
+                                                                <Input type="number" {...field} value={field.value || '0'} onChange={(e) => field.onChange(e.target.value)} />
                                                             ) : (
                                                                 <Input {...field} value={field.value || ''} />
                                                             )}

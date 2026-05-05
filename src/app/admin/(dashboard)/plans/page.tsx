@@ -118,6 +118,7 @@ export default function PlansPage() {
             }
         };
 
+        console.log('Saving plan with payload:', payload);
         const res = await fetch('/api/admin/plans', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -129,7 +130,10 @@ export default function PlansPage() {
         });
 
         const data: any = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed to save plan');
+        if (!res.ok) {
+            console.error('Plan save failed:', data);
+            throw new Error(data.error || 'Failed to save plan');
+        }
 
         toast.success(editingPlan ? 'Plan updated successfully' : 'Plan created successfully');
 
