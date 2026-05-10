@@ -280,10 +280,9 @@ export function LandingPageEditor({
                         </CardHeader>
                         <CardContent className="pt-6">
                             <ImageUpload 
-                                storeId={storeId}
                                 value={content.hero_image ? [content.hero_image] : []}
-                                onChange={(urls) => setContent(c => ({ ...c, hero_image: urls[0] || '' }))}
-                                maxImages={1}
+                                onChange={(urls) => setContent(c => ({ ...c, hero_image: urls[urls.length - 1] || '' }))}
+                                onRemove={() => setContent(c => ({ ...c, hero_image: '' }))}
                             />
                             <p className="text-[10px] text-muted-foreground mt-2">{language === 'ar' ? 'اتركها فارغة لاستخدام صورة المنتج الأساسية' : 'Leave empty to use the main product image.'}</p>
                         </CardContent>
