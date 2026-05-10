@@ -35,15 +35,15 @@ export function ElegantTemplate({ content, product, language, storeSlug, product
     const isRTL = language === 'ar';
     const accent = content.accent_color || '#B8860B';
 
-    const headline = content.headline?.[language] || product.name[language];
+    const headline = content.headline?.[language] || product.name?.[language] || (language === 'ar' ? 'منتج حصري' : 'Exclusive Product');
     const subheadline = content.subheadline?.[language] || '';
     const ctaText = content.cta_text?.[language] || (language === 'ar' ? 'اطلب الآن' : 'Order Now');
     const benefits = content.benefits || [];
     const guarantee = content.guarantee_text?.[language] || '';
     const testimonials = content.testimonials || [];
-    const heroImage = content.hero_image || product.images?.[0];
-    const finalPrice = product.sale_price || product.price;
-    const originalPrice = product.sale_price ? product.price : null;
+    const heroImage = content.hero_image || (product.images && product.images[0]) || '';
+    const finalPrice = product.sale_price || product.price || 0;
+    const originalPrice = product.sale_price ? (product.price || null) : null;
 
     // CTA goes to the actual product page.
     const checkoutUrl = `/${productId}`;

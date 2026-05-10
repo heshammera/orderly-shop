@@ -40,21 +40,44 @@ export function LandingPageRenderer({
     template,
     content,
     product,
-    language,
+    language = 'ar',
     storeSlug,
     productId,
     isPreview = false,
 }: LandingPageRendererProps) {
-    const props = { content, product, language, storeSlug, productId, isPreview };
+    // Ensure all props are safe and defined
+    const safeContent = content || {};
+    const safeProduct = product || { name: { ar: '', en: '' }, price: 0, currency: 'SAR', images: [] };
+    const safeLang = language || 'ar';
 
-    switch (template) {
-        case 'hype':
-            return <HypeTemplate {...props} />;
-        case 'elegant':
-            return <ElegantTemplate {...props} />;
-        case 'trust':
-            return <TrustTemplate {...props} />;
-        default:
-            return <TrustTemplate {...props} />;
+    const props = { 
+        content: safeContent, 
+        product: safeProduct, 
+        language: safeLang, 
+        storeSlug, 
+        productId, 
+        isPreview 
+    };
+
+    try {
+        switch (template) {
+            case 'hype':
+                return <HypeTemplate {...props} />;
+            case 'elegant':
+                return <ElegantTemplate {...props} />;
+            case 'trust':
+                return <TrustTemplate {...props} />;
+            default:
+                return <TrustTemplate {...props} />;
+        }
+    } catch (error) {
+        console.error("LandingPageRenderer Error:", error);
+        return (
+            <div className="p-10 text-center bg-red-50 text-red-800 rounded-xl border border-red-200" dir="rtl">
+                <h2 className="text-xl font-bold mb-2">عذراً، حدث خطأ أثناء عرض القالب</h2>
+                <p className="text-sm opacity-80">يرجى محاولة تغيير القالب من لوحة التحكم أو التواصل مع الدعم التقني.</p>
+                <div className="mt-4 text-[10px] font-mono opacity-50">Template: {template}</div>
+            </div>
+        );
     }
 }
