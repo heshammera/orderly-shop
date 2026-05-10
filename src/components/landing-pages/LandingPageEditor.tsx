@@ -201,26 +201,6 @@ export function LandingPageEditor({
                 if (hostParts.length > 1) {
                     cleanHost = hostParts[hostParts.length - 1]; // "localhost:3000" or just "localhost"
                 }
-                subdomainUrl = `${protocol}//${storeSlug}.${cleanHost}/lp/${productId}`;
-            } 
-            // If on production domain with at least one subdomain (e.g., store.domain.com)
-            else if (hostParts.length >= 3) {
-                // Extract "domain.com"
-                cleanHost = hostParts.slice(-2).join('.');
-                subdomainUrl = `${protocol}//${storeSlug}.${cleanHost}/lp/${productId}`;
-            }
-            // If on main domain (e.g., domain.com)
-            else {
-                subdomainUrl = `${protocol}//${storeSlug}.${host}/lp/${productId}`;
-            }
-        }
-    } catch (e) {
-        subdomainUrl = `https://${storeSlug}.orderlyshops.com/lp/${productId}`;
-    }
-
-    const previewUrl = `${subdomainUrl}${subdomainUrl.includes('?') ? '&' : '?'}preview=true`;
-
-    // Path-based fallback URL (useful for local debugging if subdomains aren't mapped)
     const fallbackUrl = typeof window !== 'undefined' 
         ? `${window.location.protocol}//${window.location.host}/s/${storeSlug}/lp/${productId}?preview=true`
         : '';
@@ -353,25 +333,8 @@ export function LandingPageEditor({
                         size="sm" 
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleSave(); }} 
                         disabled={saving}
-                        className={cn(
-                            "transition-all duration-300",
-                            saveStatus === 'success' ? "bg-green-600 hover:bg-green-700" : 
-                            saveStatus === 'error' ? "bg-red-600 hover:bg-red-700" : ""
-                        )}
                     >
-                        {saving ? (
-                            <Loader2 className="w-4 h-4 me-1 animate-spin" />
-                        ) : saveStatus === 'success' ? (
-                            <Check className="w-4 h-4 me-1" />
-                        ) : saveStatus === 'error' ? (
-                            <Zap className="w-4 h-4 me-1" />
-                        ) : (
-                            <Save className="w-4 h-4 me-1" />
-                        )}
-                        {saving ? (language === 'ar' ? 'جاري الحفظ...' : 'Saving...') : 
-                         saveStatus === 'success' ? (language === 'ar' ? 'تم الحفظ!' : 'Saved!') : 
-                         saveStatus === 'error' ? (language === 'ar' ? 'فشل الحفظ' : 'Failed') :
-                         (language === 'ar' ? 'حفظ' : 'Save')}
+                        {saving ? (language === 'ar' ? 'جاري الحفظ...' : 'Saving...') : (language === 'ar' ? 'حفظ' : 'Save')}
                     </Button>
                 </div>
             </div>
