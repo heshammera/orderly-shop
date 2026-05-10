@@ -208,7 +208,7 @@ export default async function LandingPage({
                         </h3>
                         <ul className="space-y-2 text-sm">
                             <li className="flex justify-between items-center">
-                                <span className="text-gray-600">البحث عن المتجر ({params.storeSlug}):</span>
+                                <span className="text-gray-600">البحث عن المتجر ({storeSlug}):</span>
                                 <span className={debugData.storeFound ? "text-green-600 font-bold" : "text-red-500"}>
                                     {debugData.storeFound ? "✅ وُجد" : "❌ لم يوجد"}
                                 </span>
