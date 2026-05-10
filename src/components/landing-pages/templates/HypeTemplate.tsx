@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 
 interface LandingContent {
@@ -35,13 +35,10 @@ export function HypeTemplate({ content, product, language, storeSlug, productId,
     const [timeLeft, setTimeLeft] = useState({ hours: 2, minutes: 34, seconds: 47 });
     const [visitorCount, setVisitorCount] = useState(25);
     const isRTL = language === 'ar';
-
     const accent = content.accent_color || '#8B5CF6';
 
-    // Temporarily disabled timers to break potential loops
-    /*
+    // Restored Timers with stability
     useEffect(() => {
-        if (isPreview) return;
         const timer = setInterval(() => {
             setTimeLeft(prev => {
                 let { hours, minutes, seconds } = prev;
@@ -52,10 +49,20 @@ export function HypeTemplate({ content, product, language, storeSlug, productId,
                 return { hours, minutes, seconds };
             });
         }, 1000);
-        return () => clearInterval(timer);
-    }, [isPreview]);
-    */
+        
+        const vTimer = setInterval(() => {
+            setVisitorCount(prev => {
+                const next = prev + (Math.random() > 0.5 ? 1 : -1);
+                return next < 10 ? 10 : next > 100 ? 100 : next;
+            });
+        }, 4000);
 
+        return () => { clearInterval(timer); clearInterval(vTimer); };
+    }, []);
+
+    const pad = (n: number) => String(n).padStart(2, '0');
+
+    // Safe Data
     const headline = content.headline?.[language] || product.name?.[language] || '';
     const subheadline = content.subheadline?.[language] || '';
     const ctaText = content.cta_text?.[language] || (language === 'ar' ? 'اطلب الآن' : 'Order Now');
@@ -64,12 +71,10 @@ export function HypeTemplate({ content, product, language, storeSlug, productId,
     const testimonials = content.testimonials || [];
     const heroImage = content.hero_image || (product.images && product.images[0]) || '';
     
-    // Sanitize prices to prevent NaN/Infinity
-    const finalPrice = Math.max(0, Number(product.sale_price || product.price || 0));
-    const originalPrice = product.sale_price ? Math.max(0, Number(product.price || 0)) : null;
+    const finalPrice = Number(product.sale_price || product.price || 0);
+    const originalPrice = product.sale_price ? Number(product.price || 0) : null;
+    const discount = (originalPrice && originalPrice > 0) ? Math.round(((originalPrice - finalPrice) / originalPrice) * 100) : 0;
 
-    // CTA goes to the actual product page.
-    // On subdomain: tenant.orderlyshops.com/{productId} → product page via middleware.
     const checkoutUrl = `/${productId}`;
 
     return (
@@ -92,16 +97,13 @@ export function HypeTemplate({ content, product, language, storeSlug, productId,
 
             {/* Hero Section */}
             <section className="relative z-10 min-h-[90vh] flex flex-col items-center justify-center px-4 py-16 text-center">
-                {/* Badge */}
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold mb-6 border"
                     style={{ borderColor: accent, color: accent, background: `${accent}15` }}>
                     <span>⚡</span>
                     {language === 'ar' ? 'عرض محدود الوقت' : 'Limited Time Offer'}
                 </div>
 
-                {/* Headline */}
-                <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black leading-tight mb-4 max-w-4xl"
-                    style={{ textShadow: `0 0 60px ${accent}66` }}>
+                <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black leading-tight mb-4 max-w-4xl">
                     <span style={{
                         background: `linear-gradient(135deg, #fff 40%, ${accent})`,
                         WebkitBackgroundClip: 'text',
@@ -112,102 +114,71 @@ export function HypeTemplate({ content, product, language, storeSlug, productId,
                     </span>
                 </h1>
 
-                {subheadline && (
-                    <p className="text-lg sm:text-xl text-white/60 mb-8 max-w-2xl leading-relaxed">
-                        {subheadline}
-                    </p>
-                )}
+                {subheadline && <p className="text-lg sm:text-xl text-white/60 mb-8 max-w-2xl leading-relaxed">{subheadline}</p>}
 
                 {/* Countdown */}
                 <div className="flex items-center gap-3 mb-8">
                     {[
                         { val: pad(timeLeft.hours), label: language === 'ar' ? 'ساعة' : 'HRS' },
                         { val: pad(timeLeft.minutes), label: language === 'ar' ? 'دقيقة' : 'MIN' },
-                        { val: pad(timeLeft.seconds), label: language === 'ar' ? 'ثانية' : 'SEC' },
+                        { val: pad(timeLeft.seconds), label: language === 'ar' ? 'ثانية' : 'SEC' }
                     ].map((item, i) => (
-                        <div key={i} className="flex items-center gap-3">
-                            <div className="text-center">
-                                <div className="w-16 h-16 flex items-center justify-center rounded-xl border font-mono text-2xl font-black"
-                                    style={{ borderColor: `${accent}44`, background: `${accent}15`, color: accent }}>
-                                    {item.val}
-                                </div>
-                                <div className="text-[10px] text-white/40 mt-1 uppercase tracking-widest">{item.label}</div>
+                        <div key={i} className="flex items-center">
+                            <div className="flex flex-col items-center">
+                                <div className="text-2xl sm:text-4xl font-black tabular-nums">{item.val}</div>
+                                <div className="text-[10px] opacity-40 font-bold uppercase">{item.label}</div>
                             </div>
-                            {i < 2 && <span className="text-2xl font-bold" style={{ color: accent }}>:</span>}
+                            {i < 2 && <span className="text-2xl font-bold mx-2" style={{ color: accent }}>:</span>}
                         </div>
                     ))}
                 </div>
 
-                {/* Product Image */}
-                {heroImage && (
-                    <div className="relative mb-8 group">
-                        <div className="absolute inset-0 rounded-2xl blur-2xl opacity-40 scale-95 transition-all group-hover:opacity-60"
-                            style={{ background: `radial-gradient(circle, ${accent}, transparent)` }} />
-                        <img
-                            src={heroImage}
-                            alt={headline}
-                            className="relative w-64 h-64 sm:w-80 sm:h-80 object-cover rounded-2xl border border-white/10 shadow-2xl transition-transform group-hover:scale-105"
-                        />
-                    </div>
-                )}
-
-                {/* Price */}
-                <div className="flex items-center gap-4 mb-6">
-                    {originalPrice && (
-                        <span className="text-xl text-white/30 line-through">
-                            {originalPrice} {product.currency}
-                        </span>
+                {/* Image & Price */}
+                <div className="relative mb-8 group max-w-md">
+                    <div className="absolute inset-0 rounded-2xl blur-2xl opacity-40 scale-95 transition-all group-hover:opacity-60"
+                        style={{ background: `radial-gradient(circle, ${accent}, transparent)` }} />
+                    <img src={heroImage} alt={headline} className="relative w-64 h-64 sm:w-80 sm:h-80 object-cover rounded-2xl border border-white/10 shadow-2xl" />
+                    {discount > 0 && (
+                        <div className="absolute -top-4 -start-4 w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xs text-center shadow-lg transform -rotate-12"
+                            style={{ background: `linear-gradient(135deg, ${accent}, #ef4444)` }}>
+                            <div>
+                                <div className="text-[10px] opacity-80">{language === 'ar' ? 'خصم' : 'SALE'}</div>
+                                <div className="text-sm font-black">{discount}%</div>
+                            </div>
+                        </div>
                     )}
-                    <span className="text-4xl font-black" style={{ color: accent }}>
-                        {finalPrice} {product.currency}
-                    </span>
                 </div>
 
-                {/* CTA Button */}
+                <div className="flex items-center gap-4 mb-6">
+                    {originalPrice && <span className="text-xl text-white/30 line-through">{originalPrice} {product.currency}</span>}
+                    <span className="text-4xl font-black" style={{ color: accent }}>{finalPrice} {product.currency}</span>
+                </div>
+
                 {!isPreview ? (
-                    <Link href={checkoutUrl}
-                        className="inline-flex items-center gap-3 px-10 py-4 rounded-full font-black text-lg transition-all hover:scale-105 hover:shadow-2xl active:scale-95"
-                        style={{
-                            background: `linear-gradient(135deg, ${accent}, ${accent}dd)`,
-                            boxShadow: `0 0 40px ${accent}66`
-                        }}>
-                        <span>🛒</span>
-                        {ctaText}
-                        <span>→</span>
+                    <Link href={checkoutUrl} className="inline-flex items-center gap-3 px-10 py-4 rounded-full font-black text-lg transition-all hover:scale-105"
+                        style={{ background: `linear-gradient(135deg, ${accent}, ${accent}dd)`, boxShadow: `0 0 40px ${accent}66` }}>
+                        <span>🛒</span> {ctaText} <span>→</span>
                     </Link>
                 ) : (
-                    <button
-                        className="inline-flex items-center gap-3 px-10 py-4 rounded-full font-black text-lg cursor-default"
+                    <button className="inline-flex items-center gap-3 px-10 py-4 rounded-full font-black text-lg cursor-default"
                         style={{ background: `linear-gradient(135deg, ${accent}, ${accent}dd)`, boxShadow: `0 0 40px ${accent}66` }}>
-                        <span>🛒</span>
-                        {ctaText}
-                        <span>→</span>
+                        <span>🛒</span> {ctaText} <span>→</span>
                     </button>
                 )}
-
-                <p className="mt-3 text-xs text-white/30">
-                    {language === 'ar' ? '🔒 دفع عند الاستلام | شحن سريع | معاينة قبل الاستلام' : '🔒 Cash on Delivery | Fast delivery | Inspection before delivery'}
-                </p>
+                <p className="mt-4 text-[10px] text-white/30 uppercase tracking-widest">{language === 'ar' ? '🔒 دفع عند الاستلام | شحن سريع | معاينة قبل الاستلام' : '🔒 Cash on Delivery | Fast delivery | Inspection before delivery'}</p>
             </section>
 
-            {/* Benefits Section */}
+            {/* Features & Benefits */}
             {benefits.length > 0 && (
-                <section className="relative z-10 py-16 px-4">
-                    <div className="max-w-4xl mx-auto">
-                        <h2 className="text-2xl sm:text-3xl font-black text-center mb-10">
-                            {language === 'ar' ? 'لماذا ستحب هذا المنتج؟' : 'Why You Will Love This'}
-                        </h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <section className="relative z-10 py-20 px-4 bg-white/[0.02]">
+                    <div className="max-w-5xl mx-auto">
+                        <h2 className="text-3xl sm:text-5xl font-black text-center mb-16 italic">{language === 'ar' ? 'مميزات المنتج' : 'Key Features'}</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {benefits.map((b, i) => (
-                                <div key={i}
-                                    className="p-5 rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm hover:border-white/20 transition-all group">
-                                    <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3 font-bold text-lg"
-                                        style={{ background: `${accent}22`, color: accent }}>
-                                        {i + 1}
-                                    </div>
-                                    <p className="text-sm text-white/80 leading-relaxed">
-                                        {b[language]}
-                                    </p>
+                                <div key={i} className="flex gap-6 p-8 rounded-3xl border border-white/5 bg-white/[0.03] backdrop-blur-sm group hover:border-white/20 transition-all">
+                                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl flex-shrink-0"
+                                        style={{ background: `${accent}22`, color: accent }}>{i + 1}</div>
+                                    <p className="text-lg text-white/80 leading-relaxed font-medium">{b[language]}</p>
                                 </div>
                             ))}
                         </div>
@@ -217,21 +188,21 @@ export function HypeTemplate({ content, product, language, storeSlug, productId,
 
             {/* Testimonials */}
             {testimonials.length > 0 && (
-                <section className="relative z-10 py-16 px-4">
-                    <div className="max-w-4xl mx-auto">
-                        <h2 className="text-2xl sm:text-3xl font-black text-center mb-10">
-                            {language === 'ar' ? 'ماذا قال عملاؤنا؟' : 'What Our Customers Say'}
+                <section className="relative z-10 py-20 px-4">
+                    <div className="max-w-5xl mx-auto">
+                        <h2 className="text-3xl font-black mb-12 flex items-center gap-4">
+                            <span className="h-px flex-1 bg-white/10" />
+                            {language === 'ar' ? 'آراء العملاء' : 'Testimonials'}
+                            <span className="h-px flex-1 bg-white/10" />
                         </h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                             {testimonials.map((t, i) => (
-                                <div key={i} className="p-6 rounded-xl border border-white/10 bg-white/5">
-                                    <div className="flex gap-1 mb-3">
-                                        {Array.from({ length: 5 }).map((_, s) => (
-                                            <span key={s} style={{ color: s < t.rating ? '#FFD700' : '#ffffff30' }}>★</span>
-                                        ))}
+                                <div key={i} className="p-8 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all">
+                                    <div className="flex gap-1 mb-4">
+                                        {[1,2,3,4,5].map(s => <span key={s} className="text-lg" style={{ color: s <= t.rating ? '#FFD700' : '#ffffff10' }}>★</span>)}
                                     </div>
-                                    <p className="text-sm text-white/70 mb-3 italic">"{t.text[language]}"</p>
-                                    <p className="text-xs font-bold" style={{ color: accent }}>— {t.name}</p>
+                                    <p className="text-white/70 mb-6 italic leading-relaxed">"{t.text[language]}"</p>
+                                    <p className="font-bold text-sm" style={{ color: accent }}>— {t.name}</p>
                                 </div>
                             ))}
                         </div>
@@ -241,42 +212,17 @@ export function HypeTemplate({ content, product, language, storeSlug, productId,
 
             {/* Guarantee */}
             {guarantee && (
-                <section className="relative z-10 py-12 px-4">
-                    <div className="max-w-2xl mx-auto text-center p-8 rounded-2xl border border-white/10"
-                        style={{ background: `${accent}10` }}>
-                        <div className="text-4xl mb-3">🛡️</div>
-                        <h3 className="font-black text-xl mb-2">
-                            {language === 'ar' ? 'معاينة قبل الاستلام وضمان ارجاع' : 'Inspection before receipt & Return Guarantee'}
-                        </h3>
-                        <p className="text-white/60 text-sm leading-relaxed">{guarantee}</p>
+                <section className="relative z-10 py-20 px-4">
+                    <div className="max-w-3xl mx-auto text-center p-12 rounded-[40px] border border-white/10 bg-gradient-to-b from-white/[0.05] to-transparent">
+                        <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-8 text-4xl">🛡️</div>
+                        <p className="text-xl sm:text-2xl font-medium leading-relaxed text-white/90">{guarantee}</p>
                     </div>
                 </section>
             )}
 
-            {/* Final CTA */}
-            <section className="relative z-10 py-16 px-4 text-center">
-                <h2 className="text-2xl sm:text-3xl font-black mb-4">
-                    {language === 'ar' ? 'لا تفوّت الفرصة!' : "Don't Miss Out!"}
-                </h2>
-                <p className="text-white/50 mb-6 text-sm">
-                    {language === 'ar' ? `${visitorCount} شخص يشاهد هذا المنتج — العرض ينتهي قريباً` : `${visitorCount} viewing — Offer ends soon`}
-                </p>
-                {!isPreview ? (
-                    <Link href={checkoutUrl}
-                        className="inline-flex items-center gap-3 px-10 py-4 rounded-full font-black text-lg transition-all hover:scale-105"
-                        style={{ background: `linear-gradient(135deg, ${accent}, ${accent}dd)`, boxShadow: `0 0 40px ${accent}66` }}>
-                        <span>⚡</span>
-                        {ctaText}
-                    </Link>
-                ) : (
-                    <button
-                        className="inline-flex items-center gap-3 px-10 py-4 rounded-full font-black text-lg cursor-default"
-                        style={{ background: `linear-gradient(135deg, ${accent}, ${accent}dd)`, boxShadow: `0 0 40px ${accent}66` }}>
-                        <span>⚡</span>
-                        {ctaText}
-                    </button>
-                )}
-            </section>
+            <footer className="relative z-10 py-12 text-center border-t border-white/5 opacity-30 text-[10px] uppercase tracking-widest">
+                {language === 'ar' ? 'جميع الحقوق محفوظة' : 'All Rights Reserved'} &copy; {new Date().getFullYear()}
+            </footer>
         </div>
     );
 }
