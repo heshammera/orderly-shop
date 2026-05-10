@@ -160,11 +160,16 @@ export function LandingPageEditor({
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
-        const host = window.location.host;
-        let cleanHost = host;
-        if (host.includes('admin.')) cleanHost = host.replace('admin.', '');
-        // Force lower case storeSlug for the link
-        const base = `${window.location.protocol}//${storeSlug.toLowerCase()}.${cleanHost}/lp/${productId}`;
+        const host = window.location.host; // e.g. "mais.orderlyshops.com" or "admin.orderlyshops.com"
+        const parts = host.split('.');
+        
+        let baseDomain = host;
+        // If we have at least 3 parts (sub.domain.tld), the last two are the base domain
+        if (parts.length >= 3) {
+            baseDomain = parts.slice(-2).join('.');
+        }
+
+        const base = `${window.location.protocol}//${storeSlug.toLowerCase()}.${baseDomain}/lp/${productId}`;
         setSubdomainUrl(base);
         setFallbackUrl(`${window.location.protocol}//${host}/s/${storeSlug}/lp/${productId}?preview=true`);
     }, [storeSlug, productId]);

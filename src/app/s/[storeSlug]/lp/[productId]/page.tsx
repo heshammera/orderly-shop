@@ -139,20 +139,28 @@ export default async function LandingPage({
 
         // If everything is found, render the page
         if (debugData.lpFound && debugData.productFound && debugData.storeFound) {
+            // Safe parsing helper
+            const safeParse = (val: any) => {
+                if (typeof val === 'string') {
+                    try { return JSON.parse(val); } catch (e) { return val; }
+                }
+                return val;
+            };
+
             const productData = {
-                name: typeof product!.name === 'string' ? JSON.parse(product!.name) : product!.name,
+                name: safeParse(product!.name),
                 price: product!.price,
                 sale_price: product!.sale_price,
                 currency: product!.currency || store!.currency || 'SAR',
-                images: typeof product!.images === 'string' ? JSON.parse(product!.images) : product!.images
+                images: safeParse(product!.images)
             };
 
             return (
                 <LandingPageRenderer
-                    template={lp!.template as LandingTemplate}
-                    content={lp!.content}
+                    template={(lp!.template as LandingTemplate) || 'hype'}
+                    content={lp!.content || {}}
                     product={productData}
-                    language={searchParams.preview === 'true' ? 'ar' : 'ar'} // Default to Arabic for now or sync with store
+                    language="ar"
                     storeSlug={params.storeSlug}
                     productId={params.productId}
                     isPreview={isPreview}
