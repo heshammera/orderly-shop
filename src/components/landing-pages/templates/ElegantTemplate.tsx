@@ -71,7 +71,7 @@ export function ElegantTemplate({ content, product, language, storeSlug, product
                             <div className="absolute -bottom-4 -start-4 w-20 h-20 rounded-2xl flex items-center justify-center text-white font-bold text-xs text-center shadow-lg"
                                 style={{ background: `linear-gradient(135deg, ${accent}, #D4AF37)` }}>
                                 <div>
-                                    {originalPrice ? (
+                                    {originalPrice && originalPrice > 0 ? (
                                         <>
                                             <div className="text-xs opacity-80">{language === 'ar' ? 'خصم' : 'SALE'}</div>
                                             <div className="text-base font-black">

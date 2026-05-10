@@ -79,7 +79,7 @@ export function TrustTemplate({ content, product, language, storeSlug, productId
                                         className="w-64 h-64 sm:w-80 sm:h-80 object-cover rounded-2xl shadow-xl border border-gray-100"
                                     />
                                     {/* Sale badge */}
-                                    {originalPrice && (
+                                    {originalPrice && originalPrice > 0 && (
                                         <div className="absolute top-3 start-3 px-3 py-1 rounded-full text-white text-xs font-bold"
                                             style={{ background: '#EF4444' }}>
                                             {language === 'ar' ? 'خصم' : 'SALE'} {Math.round(((originalPrice - finalPrice) / originalPrice) * 100)}%
