@@ -119,6 +119,18 @@ export function LandingPageEditor({
         } finally { setSaving(false); }
     };
 
+    // Stabilize product data to prevent re-render loops
+    const stableProduct = useMemo(() => ({
+        name: productName,
+        price: productPrice,
+        sale_price: productSalePrice,
+        currency: productCurrency,
+        images: productImages
+    }), [productName, productPrice, productSalePrice, productCurrency, productImages]);
+
+    // Stabilize content data
+    const stableContent = useMemo(() => content, [content]);
+
     let subdomainUrl = '';
     if (typeof window !== 'undefined') {
         const host = window.location.host;
@@ -134,7 +146,15 @@ export function LandingPageEditor({
             <div className="space-y-4 animate-in fade-in duration-300">
                 <Button variant="outline" size="sm" onClick={() => setShowPreview(false)}>{language === 'ar' ? '← رجوع للمحرر' : '← Back to Editor'}</Button>
                 <div className="border rounded-2xl shadow-2xl overflow-hidden bg-white" style={{ height: '75vh' }}>
-                    <LandingPageRenderer template={template} content={content} product={{ name: productName, price: productPrice, sale_price: productSalePrice, currency: productCurrency, images: productImages }} language={language as 'ar' | 'en'} storeSlug={storeSlug} productId={productId} isPreview={true} />
+                    <LandingPageRenderer 
+                        template={template} 
+                        content={stableContent} 
+                        product={stableProduct} 
+                        language={language as 'ar' | 'en'} 
+                        storeSlug={storeSlug} 
+                        productId={productId} 
+                        isPreview={true} 
+                    />
                 </div>
             </div>
         );
@@ -250,7 +270,24 @@ export function LandingPageEditor({
                             </div>
                             <div className="space-y-2">
                                 <Label className="font-bold">{language === 'ar' ? 'اللون الأساسي' : 'Accent Color'}</Label>
-                                <div className="flex gap-2"><Input type="color" value={content.accent_color} onChange={e => setContent(c => ({ ...c, accent_color: e.target.value }))} className="w-16 h-12 p-1" /><Input value={content.accent_color} onChange={e => setContent(c => ({ ...c, accent_color: e.target.value }))} className="font-mono" /></div>
+                                <div className="flex gap-2">
+                                    <input 
+                                        type="color" 
+                                        value={content.accent_color || '#2563EB'} 
+                                        onChange={e => setContent(c => ({ ...c, accent_color: e.target.value }))} 
+                                        className="w-16 h-12 p-1 rounded border cursor-pointer" 
+                                    />
+                                    <Input 
+                                        value={content.accent_color || '#2563EB'} 
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            if (val.startsWith('#')) {
+                                                setContent(c => ({ ...c, accent_color: val }));
+                                            }
+                                        }} 
+                                        className="font-mono" 
+                                    />
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
