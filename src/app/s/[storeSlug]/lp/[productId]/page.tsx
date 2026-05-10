@@ -139,26 +139,58 @@ export default async function LandingPage({
 
         // If everything is found, render the page
         if (debugData.lpFound && debugData.productFound && debugData.storeFound) {
-            // Safe parsing helper
-            const safeParse = (val: any) => {
+            // Ultra-Safe parsing helper
+            const safeParse = (val: any, fallback: any = {}) => {
+                if (!val) return fallback;
                 if (typeof val === 'string') {
-                    try { return JSON.parse(val); } catch (e) { return val; }
+                    try { return JSON.parse(val); } catch (e) { return fallback; }
                 }
                 return val;
             };
 
+            const rawName = safeParse(product!.name, { ar: 'منتج غير مسمى', en: 'Unnamed Product' });
+            const rawImages = safeParse(product!.images, []);
+
             const productData = {
-                name: safeParse(product!.name),
-                price: product!.price,
-                sale_price: product!.sale_price,
+                name: {
+                    ar: rawName.ar || rawName.en || 'منتج غير مسمى',
+                    en: rawName.en || rawName.ar || 'Unnamed Product'
+                },
+                price: product!.price || 0,
+                sale_price: product!.sale_price || undefined,
                 currency: product!.currency || store!.currency || 'SAR',
-                images: safeParse(product!.images)
+                images: Array.isArray(rawImages) ? (rawImages.length > 0 ? rawImages : ['/placeholder-product.png']) : ['/placeholder-product.png']
+            };
+
+            // Ensure content has all necessary fields with defaults
+            const safeContent = {
+                ...lp!.content,
+                headline: { 
+                    ar: lp!.content?.headline?.ar || '', 
+                    en: lp!.content?.headline?.en || '' 
+                },
+                subheadline: { 
+                    ar: lp!.content?.subheadline?.ar || '', 
+                    en: lp!.content?.subheadline?.en || '' 
+                },
+                cta_text: { 
+                    ar: lp!.content?.cta_text?.ar || 'اطلب الآن', 
+                    en: lp!.content?.cta_text?.en || 'Order Now' 
+                },
+                benefits: lp!.content?.benefits || [],
+                testimonials: lp!.content?.testimonials || [],
+                guarantee_text: { 
+                    ar: lp!.content?.guarantee_text?.ar || '', 
+                    en: lp!.content?.guarantee_text?.en || '' 
+                },
+                hero_image: lp!.content?.hero_image || '',
+                accent_color: lp!.content?.accent_color || '#2563EB'
             };
 
             return (
                 <LandingPageRenderer
                     template={(lp!.template as LandingTemplate) || 'hype'}
-                    content={lp!.content || {}}
+                    content={safeContent}
                     product={productData}
                     language="ar"
                     storeSlug={params.storeSlug}
