@@ -121,12 +121,30 @@ export default async function LandingPage({
             .eq('product_id', params.productId)
             .maybeSingle();
         
-        if (!rawLp) {
-            console.error(`[LandingPage] No record found in product_landing_pages for productId: ${params.productId}`);
-        } else if (!rawLp.is_enabled && !isPreview) {
-            console.error(`[LandingPage] Landing page found but is_enabled is FALSE for productId: ${params.productId}. (Accessing without preview=true)`);
-        }
-        return notFound();
+        console.error(`[LandingPage] No record found in product_landing_pages for productId: ${params.productId}`, {
+            storeId: store.id,
+            slug: params.storeSlug
+        });
+
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 text-center" dir="rtl">
+                <div className="max-w-md space-y-4">
+                    <h1 className="text-6xl font-bold text-gray-200">404</h1>
+                    <h2 className="text-2xl font-bold text-gray-800">عذراً، هذه الصفحة غير متاحة حالياً</h2>
+                    <p className="text-gray-600">تأكد من تفعيل صفحة الهبوط من لوحة التحكم والضغط على زر "حفظ" أولاً.</p>
+                    
+                    {/* Debug info - only visible to admins/merchants if we had a way to check, 
+                        but here we'll show it small to help us find the issue */}
+                    <div className="mt-8 pt-8 border-t text-[10px] text-gray-400 font-mono text-left opacity-30">
+                        <p>DEBUG INFO:</p>
+                        <p>Store ID: {store.id}</p>
+                        <p>Store Slug: {params.storeSlug}</p>
+                        <p>Product ID: {params.productId}</p>
+                        <p>Status: {rawLp ? "Disabled" : "Not Found"}</p>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     // Fetch product

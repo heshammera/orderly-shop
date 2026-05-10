@@ -86,6 +86,7 @@ export function LandingPageEditor({
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [showPreview, setShowPreview] = useState(false);
     const [landingPageId, setLandingPageId] = useState<string | null>(null);
 
@@ -135,8 +136,13 @@ export function LandingPageEditor({
             }
             toast.success(language === 'ar' ? '✅ تم حفظ صفحة الهبوط!' : '✅ Landing page saved!');
             setHasUnsavedChanges(false);
+            setSaveStatus('success');
+            setTimeout(() => setSaveStatus('idle'), 3000);
         } catch (e: any) {
+            console.error('Error saving landing page:', e);
             toast.error(e.message);
+            setSaveStatus('error');
+            setTimeout(() => setSaveStatus('idle'), 3000);
         } finally {
             setSaving(false);
         }
@@ -332,9 +338,30 @@ export function LandingPageEditor({
                         {language === 'ar' ? 'رابط داخلي (للتجربة)' : 'Internal Link (Debug)'}
                     </Button>
 
-                    <Button type="button" size="sm" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleSave(); }} disabled={saving}>
-                        {saving ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <Save className="w-4 h-4 me-1" />}
-                        {language === 'ar' ? 'حفظ' : 'Save'}
+                    <Button 
+                        type="button" 
+                        size="sm" 
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleSave(); }} 
+                        disabled={saving}
+                        className={cn(
+                            "transition-all duration-300",
+                            saveStatus === 'success' ? "bg-green-600 hover:bg-green-700" : 
+                            saveStatus === 'error' ? "bg-red-600 hover:bg-red-700" : ""
+                        )}
+                    >
+                        {saving ? (
+                            <Loader2 className="w-4 h-4 me-1 animate-spin" />
+                        ) : saveStatus === 'success' ? (
+                            <Check className="w-4 h-4 me-1" />
+                        ) : saveStatus === 'error' ? (
+                            <Zap className="w-4 h-4 me-1" />
+                        ) : (
+                            <Save className="w-4 h-4 me-1" />
+                        )}
+                        {saving ? (language === 'ar' ? 'جاري الحفظ...' : 'Saving...') : 
+                         saveStatus === 'success' ? (language === 'ar' ? 'تم الحفظ!' : 'Saved!') : 
+                         saveStatus === 'error' ? (language === 'ar' ? 'فشل الحفظ' : 'Failed') :
+                         (language === 'ar' ? 'حفظ' : 'Save')}
                     </Button>
                 </div>
             </div>
