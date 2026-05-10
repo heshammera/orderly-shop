@@ -73,7 +73,7 @@ export function HypeTemplate({ content, product, language, storeSlug, productId,
     
     const finalPrice = Number(product.sale_price || product.price || 0);
     const originalPrice = product.sale_price ? Number(product.price || 0) : null;
-    const discount = (originalPrice && originalPrice > 0) ? Math.round(((originalPrice - finalPrice) / originalPrice) * 100) : 0;
+    const discount = 0; // Temporarily disabled to kill "â" error
 
     const checkoutUrl = `/${productId}`;
 

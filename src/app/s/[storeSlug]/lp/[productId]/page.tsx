@@ -154,13 +154,13 @@ export default async function LandingPage({
 
             const productData = {
                 name: {
-                    ar: rawName.ar || 'منتج',
-                    en: rawName.en || 'Product'
+                    ar: String(rawName.ar || 'منتج'),
+                    en: String(rawName.en || 'Product')
                 },
-                price: Number(product!.price) || 0,
-                sale_price: product!.sale_price ? Number(product!.sale_price) : undefined,
-                currency: product!.currency || store!.currency || 'SAR',
-                images: Array.isArray(rawImages) ? (rawImages.length > 0 ? rawImages : []) : []
+                price: parseFloat(String(product!.price || 0)) || 0,
+                sale_price: product!.sale_price ? (parseFloat(String(product!.sale_price)) || undefined) : undefined,
+                currency: String(product!.currency || store!.currency || 'SAR').replace(/[^a-zA-Z]/g, ''),
+                images: Array.isArray(rawImages) ? rawImages.map(img => String(img)) : []
             };
 
             const safeContent = {
