@@ -32,7 +32,7 @@ export async function generateMetadata({
             .maybeSingle();
 
         if (storeError || !store) {
-            console.error(`[LP Metadata] Store not found for slug: ${params.storeSlug}`, storeError);
+            console.error(`[LP Metadata] Store not found for slug: ${storeSlug}`, storeError);
             return {};
         }
 
@@ -45,7 +45,7 @@ export async function generateMetadata({
             .maybeSingle();
 
         if (lpError) {
-            console.error(`[LP Metadata] Error fetching landing page for ${params.productId}`, lpError);
+            console.error(`[LP Metadata] Error fetching landing page for ${productId}`, lpError);
         }
 
         // 3. Fetch Product
@@ -56,7 +56,7 @@ export async function generateMetadata({
             .maybeSingle();
 
         if (productError || !product) {
-            console.error(`[LP Metadata] Product not found for id: ${params.productId}`, productError);
+            console.error(`[LP Metadata] Product not found for id: ${productId}`, productError);
             return {};
         }
 
