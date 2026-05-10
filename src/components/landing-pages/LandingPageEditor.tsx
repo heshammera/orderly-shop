@@ -28,81 +28,44 @@ interface LandingPageEditorProps {
     canUseLandingPages: boolean;
 }
 
-const TEMPLATES: { id: LandingTemplate; labelAr: string; labelEn: string; descAr: string; descEn: string; icon: React.ReactNode; color: string }[] = [
-    {
-        id: 'hype',
-        labelAr: 'هايب (ديناميكي)',
-        labelEn: 'Hype (Dynamic)',
-        descAr: 'أسود مع ألوان نيون — مثالي للتقنية والرياضة والألعاب',
-        descEn: 'Dark neon — ideal for tech, sports & gaming',
-        icon: <Zap className="w-5 h-5" />,
-        color: '#8B5CF6',
-    },
-    {
-        id: 'elegant',
-        labelAr: 'إليغانت (فاخر)',
-        labelEn: 'Elegant (Luxury)',
-        descAr: 'أبيض وذهبي — مثالي للعطور والموضة والفاخر',
-        descEn: 'White & gold — ideal for perfumes, fashion & luxury',
-        icon: <Crown className="w-5 h-5" />,
-        color: '#B8860B',
-    },
-    {
-        id: 'trust',
-        labelAr: 'تراست (ثقة)',
-        labelEn: 'Trust (Confidence)',
-        descAr: 'أزرق هادئ مع social proof — مثالي للمنتجات العامة',
-        descEn: 'Blue with social proof — ideal for general products',
-        icon: <Shield className="w-5 h-5" />,
-        color: '#2563EB',
-    },
-];
-
 const DEFAULT_CONTENT = {
     headline: { ar: '', en: '' },
     subheadline: { ar: '', en: '' },
-    cta_text: { ar: 'اطلب الآن 🚀', en: 'Order Now 🚀' },
+    cta_text: { ar: 'اطلب الآن', en: 'Order Now' },
     benefits: [
-        { ar: '🔒 دفع عند الاستلام', en: '🔒 Cash on Delivery' },
-        { ar: '🚚 شحن سريع لباب منزلك', en: '🚚 Fast delivery to your door' },
-        { ar: '↩️ معاينة قبل الاستلام', en: '↩️ Inspection before delivery' },
-        { ar: '⭐ ارجاع في حالة المعاينة وعدم الرضا', en: '⭐ Return if not satisfied upon inspection' },
+        { ar: 'خامات عالية الجودة وضمان طويل الأمد', en: 'High quality materials with long warranty' },
+        { ar: 'تصميم عصري يناسب كافة الاحتياجات', en: 'Modern design suitable for all needs' }
     ],
-    guarantee_text: { ar: 'معاينة قبل الاستلام وضمان ارجاع المنتج في حالة عدم الرضا', en: 'Inspection before receipt & Return guarantee if not satisfied' },
+    guarantee_text: { 
+        ar: 'معاينة قبل الاستلام وضمان ارجاع المنتج في حالة عدم الرضا', 
+        en: 'Inspection before receipt and return guarantee if not satisfied' 
+    },
     testimonials: [
-        { name: 'محمد أحمد', text: { ar: 'منتج رائع، استلمته سريعاً وكان بالضبط كما هو موضح', en: 'Great product, received it quickly, exactly as described' }, rating: 5 },
-        { name: 'سارة علي', text: { ar: 'جودة ممتازة وخدمة رائعة، سأشتري مرة أخرى بالتأكيد', en: 'Excellent quality and great service, will definitely buy again' }, rating: 5 },
+        { name: 'أحمد محمد', text: { ar: 'منتج رائع جداً وتوصيل سريع!', en: 'Great product and fast delivery!' }, rating: 5 },
     ],
     hero_image: '',
-    accent_color: '#8B5CF6',
+    accent_color: '#2563EB'
 };
 
 export function LandingPageEditor({
     productId, storeId, storeSlug,
-    productName, productPrice, productSalePrice, productImages, productCurrency,
-    canUseLandingPages,
+    productName, productPrice, productSalePrice,
+    productImages, productCurrency,
+    canUseLandingPages
 }: LandingPageEditorProps) {
-    const { language } = useLanguage();
     const supabase = createClient();
-
+    const { language } = useLanguage();
+    
+    const [template, setTemplate] = useState<LandingTemplate>('hype');
+    const [isEnabled, setIsEnabled] = useState(false);
+    const [isStandalone, setIsStandalone] = useState(true);
+    const [content, setContent] = useState(DEFAULT_CONTENT);
+    
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [showPreview, setShowPreview] = useState(false);
     const [landingPageId, setLandingPageId] = useState<string | null>(null);
-
-    const [template, setTemplate] = useState<LandingTemplate>('hype');
-    const [isEnabled, setIsEnabled] = useState(false);
-    const [isStandalone, setIsStandalone] = useState(true);
-    const [content, setContent] = useState(DEFAULT_CONTENT);
-    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-
-    /* 
-    // Temporarily disabled to prevent potential loops while debugging
-    useEffect(() => {
-        if (!loading) setHasUnsavedChanges(true);
-    }, [template, isEnabled, isStandalone, content]);
-    */
 
     useEffect(() => {
         if (!productId || !canUseLandingPages) { setLoading(false); return; }
@@ -145,7 +108,6 @@ export function LandingPageEditor({
                 setLandingPageId(data.id);
             }
             toast.success(language === 'ar' ? '✅ تم حفظ صفحة الهبوط!' : '✅ Landing page saved!');
-            setHasUnsavedChanges(false);
             setSaveStatus('success');
             setTimeout(() => setSaveStatus('idle'), 3000);
         } catch (e: any) {
@@ -178,34 +140,23 @@ export function LandingPageEditor({
 
     const productData = { name: productName, price: productPrice, sale_price: productSalePrice, currency: productCurrency, images: productImages };
 
-    // The public URL shown to the merchant uses the subdomain format.
-    // The middleware rewrites: tenant.orderlyshops.com/lp/{id} → /s/tenant/lp/{id} internally.
-    // The public URL shown to the merchant.
-    const SITE_BASE = process.env.NEXT_PUBLIC_SITE_URL || 'https://orderlyshops.com';
-    let subdomainUrl = '';
-    try {
-        const siteUrlObj = new URL(SITE_BASE);
-        const protocol = typeof window !== 'undefined' ? window.location.protocol : siteUrlObj.protocol;
-        const host = typeof window !== 'undefined' ? window.location.host : siteUrlObj.host; // includes port if present
+    // URLs
+    const [subdomainUrl, setSubdomainUrl] = useState('');
+    const [fallbackUrl, setFallbackUrl] = useState('');
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const host = window.location.host;
+        let cleanHost = host;
+        if (host.includes('admin.')) cleanHost = host.replace('admin.', '');
         
-        // Construct public URLs
-        subdomainUrl = `${protocol}//${host}/s/${storeSlug}/lp/${productId}`;
-    
-        if (typeof window !== 'undefined') {
-            const hostParts = host.split('.');
-            let cleanHost = host;
+        const base = `${window.location.protocol}//${storeSlug}.${cleanHost}/lp/${productId}`;
+        setSubdomainUrl(base);
+        setFallbackUrl(`${window.location.protocol}//${host}/s/${storeSlug}/lp/${productId}?preview=true`);
+    }, [storeSlug, productId]);
 
-            // If on localhost (e.g., localhost:3000 or store.localhost:3000)
-            if (host.includes('localhost')) {
-                // Extract "localhost:PORT" from any "sub.localhost:PORT"
-                if (hostParts.length > 1) {
-                    cleanHost = hostParts[hostParts.length - 1]; // "localhost:3000" or just "localhost"
-                }
-    const fallbackUrl = typeof window !== 'undefined' 
-        ? `${window.location.protocol}//${window.location.host}/s/${storeSlug}/lp/${productId}?preview=true`
-        : '';
+    const previewUrl = `${subdomainUrl}${subdomainUrl.includes('?') ? '&' : '?'}preview=true`;
 
-    // Locked state for non-paying plans
     if (!canUseLandingPages) {
         return (
             <div className="flex flex-col items-center justify-center py-16 px-4 text-center space-y-4">
@@ -214,9 +165,7 @@ export function LandingPageEditor({
                 </div>
                 <h3 className="text-xl font-bold">{language === 'ar' ? 'صفحات الهبوط — ميزة مدفوعة' : 'Landing Pages — Paid Feature'}</h3>
                 <p className="text-muted-foreground max-w-md text-sm">
-                    {language === 'ar'
-                        ? 'قم بترقية باقتك للوصول لميزة صفحات الهبوط المخصصة وزيادة مبيعاتك بشكل كبير'
-                        : 'Upgrade your plan to access custom landing pages and significantly boost your sales'}
+                    {language === 'ar' ? 'قم بترقية باقتك للوصول لميزة صفحات الهبوط المخصصة وزيادة مبيعاتك بشكل كبير' : 'Upgrade your plan to access custom landing pages and significantly boost your sales'}
                 </p>
                 <div className="flex flex-wrap gap-2 justify-center text-xs text-muted-foreground">
                     {['🎨 3 قوالب احترافية', '✏️ تخصيص كامل', '🔗 رابط مستقل', '📊 تحسين التحويل'].map(f => (
@@ -229,7 +178,6 @@ export function LandingPageEditor({
 
     if (loading) return <div className="flex justify-center py-8"><Loader2 className="animate-spin" /></div>;
 
-    // Preview mode
     if (showPreview) {
         return (
             <div className="space-y-4">
@@ -256,74 +204,142 @@ export function LandingPageEditor({
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                    <Switch checked={isEnabled} onCheckedChange={setIsEnabled} id="lp-enabled" />
-                    <Label htmlFor="lp-enabled" className="font-medium cursor-pointer">
-                        {isEnabled
-                            ? (language === 'ar' ? '✅ صفحة الهبوط مفعّلة' : '✅ Landing Page Active')
-                            : (language === 'ar' ? '⭕ صفحة الهبوط معطّلة' : '⭕ Landing Page Disabled')}
-                    </Label>
+            <div className="flex items-center justify-between bg-muted/50 p-4 rounded-xl border border-border/50">
+                <div className="flex items-center gap-4">
+                    <div className={cn("p-2 rounded-lg", isEnabled ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500")}>
+                        <ExternalLink className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <Label htmlFor="lp-enabled" className="font-bold block mb-1">
+                            {language === 'ar' ? 'تفعيل صفحة الهبوط للمنتج' : 'Enable Product Landing Page'}
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                            {language === 'ar' ? 'عند التفعيل، سيتم توجيه العملاء لصفحة مخصصة بدلاً من صفحة المتجر التقليدية' : 'When enabled, customers will be routed to a custom page instead of the standard store page.'}
+                        </p>
+                    </div>
                 </div>
+                <div className="flex items-center gap-6">
+                    <Switch checked={isEnabled} onCheckedChange={setIsEnabled} id="lp-enabled" />
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-lg">{language === 'ar' ? 'المحتوى والنصوص' : 'Content & Texts'}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>{language === 'ar' ? 'العنوان الرئيسي (عربي)' : 'Headline (AR)'}</Label>
+                                    <Input value={content.headline.ar} onChange={e => setContent(c => ({ ...c, headline: { ...c.headline, ar: e.target.value } }))} placeholder={productName.ar} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>{language === 'ar' ? 'العنوان الرئيسي (انجليزي)' : 'Headline (EN)'}</Label>
+                                    <Input value={content.headline.en} onChange={e => setContent(c => ({ ...c, headline: { ...c.headline, en: e.target.value } }))} placeholder={productName.en} />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>{language === 'ar' ? 'العنوان الفرعي (عربي)' : 'Subheadline (AR)'}</Label>
+                                    <Textarea value={content.subheadline.ar} onChange={e => setContent(c => ({ ...c, subheadline: { ...c.subheadline, ar: e.target.value } }))} rows={2} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>{language === 'ar' ? 'العنوان الفرعي (انجليزي)' : 'Subheadline (EN)'}</Label>
+                                    <Textarea value={content.subheadline.en} onChange={e => setContent(c => ({ ...c, subheadline: { ...c.subheadline, en: e.target.value } }))} rows={2} />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>{language === 'ar' ? 'نص زر الطلب (عربي)' : 'CTA Button Text (AR)'}</Label>
+                                    <Input value={content.cta_text.ar} onChange={e => setContent(c => ({ ...c, cta_text: { ...c.cta_text, ar: e.target.value } }))} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>{language === 'ar' ? 'نص زر الطلب (انجليزي)' : 'CTA Button Text (EN)'}</Label>
+                                    <Input value={content.cta_text.en} onChange={e => setContent(c => ({ ...c, cta_text: { ...c.cta_text, en: e.target.value } }))} />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-lg">{language === 'ar' ? 'المميزات والفوائد' : 'Benefits & Features'}</CardTitle>
+                            <Button type="button" variant="outline" size="sm" onClick={addBenefit}><Plus className="w-4 h-4 me-1" /> {language === 'ar' ? 'إضافة' : 'Add'}</Button>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {content.benefits.map((b, i) => (
+                                <div key={i} className="flex gap-2 items-start bg-muted/30 p-3 rounded-lg border border-border/50">
+                                    <div className="flex-1 space-y-2">
+                                        <Input value={b.ar} onChange={e => updateBenefit(i, 'ar', e.target.value)} placeholder="ميزة بالعربي" />
+                                        <Input value={b.en} onChange={e => updateBenefit(i, 'en', e.target.value)} placeholder="Feature in English" />
+                                    </div>
+                                    <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => removeBenefit(i)}><Trash2 className="w-4 h-4" /></Button>
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                </div>
+
+                <div className="space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-lg">{language === 'ar' ? 'القالب والتصميم' : 'Template & Style'}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>{language === 'ar' ? 'اختر القالب' : 'Choose Template'}</Label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {(['trust', 'hype', 'elegant'] as LandingTemplate[]).map(t => (
+                                        <button key={t} type="button" onClick={() => setTemplate(t)} className={cn("p-2 text-xs rounded-lg border-2 transition-all", template === t ? "border-primary bg-primary/5 font-bold" : "border-transparent bg-muted hover:bg-muted/80")}>
+                                            {t.toUpperCase()}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>{language === 'ar' ? 'اللون الأساسي' : 'Accent Color'}</Label>
+                                <div className="flex gap-2">
+                                    <Input type="color" value={content.accent_color} onChange={e => setContent(c => ({ ...c, accent_color: e.target.value }))} className="w-12 h-10 p-1" />
+                                    <Input value={content.accent_color} onChange={e => setContent(c => ({ ...c, accent_color: e.target.value }))} className="font-mono" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-lg">{language === 'ar' ? 'روابط الوصول' : 'Links'}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            <div className="p-3 bg-muted rounded-lg break-all">
+                                <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1">{language === 'ar' ? 'الرابط المباشر' : 'Direct Link'}</p>
+                                <a href={subdomainUrl} target="_blank" className="text-xs text-primary hover:underline flex items-center gap-1">
+                                    {subdomainUrl} <ExternalLink className="w-3 h-3" />
+                                </a>
+                            </div>
+                            <Button type="button" variant="outline" className="w-full" onClick={() => setShowPreview(true)}>
+                                <Eye className="w-4 h-4 me-2" /> {language === 'ar' ? 'معاينة سريعة' : 'Quick Preview'}
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-6 border-t sticky bottom-0 bg-background py-4">
+                <p className="text-xs text-muted-foreground">
+                    {language === 'ar' ? 'تذكر حفظ التعديلات لاعتمادها في الرابط المباشر' : 'Remember to save changes to apply them to the live link.'}
+                </p>
                 <div className="flex gap-2">
-                    <Button type="button" variant="outline" size="sm" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowPreview(true); }}>
-                        <Eye className="w-4 h-4 me-1" />
-                        {language === 'ar' ? 'معاينة سريعة' : 'Quick Preview'}
-                    </Button>
-                    
                     <Button 
-                        type="button"
-                        variant="outline" 
-                        size="sm" 
-                        className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 hover:bg-amber-100 transition-colors"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            if (!landingPageId) {
-                                toast.error(language === 'ar' ? 'يرجى حفظ الصفحة أولاً' : 'Please save the page first');
-                                return;
-                            }
-                            window.open(previewUrl, '_blank');
-                        }}
-                    >
-                        <ExternalLink className="w-4 h-4 me-1" />
-                        {language === 'ar' ? 'معاينة في صفحة جديدة' : 'Preview in New Tab'}
-                    </Button>
-
-                    <Button 
-                        type="button"
-                        variant="outline" 
-                        size="sm" 
-                        className={`border-green-200 bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-400 hover:bg-green-100 transition-colors ${(!isEnabled || !landingPageId) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            if (!landingPageId) {
-                                toast.error(language === 'ar' ? 'يرجى حفظ الصفحة أولاً' : 'Please save the page first');
-                                return;
-                            }
-                            if (!isEnabled) {
-                                toast.error(language === 'ar' ? 'يجب تفعيل الصفحة أولاً للوصول للرابط المباشر' : 'Please enable the page first to access the live link');
-                                return;
-                            }
-                            window.open(subdomainUrl, '_blank');
-                        }}
-                    >
-                        <Zap className="w-4 h-4 me-1" />
-                        {language === 'ar' ? 'فتح الرابط المباشر' : 'Open Live Link'}
-                    </Button>
-
-                    <Button 
-                        type="button"
+                        type="button" 
                         variant="ghost" 
                         size="sm" 
                         className="text-[10px] text-muted-foreground opacity-30 hover:opacity-100"
-                        title="Internal path (bypass subdomains)"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            window.open(fallbackUrl, '_blank');
-                        }}
+                        onClick={(e) => { e.preventDefault(); window.open(fallbackUrl, '_blank'); }}
                     >
                         {language === 'ar' ? 'رابط داخلي (للتجربة)' : 'Internal Link (Debug)'}
                     </Button>
@@ -334,206 +350,11 @@ export function LandingPageEditor({
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleSave(); }} 
                         disabled={saving}
                     >
-                        {saving ? (language === 'ar' ? 'جاري الحفظ...' : 'Saving...') : (language === 'ar' ? 'حفظ' : 'Save')}
+                        {saving ? (language === 'ar' ? 'جاري الحفظ...' : 'Saving...') : 
+                         saveStatus === 'success' ? (language === 'ar' ? 'تم الحفظ!' : 'Saved!') : 
+                         (language === 'ar' ? 'حفظ' : 'Save')}
                     </Button>
                 </div>
-            </div>
-
-            {/* Link display — shows subdomain URL */}
-            {landingPageId && isEnabled && (
-                <div className="space-y-4">
-                    <div className="p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg space-y-2">
-                        <p className="text-xs font-semibold text-green-700 dark:text-green-400">
-                            {language === 'ar' ? '🔗 رابط صفحة الهبوط (Subdomain)' : '🔗 Landing Page URL (Subdomain)'}
-                        </p>
-                        <div className="flex items-center gap-2">
-                            <code className="text-green-700 dark:text-green-400 flex-1 break-all text-xs font-mono">{subdomainUrl}</code>
-                            <button
-                                type="button"
-                                onClick={() => { navigator.clipboard.writeText(subdomainUrl); toast.success(language === 'ar' ? 'تم نسخ الرابط!' : 'Link copied!'); }}
-                                className="flex-shrink-0 text-xs px-2 py-1 rounded bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 hover:bg-green-200 transition-colors"
-                            >
-                                {language === 'ar' ? 'نسخ' : 'Copy'}
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg space-y-2">
-                        <p className="text-xs font-semibold text-blue-700 dark:text-blue-400">
-                            {language === 'ar' ? '🔗 الرابط البديل (Path-based - استخدمه إذا لم يعمل الرابط أعلاه)' : '🔗 Alternative URL (Path-based - use if above link fails)'}
-                        </p>
-                        <div className="flex items-center gap-2">
-                            <code className="text-blue-700 dark:text-blue-400 flex-1 break-all text-xs font-mono">{fallbackUrl}</code>
-                            <button
-                                type="button"
-                                onClick={() => { navigator.clipboard.writeText(fallbackUrl); toast.success(language === 'ar' ? 'تم نسخ الرابط!' : 'Link copied!'); }}
-                                className="flex-shrink-0 text-xs px-2 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-200 transition-colors"
-                            >
-                                {language === 'ar' ? 'نسخ' : 'Copy'}
-                            </button>
-                        </div>
-                    </div>
-
-                    {hasUnsavedChanges && (
-                        <div className="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg flex items-center gap-2 text-amber-800 dark:text-amber-400 text-xs">
-                            <span>⚠️</span>
-                            <p>{language === 'ar' ? 'لديك تعديلات لم يتم حفظها. يرجى الحفظ أولاً لضمان عمل الروابط بشكل صحيح.' : 'You have unsaved changes. Please save first to ensure links work correctly.'}</p>
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {/* Template Selection */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-base">{language === 'ar' ? '🎨 اختر القالب' : '🎨 Choose Template'}</CardTitle>
-                    <CardDescription>{language === 'ar' ? 'اختر التصميم المناسب لمنتجك' : 'Choose the design that fits your product'}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        {TEMPLATES.map((t) => (
-                            <button
-                                key={t.id}
-                                type="button"
-                                onClick={() => { setTemplate(t.id); setContent(c => ({ ...c, accent_color: t.color })); }}
-                                className={`p-4 rounded-xl border-2 text-start transition-all hover:shadow-md ${template === t.id ? 'border-primary shadow-sm' : 'border-border hover:border-primary/50'}`}
-                            >
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="p-1.5 rounded-lg text-white" style={{ background: t.color }}>{t.icon}</div>
-                                    <span className="font-bold text-sm">{language === 'ar' ? t.labelAr : t.labelEn}</span>
-                                    {template === t.id && <Badge className="ms-auto text-xs px-1.5">✓</Badge>}
-                                </div>
-                                <p className="text-xs text-muted-foreground">{language === 'ar' ? t.descAr : t.descEn}</p>
-                            </button>
-                        ))}
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Standalone switch */}
-            <Card>
-                <CardContent className="pt-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="font-medium text-sm">{language === 'ar' ? 'صفحة مستقلة (بدون header/footer المتجر)' : 'Standalone Page (no store header/footer)'}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">{language === 'ar' ? 'تفعّل هذا لصفحات الحملات الإعلانية المنفصلة' : 'Enable for standalone ad campaign pages'}</p>
-                        </div>
-                        <Switch checked={isStandalone} onCheckedChange={setIsStandalone} />
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Accent Color */}
-            <Card>
-                <CardHeader><CardTitle className="text-base">{language === 'ar' ? '🎨 لون القالب' : '🎨 Template Color'}</CardTitle></CardHeader>
-                <CardContent>
-                    <div className="flex items-center gap-4">
-                        <input type="color" value={content.accent_color || '#8B5CF6'} onChange={e => setContent(c => ({ ...c, accent_color: e.target.value }))} className="h-10 w-20 rounded cursor-pointer border" />
-                        <p className="text-xs text-muted-foreground">{language === 'ar' ? 'اختر اللون الأساسي للقالب' : 'Pick the primary template color'}</p>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Hero Content */}
-            <Card>
-                <CardHeader><CardTitle className="text-base">{language === 'ar' ? '✍️ المحتوى الرئيسي' : '✍️ Main Content'}</CardTitle></CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                            <Label className="text-xs">{language === 'ar' ? 'العنوان الرئيسي (عربي)' : 'Headline (Arabic)'}</Label>
-                            <Input value={content.headline.ar} onChange={e => setContent(c => ({ ...c, headline: { ...c.headline, ar: e.target.value } }))} placeholder={productName.ar} />
-                        </div>
-                        <div className="space-y-1">
-                            <Label className="text-xs">{language === 'ar' ? 'العنوان الرئيسي (إنجليزي)' : 'Headline (English)'}</Label>
-                            <Input value={content.headline.en} onChange={e => setContent(c => ({ ...c, headline: { ...c.headline, en: e.target.value } }))} placeholder={productName.en} />
-                        </div>
-                        <div className="space-y-1">
-                            <Label className="text-xs">{language === 'ar' ? 'العنوان الفرعي (عربي)' : 'Subheadline (Arabic)'}</Label>
-                            <Textarea rows={2} value={content.subheadline.ar} onChange={e => setContent(c => ({ ...c, subheadline: { ...c.subheadline, ar: e.target.value } }))} placeholder={language === 'ar' ? 'جملة تسويقية جذابة...' : 'Catchy marketing phrase...'} />
-                        </div>
-                        <div className="space-y-1">
-                            <Label className="text-xs">{language === 'ar' ? 'العنوان الفرعي (إنجليزي)' : 'Subheadline (English)'}</Label>
-                            <Textarea rows={2} value={content.subheadline.en} onChange={e => setContent(c => ({ ...c, subheadline: { ...c.subheadline, en: e.target.value } }))} placeholder="Catchy marketing phrase..." />
-                        </div>
-                        <div className="space-y-1">
-                            <Label className="text-xs">{language === 'ar' ? 'نص زر الشراء (عربي)' : 'CTA Button (Arabic)'}</Label>
-                            <Input value={content.cta_text.ar} onChange={e => setContent(c => ({ ...c, cta_text: { ...c.cta_text, ar: e.target.value } }))} placeholder="اطلب الآن 🚀" />
-                        </div>
-                        <div className="space-y-1">
-                            <Label className="text-xs">{language === 'ar' ? 'نص زر الشراء (إنجليزي)' : 'CTA Button (English)'}</Label>
-                            <Input value={content.cta_text.en} onChange={e => setContent(c => ({ ...c, cta_text: { ...c.cta_text, en: e.target.value } }))} placeholder="Order Now 🚀" />
-                        </div>
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs">{language === 'ar' ? 'رابط صورة مخصصة (Hero Image) — اتركه فارغاً لاستخدام صورة المنتج' : 'Custom hero image URL — leave empty to use product image'}</Label>
-                        <Input value={content.hero_image} onChange={e => setContent(c => ({ ...c, hero_image: e.target.value }))} placeholder="https://..." />
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Benefits */}
-            <Card>
-                <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <CardTitle className="text-base">{language === 'ar' ? '✅ المميزات والفوائد' : '✅ Benefits'}</CardTitle>
-                        <Button type="button" variant="outline" size="sm" onClick={(e) => { e.preventDefault(); e.stopPropagation(); addBenefit(); }}><Plus className="w-3 h-3 me-1" />{language === 'ar' ? 'إضافة' : 'Add'}</Button>
-                    </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                    {content.benefits.map((b, i) => (
-                        <div key={i} className="flex gap-2 items-start">
-                            <div className="flex-1 grid grid-cols-2 gap-2">
-                                <Input placeholder={language === 'ar' ? 'ميزة (عربي)' : 'Benefit (Arabic)'} value={b.ar} onChange={e => updateBenefit(i, 'ar', e.target.value)} className="text-xs h-8" />
-                                <Input placeholder="Benefit (English)" value={b.en} onChange={e => updateBenefit(i, 'en', e.target.value)} className="text-xs h-8" />
-                            </div>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive flex-shrink-0" onClick={() => removeBenefit(i)}><Trash2 className="w-3 h-3" /></Button>
-                        </div>
-                    ))}
-                </CardContent>
-            </Card>
-
-            {/* Guarantee */}
-            <Card>
-                <CardHeader><CardTitle className="text-base">{language === 'ar' ? '🛡️ نص الضمان' : '🛡️ Guarantee Text'}</CardTitle></CardHeader>
-                <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <Textarea rows={3} placeholder={language === 'ar' ? 'نص الضمان بالعربية...' : 'Guarantee in Arabic...'} value={content.guarantee_text.ar} onChange={e => setContent(c => ({ ...c, guarantee_text: { ...c.guarantee_text, ar: e.target.value } }))} />
-                    <Textarea rows={3} placeholder="Guarantee in English..." value={content.guarantee_text.en} onChange={e => setContent(c => ({ ...c, guarantee_text: { ...c.guarantee_text, en: e.target.value } }))} />
-                </CardContent>
-            </Card>
-
-            {/* Testimonials */}
-            <Card>
-                <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <CardTitle className="text-base">{language === 'ar' ? '⭐ تقييمات العملاء' : '⭐ Testimonials'}</CardTitle>
-                        <Button type="button" variant="outline" size="sm" onClick={(e) => { e.preventDefault(); e.stopPropagation(); addTestimonial(); }}><Plus className="w-3 h-3 me-1" />{language === 'ar' ? 'إضافة' : 'Add'}</Button>
-                    </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    {content.testimonials.map((t, i) => (
-                        <div key={i} className="p-3 border rounded-lg space-y-2">
-                            <div className="flex gap-2 items-center">
-                                <Input placeholder={language === 'ar' ? 'اسم العميل' : 'Customer name'} value={t.name} onChange={e => updateTestimonial(i, 'name', e.target.value)} className="text-xs h-8 flex-1" />
-                                <select value={t.rating} onChange={e => updateTestimonial(i, 'rating', Number(e.target.value))} className="h-8 px-2 rounded border text-xs bg-background">
-                                    {[5, 4, 3, 2, 1].map(r => <option key={r} value={r}>{r} ★</option>)}
-                                </select>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive flex-shrink-0" onClick={() => removeTestimonial(i)}><Trash2 className="w-3 h-3" /></Button>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2">
-                                <Input placeholder={language === 'ar' ? 'التقييم (عربي)' : 'Review (Arabic)'} value={t.text.ar} onChange={e => updateTestimonial(i, 'text_ar', e.target.value)} className="text-xs h-8" />
-                                <Input placeholder="Review (English)" value={t.text.en} onChange={e => updateTestimonial(i, 'text_en', e.target.value)} className="text-xs h-8" />
-                            </div>
-                        </div>
-                    ))}
-                </CardContent>
-            </Card>
-
-            {/* Save Button */}
-            <div className="flex justify-end pb-4">
-                <Button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleSave(); }} disabled={saving} size="lg">
-                    {saving ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <Save className="w-4 h-4 me-2" />}
-                    {language === 'ar' ? 'حفظ صفحة الهبوط' : 'Save Landing Page'}
-                </Button>
             </div>
         </div>
     );
