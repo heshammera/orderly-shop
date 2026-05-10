@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, Search, Ban, CheckCircle, Edit, CreditCard, DollarSign, MoreHorizontal, ShieldAlert, Lock, Trash2, AlertTriangle, Eye, ExternalLink, ArrowRightLeft } from 'lucide-react';
+import { Loader2, Search, Ban, CheckCircle, Edit, CreditCard, DollarSign, MoreHorizontal, ShieldAlert, Lock, Trash2, AlertTriangle, Eye, ExternalLink, ArrowRightLeft, Sparkles } from 'lucide-react';
 import { useExchangeRate, convertUsdToTarget } from '@/hooks/useExchangeRate';
 import {
     Dialog,
