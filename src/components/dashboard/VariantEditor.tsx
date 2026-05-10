@@ -481,13 +481,13 @@ export function VariantEditor({ productId, value, onChange, standalone = true, s
                                             />
                                             <div className="flex items-center gap-1">
                                                 <Input
-                                                    type="number"
+                                                    type={globalIgnoreStock || !option.manage_stock ? "text" : "number"}
                                                     required={!globalIgnoreStock && option.manage_stock}
                                                     disabled={globalIgnoreStock || !option.manage_stock}
-                                                    value={globalIgnoreStock || !option.manage_stock ? '∞' : (option.stock !== undefined ? option.stock : '')}
+                                                    value={globalIgnoreStock || !option.manage_stock ? (language === 'ar' ? '∞ غير محدود' : '∞ Unlimited') : (option.stock !== undefined ? option.stock : '')}
                                                     onChange={(e) => updateOption(vIndex, oIndex, 'stock', parseInt(e.target.value) || 0)}
                                                     placeholder={language === 'ar' ? 'الكمية' : 'Qty'}
-                                                    className={cn("h-8 text-xs w-16", (globalIgnoreStock || !option.manage_stock) && "font-bold text-blue-600")}
+                                                    className={cn("h-8 text-xs w-16", (globalIgnoreStock || !option.manage_stock) && "font-bold text-blue-600 bg-blue-50/50")}
                                                 />
                                                 <div className="flex flex-col items-center gap-0.5" title={language === 'ar' ? 'تخطي المخزون' : 'Ignore Stock'}>
                                                     <Switch
