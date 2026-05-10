@@ -31,8 +31,8 @@ interface TrustTemplateProps {
 }
 
 const TRUST_BADGES = {
-    ar: ['🔒 دفع آمن', '🚚 شحن سريع', '↩️ إرجاع مجاني', '⭐ ضمان الجودة'],
-    en: ['🔒 Secure Payment', '🚚 Fast Shipping', '↩️ Free Returns', '⭐ Quality Guarantee'],
+    ar: ['🔒 دفع عند الاستلام', '🚚 شحن سريع', '↩️ معاينة قبل الاستلام', '⭐ ضمان الجودة'],
+    en: ['🔒 Cash on Delivery', '🚚 Fast Shipping', '↩️ Inspection before delivery', '⭐ Quality Guarantee'],
 };
 
 export function TrustTemplate({ content, product, language, storeSlug, productId, isPreview = false }: TrustTemplateProps) {

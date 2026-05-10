@@ -75,9 +75,11 @@ export default async function LandingPage({
         .select('id, name, slug, currency')
         .eq('slug', params.storeSlug)
         .single();
-    if (!store) return notFound();
+    if (!store) {
+        console.error(`[LandingPage] Store not found for slug: ${params.storeSlug}`);
+        return notFound();
+    }
 
-    // Fetch landing page data
     const { data: lp } = await supabase
         .from('product_landing_pages')
         .select('*')
@@ -86,7 +88,21 @@ export default async function LandingPage({
         .eq('is_enabled', true)
         .maybeSingle();
 
-    if (!lp) return notFound();
+    if (!lp) {
+        // Log more details to help merchant debug
+        const { data: rawLp } = await supabase
+            .from('product_landing_pages')
+            .select('id, is_enabled')
+            .eq('product_id', params.productId)
+            .maybeSingle();
+        
+        if (!rawLp) {
+            console.error(`[LandingPage] No record found in product_landing_pages for productId: ${params.productId}`);
+        } else if (!rawLp.is_enabled) {
+            console.error(`[LandingPage] Landing page found but is_enabled is FALSE for productId: ${params.productId}`);
+        }
+        return notFound();
+    }
 
     // Fetch product
     const { data: productRaw } = await supabase
@@ -97,7 +113,10 @@ export default async function LandingPage({
         .eq('status', 'active')
         .single();
 
-    if (!productRaw) return notFound();
+    if (!productRaw) {
+        console.error(`[LandingPage] Product not found or not active for productId: ${params.productId}`);
+        return notFound();
+    }
 
     let parsedImages: string[] = [];
     try {

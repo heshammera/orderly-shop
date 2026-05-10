@@ -142,7 +142,7 @@ export function ElegantTemplate({ content, product, language, storeSlug, product
                     )}
 
                     <p className="text-xs text-gray-400">
-                        🔒 {language === 'ar' ? 'دفع آمن | شحن مضمون' : 'Secure payment | Guaranteed shipping'}
+                        {language === 'ar' ? '🔒 دفع عند الاستلام | شحن سريع | معاينة قبل الاستلام' : '🔒 Cash on Delivery | Fast shipping | Inspection before delivery'}
                     </p>
                 </div>
             </section>

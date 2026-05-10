@@ -191,7 +191,7 @@ export function HypeTemplate({ content, product, language, storeSlug, productId,
                 )}
 
                 <p className="mt-3 text-xs text-white/30">
-                    {language === 'ar' ? '🔒 دفع آمن 100% | شحن سريع' : '🔒 Secure checkout | Fast delivery'}
+                    {language === 'ar' ? '🔒 دفع عند الاستلام | شحن سريع | معاينة قبل الاستلام' : '🔒 Cash on Delivery | Fast delivery | Inspection before delivery'}
                 </p>
             </section>
 

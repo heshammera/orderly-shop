@@ -60,13 +60,13 @@ const TEMPLATES: { id: LandingTemplate; labelAr: string; labelEn: string; descAr
 const DEFAULT_CONTENT = {
     headline: { ar: '', en: '' },
     subheadline: { ar: '', en: '' },
-    cta_text: { ar: 'اطلب الآن 🚀', en: 'Order Now 🚀' },
     benefits: [
-        { ar: 'جودة عالية مضمونة', en: 'Guaranteed high quality' },
-        { ar: 'شحن سريع لباب منزلك', en: 'Fast delivery to your door' },
-        { ar: 'ضمان استرداد المال', en: 'Money-back guarantee' },
+        { ar: '🔒 دفع عند الاستلام', en: '🔒 Cash on Delivery' },
+        { ar: '🚚 شحن سريع لباب منزلك', en: '🚚 Fast delivery to your door' },
+        { ar: '↩️ معاينة قبل الاستلام', en: '↩️ Inspection before delivery' },
+        { ar: '⭐ ضمان الجودة', en: '⭐ Quality guarantee' },
     ],
-    guarantee_text: { ar: 'نضمن رضاك التام أو نسترد أموالك كاملة خلال 14 يوم', en: 'We guarantee your full satisfaction or a complete refund within 14 days' },
+    guarantee_text: { ar: 'نضمن رضاك التام لانك تستطيع المعاينة قبل الاستلام وان لم يعجبك المنتج لا تدفع غير مصاريف الشحن', en: 'We guarantee your satisfaction because you can inspect the product before receiving it. If you don\'t like it, you only pay the shipping fees.' },
     testimonials: [
         { name: 'محمد أحمد', text: { ar: 'منتج رائع، استلمته سريعاً وكان بالضبط كما هو موضح', en: 'Great product, received it quickly, exactly as described' }, rating: 5 },
         { name: 'سارة علي', text: { ar: 'جودة ممتازة وخدمة رائعة، سأشتري مرة أخرى بالتأكيد', en: 'Excellent quality and great service, will definitely buy again' }, rating: 5 },
@@ -92,6 +92,12 @@ export function LandingPageEditor({
     const [isEnabled, setIsEnabled] = useState(false);
     const [isStandalone, setIsStandalone] = useState(true);
     const [content, setContent] = useState(DEFAULT_CONTENT);
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+    // Track unsaved changes
+    useEffect(() => {
+        if (!loading) setHasUnsavedChanges(true);
+    }, [template, isEnabled, isStandalone, content]);
 
     // Load existing landing page data
     useEffect(() => {
@@ -127,6 +133,7 @@ export function LandingPageEditor({
                 setLandingPageId(data.id);
             }
             toast.success(language === 'ar' ? '✅ تم حفظ صفحة الهبوط!' : '✅ Landing page saved!');
+            setHasUnsavedChanges(false);
         } catch (e: any) {
             toast.error(e.message);
         } finally {
@@ -156,11 +163,26 @@ export function LandingPageEditor({
 
     // The public URL shown to the merchant uses the subdomain format.
     // The middleware rewrites: tenant.orderlyshops.com/lp/{id} → /s/tenant/lp/{id} internally.
+    // The public URL shown to the merchant.
     const SITE_BASE = process.env.NEXT_PUBLIC_SITE_URL || 'https://orderlyshops.com';
-    const siteHost = typeof window !== 'undefined' ? (() => { try { return new URL(SITE_BASE).hostname; } catch { return 'orderlyshops.com'; } })() : 'orderlyshops.com';
-    const subdomainUrl = `https://${storeSlug}.${siteHost}/lp/${productId}`;
-    // Internal fallback path (for localhost / main domain access)
-    const internalUrl = `/s/${storeSlug}/lp/${productId}`;
+    let subdomainUrl = '';
+    try {
+        const siteUrlObj = new URL(SITE_BASE);
+        const protocol = typeof window !== 'undefined' ? window.location.protocol : siteUrlObj.protocol;
+        const host = siteUrlObj.host; // includes port if present
+        
+        // If host is localhost:3000, we want store.localhost:3000
+        if (host.includes('localhost')) {
+             subdomainUrl = `${protocol}//${storeSlug}.${host}/lp/${productId}`;
+        } else {
+             subdomainUrl = `https://${storeSlug}.${siteUrlObj.hostname}/lp/${productId}`;
+        }
+    } catch (e) {
+        subdomainUrl = `https://${storeSlug}.orderlyshops.com/lp/${productId}`;
+    }
+
+    // Internal fallback path (for cases where subdomains are not configured)
+    const internalUrl = `${SITE_BASE}/s/${storeSlug}/lp/${productId}`;
 
     // Locked state for non-paying plans
     if (!canUseLandingPages) {
@@ -245,20 +267,45 @@ export function LandingPageEditor({
 
             {/* Link display — shows subdomain URL */}
             {landingPageId && isEnabled && (
-                <div className="p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg space-y-1">
-                    <p className="text-xs font-semibold text-green-700 dark:text-green-400">
-                        {language === 'ar' ? '🔗 رابط صفحة الهبوط' : '🔗 Landing Page URL'}
-                    </p>
-                    <div className="flex items-center gap-2">
-                        <code className="text-green-700 dark:text-green-400 flex-1 break-all text-xs font-mono">{subdomainUrl}</code>
-                        <button
-                            type="button"
-                            onClick={() => { navigator.clipboard.writeText(subdomainUrl); toast.success(language === 'ar' ? 'تم نسخ الرابط!' : 'Link copied!'); }}
-                            className="flex-shrink-0 text-xs px-2 py-1 rounded bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 hover:bg-green-200 transition-colors"
-                        >
-                            {language === 'ar' ? 'نسخ' : 'Copy'}
-                        </button>
+                <div className="space-y-4">
+                    <div className="p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg space-y-2">
+                        <p className="text-xs font-semibold text-green-700 dark:text-green-400">
+                            {language === 'ar' ? '🔗 رابط صفحة الهبوط (Subdomain)' : '🔗 Landing Page URL (Subdomain)'}
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <code className="text-green-700 dark:text-green-400 flex-1 break-all text-xs font-mono">{subdomainUrl}</code>
+                            <button
+                                type="button"
+                                onClick={() => { navigator.clipboard.writeText(subdomainUrl); toast.success(language === 'ar' ? 'تم نسخ الرابط!' : 'Link copied!'); }}
+                                className="flex-shrink-0 text-xs px-2 py-1 rounded bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 hover:bg-green-200 transition-colors"
+                            >
+                                {language === 'ar' ? 'نسخ' : 'Copy'}
+                            </button>
+                        </div>
                     </div>
+
+                    <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg space-y-2">
+                        <p className="text-xs font-semibold text-blue-700 dark:text-blue-400">
+                            {language === 'ar' ? '🔗 الرابط البديل (Path-based - استخدمه إذا لم يعمل الرابط أعلاه)' : '🔗 Alternative URL (Path-based - use if above link fails)'}
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <code className="text-blue-700 dark:text-blue-400 flex-1 break-all text-xs font-mono">{internalUrl}</code>
+                            <button
+                                type="button"
+                                onClick={() => { navigator.clipboard.writeText(internalUrl); toast.success(language === 'ar' ? 'تم نسخ الرابط!' : 'Link copied!'); }}
+                                className="flex-shrink-0 text-xs px-2 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-200 transition-colors"
+                            >
+                                {language === 'ar' ? 'نسخ' : 'Copy'}
+                            </button>
+                        </div>
+                    </div>
+
+                    {hasUnsavedChanges && (
+                        <div className="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg flex items-center gap-2 text-amber-800 dark:text-amber-400 text-xs">
+                            <span>⚠️</span>
+                            <p>{language === 'ar' ? 'لديك تعديلات لم يتم حفظها. يرجى الحفظ أولاً لضمان عمل الروابط بشكل صحيح.' : 'You have unsaved changes. Please save first to ensure links work correctly.'}</p>
+                        </div>
+                    )}
                 </div>
             )}
 
