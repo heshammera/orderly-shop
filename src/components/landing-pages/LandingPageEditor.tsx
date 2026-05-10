@@ -169,13 +169,33 @@ export function LandingPageEditor({
     try {
         const siteUrlObj = new URL(SITE_BASE);
         const protocol = typeof window !== 'undefined' ? window.location.protocol : siteUrlObj.protocol;
-        const host = siteUrlObj.host; // includes port if present
+        const host = typeof window !== 'undefined' ? window.location.host : siteUrlObj.host; // includes port if present
         
-        // If host is localhost:3000, we want store.localhost:3000
-        if (host.includes('localhost')) {
-             subdomainUrl = `${protocol}//${storeSlug}.${host}/lp/${productId}`;
-        } else {
-             subdomainUrl = `https://${storeSlug}.${siteUrlObj.hostname}/lp/${productId}`;
+        // Construct public URLs
+        subdomainUrl = `${protocol}//${host}/s/${storeSlug}/lp/${productId}`;
+    
+        if (typeof window !== 'undefined') {
+            const hostParts = host.split('.');
+            let cleanHost = host;
+
+            // If on localhost (e.g., localhost:3000 or store.localhost:3000)
+            if (host.includes('localhost')) {
+                // Extract "localhost:PORT" from any "sub.localhost:PORT"
+                if (hostParts.length > 1) {
+                    cleanHost = hostParts.slice(-1)[0]; // Just "localhost:3000"
+                }
+                subdomainUrl = `${protocol}//${storeSlug}.${cleanHost}/lp/${productId}`;
+            } 
+            // If on production domain with at least one subdomain (e.g., store.domain.com)
+            else if (hostParts.length >= 3) {
+                // Extract "domain.com"
+                cleanHost = hostParts.slice(-2).join('.');
+                subdomainUrl = `${protocol}//${storeSlug}.${cleanHost}/lp/${productId}`;
+            }
+            // If on main domain (e.g., domain.com)
+            else {
+                subdomainUrl = `${protocol}//${storeSlug}.${host}/lp/${productId}`;
+            }
         }
     } catch (e) {
         subdomainUrl = `https://${storeSlug}.orderlyshops.com/lp/${productId}`;

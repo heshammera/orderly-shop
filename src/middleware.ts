@@ -372,6 +372,8 @@ export async function middleware(request: NextRequest) {
                 headers: request.headers,
             },
         });
+        
+        console.log(`[Middleware] Rewriting SUBDOMAIN request: ${url.href} -> ${newUrl.pathname}`);
 
         // Copy cookies from updateSession response
         response.headers.forEach((value, key) => {

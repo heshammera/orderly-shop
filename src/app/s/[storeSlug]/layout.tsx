@@ -29,8 +29,8 @@ export async function generateMetadata({ params }: { params: { storeSlug: string
         const { data: store } = await supabaseAdmin
             .from('stores')
             .select('name, description, logo_url')
-            .eq('slug', params.storeSlug)
-            .single();
+            .ilike('slug', params.storeSlug)
+            .maybeSingle();
 
         if (!store) return { title: 'Store Not Found' };
 
@@ -100,7 +100,7 @@ export default async function Layout({
             )
         `)
         .ilike('slug', params.storeSlug)
-        .single();
+        .maybeSingle();
 
     if (storeError || !store) {
         return notFound();

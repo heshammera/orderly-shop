@@ -77,7 +77,7 @@ export default async function LandingPage({
         .from('stores')
         .select('id, name, slug, currency')
         .ilike('slug', params.storeSlug) // Case-insensitive lookup
-        .single();
+        .maybeSingle();
     if (!store) {
         console.error(`[LandingPage] Store not found for slug: ${params.storeSlug}`);
         return notFound();
@@ -122,7 +122,7 @@ export default async function LandingPage({
         productQuery = productQuery.eq('status', 'active');
     }
 
-    const { data: productRaw } = await productQuery.single();
+    const { data: productRaw } = await productQuery.maybeSingle();
 
     if (!productRaw) {
         console.error(`[LandingPage] Product not found or not active for productId: ${params.productId}${isPreview ? ' (Preview mode)' : ''}`);
