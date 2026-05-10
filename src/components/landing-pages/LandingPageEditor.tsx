@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,7 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { ExternalLink, Lock, Loader2, Plus, Trash2, Save, Eye, Zap, Crown, Shield } from 'lucide-react';
+import { ExternalLink, Lock, Loader2, Plus, Trash2, Save, Eye, Zap, Crown, Shield, Check } from 'lucide-react';
 import { LandingPageRenderer } from './LandingPageRenderer';
 import type { LandingTemplate } from './LandingPageRenderer';
 
