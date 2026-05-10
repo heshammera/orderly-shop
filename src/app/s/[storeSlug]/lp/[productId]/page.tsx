@@ -17,9 +17,10 @@ const getAdminClient = cache(() => {
 export async function generateMetadata({
     params,
 }: {
-    params: { storeSlug: string; productId: string };
+    params: Promise<{ storeSlug: string; productId: string }>;
 }): Promise<Metadata> {
     try {
+        const { storeSlug, productId } = await params;
         const supabase = getAdminClient();
         if (!supabase) return {};
 
@@ -51,7 +52,7 @@ export async function generateMetadata({
         const { data: product, error: productError } = await supabase
             .from('products')
             .select('name, images')
-            .eq('id', params.productId)
+            .eq('id', productId)
             .maybeSingle();
 
         if (productError || !product) {
@@ -83,10 +84,12 @@ export default async function LandingPage({
     params,
     searchParams,
 }: {
-    params: { storeSlug: string; productId: string };
-    searchParams: { preview?: string };
+    params: Promise<{ storeSlug: string; productId: string }>;
+    searchParams: Promise<{ preview?: string }>;
 }) {
-    const isPreview = searchParams.preview === 'true';
+    const { storeSlug, productId } = await params;
+    const { preview: previewParam } = await searchParams;
+    const isPreview = previewParam === 'true';
     const supabase = getAdminClient();
     
     // Debug helper to show exactly what's failing
@@ -107,7 +110,7 @@ export default async function LandingPage({
         const { data: product, error: productError } = await supabase
             .from('products')
             .select('id, name, price, sale_price, images, currency, store_id, status')
-            .eq('id', params.productId)
+            .eq('id', productId)
             .maybeSingle();
 
         if (product) debugData.productFound = true;
@@ -117,7 +120,7 @@ export default async function LandingPage({
         const { data: store } = await supabase
             .from('stores')
             .select('id, name, slug, currency')
-            .ilike('slug', params.storeSlug)
+            .ilike('slug', storeSlug)
             .maybeSingle();
         
         if (store) debugData.storeFound = true;
@@ -126,7 +129,7 @@ export default async function LandingPage({
         let lpQuery = supabase
             .from('product_landing_pages')
             .select('*')
-            .eq('product_id', params.productId);
+            .eq('product_id', productId);
         
         const { data: lp } = await lpQuery.maybeSingle();
         if (lp) {
@@ -181,8 +184,8 @@ export default async function LandingPage({
                     content={safeContent}
                     product={productData}
                     language="ar"
-                    storeSlug={params.storeSlug}
-                    productId={params.productId}
+                    storeSlug={storeSlug}
+                    productId={productId}
                     isPreview={isPreview}
                 />
             );
@@ -226,7 +229,7 @@ export default async function LandingPage({
                         
                         <div className="mt-4 pt-4 border-t border-blue-100 flex flex-col gap-1 text-[10px] font-mono text-blue-400 opacity-60">
                             <p>Store ID: {store?.id || "N/A"}</p>
-                            <p>Product ID: {params.productId}</p>
+                            <p>Product ID: {productId}</p>
                             {debugData.error && <p className="text-red-400">DB Error: {JSON.stringify(debugData.error)}</p>}
                         </div>
                     </div>

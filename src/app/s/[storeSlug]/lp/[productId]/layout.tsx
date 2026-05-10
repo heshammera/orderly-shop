@@ -13,8 +13,9 @@ export default async function LandingPageLayout({
     params,
 }: {
     children: React.ReactNode;
-    params: { storeSlug: string; productId: string };
+    params: Promise<{ storeSlug: string; productId: string }>;
 }) {
+    const { productId } = await params;
     const supabase = getAdminClient();
 
     // Check if this landing page is standalone (no store header/footer)
@@ -24,7 +25,7 @@ export default async function LandingPageLayout({
             const { data: lp } = await supabase
                 .from('product_landing_pages')
                 .select('is_standalone')
-                .eq('product_id', params.productId)
+                .eq('product_id', productId)
                 .eq('is_enabled', true)
                 .maybeSingle();
             if (lp) isStandalone = lp.is_standalone ?? true;
