@@ -17,15 +17,16 @@ const getAdminClient = cache(() => {
     return createClient(url, key);
 });
 
-export async function generateMetadata({ params }: { params: { storeSlug: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ storeSlug: string }> }): Promise<Metadata> {
     try {
+        const { storeSlug } = await params;
         const supabaseAdmin = getAdminClient();
         if (!supabaseAdmin) return { title: 'Store' };
 
         const { data: store } = await supabaseAdmin
             .from('stores')
             .select('name, description, logo_url')
-            .eq('slug', params.storeSlug)
+            .eq('slug', storeSlug)
             .single();
 
         if (!store) return { title: 'Store Not Found' };
@@ -55,7 +56,8 @@ export async function generateMetadata({ params }: { params: { storeSlug: string
     }
 }
 
-export default async function StorePage({ params }: { params: { storeSlug: string } }) {
+export default async function StorePage({ params }: { params: Promise<{ storeSlug: string }> }) {
+    const { storeSlug } = await params;
     const headersList = headers();
     const host = headersList.get('host') || '';
     const hostname = host.replace(/:\d+$/, '').replace(/^\[(.+)\]$/, '$1').toLowerCase().trim();
@@ -67,7 +69,7 @@ export default async function StorePage({ params }: { params: { storeSlug: strin
         hostname === 'orderlyshops.com' ||
         hostname === 'www.orderlyshops.com';
 
-    const baseUrl = isMainDomain ? `/s/${params.storeSlug}` : '';
+    const baseUrl = isMainDomain ? `/s/${storeSlug}` : '';
 
     // Use admin client to fetch store even if pending
     const supabaseAdmin = getAdminClient();
@@ -79,7 +81,7 @@ export default async function StorePage({ params }: { params: { storeSlug: strin
     const { data: store, error: storeError } = await supabaseAdmin
         .from('stores')
         .select('id, name, logo_url, description, currency, settings, status, slug, has_removed_copyright')
-        .eq('slug', params.storeSlug)
+        .eq('slug', storeSlug)
         .single();
 
     if (storeError) {

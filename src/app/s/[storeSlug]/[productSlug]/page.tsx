@@ -13,15 +13,16 @@ const getAdminClient = cache(() => {
     return createClient(url, key);
 });
 
-export async function generateMetadata({ params }: { params: { storeSlug: string, productSlug: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ storeSlug: string, productSlug: string }> }): Promise<Metadata> {
     try {
+        const { storeSlug, productSlug } = await params;
         const supabaseAdmin = getAdminClient();
         if (!supabaseAdmin) return {};
 
-        const { data: store } = await supabaseAdmin.from('stores').select('id').eq('slug', params.storeSlug).single();
+        const { data: store } = await supabaseAdmin.from('stores').select('id').eq('slug', storeSlug).single();
         if (!store) return {};
 
-        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.productSlug);
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(productSlug);
 
         let query = supabaseAdmin
             .from('products')
@@ -29,9 +30,9 @@ export async function generateMetadata({ params }: { params: { storeSlug: string
             .eq('store_id', store.id);
 
         if (isUuid) {
-            query = query.eq('id', params.productSlug);
+            query = query.eq('id', productSlug);
         } else {
-            query = query.eq('sku', params.productSlug);
+            query = query.eq('sku', productSlug);
         }
 
         const { data: product } = await query.single();
@@ -60,7 +61,8 @@ export async function generateMetadata({ params }: { params: { storeSlug: string
     }
 }
 
-export default async function ProductPage({ params }: { params: { storeSlug: string, productSlug: string } }) {
+export default async function ProductPage({ params }: { params: Promise<{ storeSlug: string, productSlug: string }> }) {
+    const { storeSlug, productSlug } = await params;
     const supabaseAdmin = getAdminClient();
     if (!supabaseAdmin) return notFound();
 
@@ -68,14 +70,14 @@ export default async function ProductPage({ params }: { params: { storeSlug: str
     const { data: store, error: storeError } = await supabaseAdmin
         .from('stores')
         .select('id, name, logo_url, description, currency, settings, slug')
-        .eq('slug', params.storeSlug)
+        .eq('slug', storeSlug)
         .single();
 
     if (storeError || !store) {
         return notFound();
     }
 
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.productSlug);
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(productSlug);
 
     let productQuery = supabaseAdmin
         .from('products')
@@ -84,9 +86,9 @@ export default async function ProductPage({ params }: { params: { storeSlug: str
         .eq('status', 'active');
 
     if (isUuid) {
-        productQuery = productQuery.eq('id', params.productSlug);
+        productQuery = productQuery.eq('id', productSlug);
     } else {
-        productQuery = productQuery.eq('sku', params.productSlug);
+        productQuery = productQuery.eq('sku', productSlug);
     }
 
     const { data: productResData, error: productError } = await productQuery.single();
