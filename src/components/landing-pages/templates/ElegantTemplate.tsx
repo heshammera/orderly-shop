@@ -217,7 +217,7 @@ export function ElegantTemplate({ content, product, language, storeSlug, product
                             🛡️
                         </div>
                         <h3 className="font-black text-xl text-gray-900 mb-2">
-                            {language === 'ar' ? 'ضماننا لك' : 'Our Promise'}
+                            {language === 'ar' ? 'معاينة قبل الاستلام وضمان ارجاع' : 'Inspection before receipt & Return Guarantee'}
                         </h3>
                         <p className="text-gray-500 text-sm leading-relaxed">{guarantee}</p>
                     </div>

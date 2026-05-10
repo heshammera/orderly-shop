@@ -251,7 +251,7 @@ export function HypeTemplate({ content, product, language, storeSlug, productId,
                         style={{ background: `${accent}10` }}>
                         <div className="text-4xl mb-3">🛡️</div>
                         <h3 className="font-black text-xl mb-2">
-                            {language === 'ar' ? 'ضماننا لك' : 'Our Guarantee'}
+                            {language === 'ar' ? 'معاينة قبل الاستلام وضمان ارجاع' : 'Inspection before receipt & Return Guarantee'}
                         </h3>
                         <p className="text-white/60 text-sm leading-relaxed">{guarantee}</p>
                     </div>

@@ -64,9 +64,9 @@ const DEFAULT_CONTENT = {
         { ar: '🔒 دفع عند الاستلام', en: '🔒 Cash on Delivery' },
         { ar: '🚚 شحن سريع لباب منزلك', en: '🚚 Fast delivery to your door' },
         { ar: '↩️ معاينة قبل الاستلام', en: '↩️ Inspection before delivery' },
-        { ar: '⭐ ضمان الجودة', en: '⭐ Quality guarantee' },
+        { ar: '⭐ ارجاع في حالة المعاينة وعدم الرضا', en: '⭐ Return if not satisfied upon inspection' },
     ],
-    guarantee_text: { ar: 'نضمن رضاك التام لانك تستطيع المعاينة قبل الاستلام وان لم يعجبك المنتج لا تدفع غير مصاريف الشحن', en: 'We guarantee your satisfaction because you can inspect the product before receiving it. If you don\'t like it, you only pay the shipping fees.' },
+    guarantee_text: { ar: 'معاينة قبل الاستلام وضمان ارجاع المنتج في حالة عدم الرضا', en: 'Inspection before receipt & Return guarantee if not satisfied' },
     testimonials: [
         { name: 'محمد أحمد', text: { ar: 'منتج رائع، استلمته سريعاً وكان بالضبط كما هو موضح', en: 'Great product, received it quickly, exactly as described' }, rating: 5 },
         { name: 'سارة علي', text: { ar: 'جودة ممتازة وخدمة رائعة، سأشتري مرة أخرى بالتأكيد', en: 'Excellent quality and great service, will definitely buy again' }, rating: 5 },

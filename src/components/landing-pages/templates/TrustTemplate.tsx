@@ -230,7 +230,7 @@ export function TrustTemplate({ content, product, language, storeSlug, productId
                             <div className="text-5xl flex-shrink-0">🛡️</div>
                             <div>
                                 <h3 className="font-black text-lg text-gray-900 mb-1">
-                                    {language === 'ar' ? 'ضمان الرضا التام' : '100% Satisfaction Guarantee'}
+                                    {language === 'ar' ? 'معاينة قبل الاستلام وضمان ارجاع' : 'Inspection before receipt & Return Guarantee'}
                                 </h3>
                                 <p className="text-gray-500 text-sm leading-relaxed">{guarantee}</p>
                             </div>
