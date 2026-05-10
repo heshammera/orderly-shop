@@ -88,104 +88,137 @@ export default async function LandingPage({
 }) {
     const isPreview = searchParams.preview === 'true';
     const supabase = getAdminClient();
-    if (!supabase) return notFound();
-
-    // Fetch store
-    const { data: store } = await supabase
-        .from('stores')
-        .select('id, name, slug, currency')
-        .ilike('slug', params.storeSlug) // Case-insensitive lookup
-        .maybeSingle();
-    if (!store) {
-        console.error(`[LandingPage] Store not found for slug: ${params.storeSlug}`);
-        return notFound();
-    }
-
-    let lpQuery = supabase
-        .from('product_landing_pages')
-        .select('*')
-        .eq('product_id', params.productId)
-        .eq('store_id', store.id);
     
-    if (!isPreview) {
-        lpQuery = lpQuery.eq('is_enabled', true);
+    // Debug helper to show exactly what's failing
+    let debugData = {
+        storeFound: false,
+        productFound: false,
+        lpFound: false,
+        lpRecordFoundButDisabled: false,
+        error: null as any
+    };
+
+    if (!supabase) {
+        return <div className="p-10 text-red-500">CRITICAL: Supabase Admin Client could not be initialized. Check environment variables.</div>;
     }
 
-    const { data: lp } = await lpQuery.maybeSingle();
+    try {
+        // 1. Fetch Product FIRST (most specific)
+        const { data: product, error: productError } = await supabase
+            .from('products')
+            .select('id, name, price, sale_price, images, currency, store_id, status')
+            .eq('id', params.productId)
+            .maybeSingle();
 
-    if (!lp) {
-        // Log more details to help merchant debug
-        const { data: rawLp } = await supabase
-            .from('product_landing_pages')
-            .select('id, is_enabled')
-            .eq('product_id', params.productId)
+        if (product) debugData.productFound = true;
+        if (productError) debugData.error = productError;
+
+        // 2. Fetch Store
+        const { data: store } = await supabase
+            .from('stores')
+            .select('id, name, slug, currency')
+            .ilike('slug', params.storeSlug)
             .maybeSingle();
         
-        console.error(`[LandingPage] No record found in product_landing_pages for productId: ${params.productId}`, {
-            storeId: store.id,
-            slug: params.storeSlug
-        });
+        if (store) debugData.storeFound = true;
 
+        // 3. Fetch Landing Page
+        let lpQuery = supabase
+            .from('product_landing_pages')
+            .select('*')
+            .eq('product_id', params.productId);
+        
+        const { data: lp } = await lpQuery.maybeSingle();
+        if (lp) {
+            debugData.lpRecordFoundButDisabled = !lp.is_enabled;
+            // Only consider it "Found" if it's enabled OR we are in preview mode
+            if (lp.is_enabled || isPreview) {
+                debugData.lpFound = true;
+            }
+        }
+
+        // If everything is found, render the page
+        if (debugData.lpFound && debugData.productFound && debugData.storeFound) {
+            const productData = {
+                name: typeof product!.name === 'string' ? JSON.parse(product!.name) : product!.name,
+                price: product!.price,
+                sale_price: product!.sale_price,
+                currency: product!.currency || store!.currency || 'SAR',
+                images: typeof product!.images === 'string' ? JSON.parse(product!.images) : product!.images
+            };
+
+            return (
+                <LandingPageRenderer
+                    template={lp!.template as LandingTemplate}
+                    content={lp!.content}
+                    product={productData}
+                    language={searchParams.preview === 'true' ? 'ar' : 'ar'} // Default to Arabic for now or sync with store
+                    storeSlug={params.storeSlug}
+                    productId={params.productId}
+                    isPreview={isPreview}
+                />
+            );
+        }
+
+        // Otherwise show our advanced 404 Debug page
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 text-center" dir="rtl">
-                <div className="max-w-md space-y-4">
-                    <h1 className="text-6xl font-bold text-gray-200">404</h1>
-                    <h2 className="text-2xl font-bold text-gray-800">عذراً، هذه الصفحة غير متاحة حالياً</h2>
-                    <p className="text-gray-600">تأكد من تفعيل صفحة الهبوط من لوحة التحكم والضغط على زر "حفظ" أولاً.</p>
-                    
-                    {/* Debug info - only visible to admins/merchants if we had a way to check, 
-                        but here we'll show it small to help us find the issue */}
-                    <div className="mt-8 pt-8 border-t text-[10px] text-gray-400 font-mono text-left opacity-30">
-                        <p>DEBUG INFO:</p>
-                        <p>Store ID: {store.id}</p>
-                        <p>Store Slug: {params.storeSlug}</p>
-                        <p>Product ID: {params.productId}</p>
-                        <p>Status: {rawLp ? "Disabled" : "Not Found"}</p>
+            <div className="min-h-screen flex items-center justify-center bg-white p-6 text-center" dir="rtl">
+                <div className="max-w-lg w-full space-y-6">
+                    <div className="text-8xl font-black text-gray-100">404</div>
+                    <div className="space-y-2">
+                        <h1 className="text-2xl font-bold text-gray-900">عذراً، لم نتمكن من العثور على هذه الصفحة</h1>
+                        <p className="text-gray-500">قد يكون الرابط غير صحيح أو أن الصفحة غير مفعّلة حالياً من لوحة التحكم.</p>
                     </div>
+
+                    <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 text-right space-y-3">
+                        <h3 className="font-bold text-blue-900 flex items-center gap-2">
+                            <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                            حالة البيانات (التشخيص):
+                        </h3>
+                        <ul className="space-y-2 text-sm">
+                            <li className="flex justify-between items-center">
+                                <span className="text-gray-600">البحث عن المتجر ({params.storeSlug}):</span>
+                                <span className={debugData.storeFound ? "text-green-600 font-bold" : "text-red-500"}>
+                                    {debugData.storeFound ? "✅ وُجد" : "❌ لم يوجد"}
+                                </span>
+                            </li>
+                            <li className="flex justify-between items-center">
+                                <span className="text-gray-600">البحث عن المنتج:</span>
+                                <span className={debugData.productFound ? "text-green-600 font-bold" : "text-red-500"}>
+                                    {debugData.productFound ? "✅ وُجد" : "❌ لم يوجد"}
+                                </span>
+                            </li>
+                            <li className="flex justify-between items-center">
+                                <span className="text-gray-600">سجل صفحة الهبوط:</span>
+                                <span className={debugData.lpRecordFoundButDisabled || debugData.lpFound ? "text-green-600 font-bold" : "text-red-500"}>
+                                    {debugData.lpFound ? "✅ مفعلة" : debugData.lpRecordFoundButDisabled ? "⚠️ موجودة ولكن معطلة" : "❌ غير موجودة"}
+                                </span>
+                            </li>
+                        </ul>
+                        
+                        <div className="mt-4 pt-4 border-t border-blue-100 flex flex-col gap-1 text-[10px] font-mono text-blue-400 opacity-60">
+                            <p>Store ID: {store?.id || "N/A"}</p>
+                            <p>Product ID: {params.productId}</p>
+                            {debugData.error && <p className="text-red-400">DB Error: {JSON.stringify(debugData.error)}</p>}
+                        </div>
+                    </div>
+
+                    <button 
+                        onClick={() => window.location.reload()}
+                        className="px-6 py-2 bg-gray-900 text-white rounded-full text-sm font-medium hover:bg-gray-800 transition-colors"
+                    >
+                        تحديث الصفحة
+                    </button>
                 </div>
             </div>
         );
+
+    } catch (e: any) {
+        return (
+            <div className="p-10 bg-red-50 text-red-700 rounded-lg">
+                <h1 className="font-bold">Server Error during fetch:</h1>
+                <pre className="mt-2 text-xs">{e.message}</pre>
+            </div>
+        );
     }
-
-    // Fetch product
-    let productQuery = supabase
-        .from('products')
-        .select('id, name, price, sale_price, images, currency')
-        .eq('id', params.productId)
-        .eq('store_id', store.id);
-
-    if (!isPreview) {
-        productQuery = productQuery.eq('status', 'active');
-    }
-
-    const { data: productRaw } = await productQuery.maybeSingle();
-
-    if (!productRaw) {
-        console.error(`[LandingPage] Product not found or not active for productId: ${params.productId}${isPreview ? ' (Preview mode)' : ''}`);
-        return notFound();
-    }
-
-    let parsedImages: string[] = [];
-    try {
-        parsedImages = typeof productRaw.images === 'string' ? JSON.parse(productRaw.images) : (Array.isArray(productRaw.images) ? productRaw.images : []);
-    } catch { parsedImages = []; }
-
-    const product = {
-        name: typeof productRaw.name === 'string' ? JSON.parse(productRaw.name) : productRaw.name,
-        price: productRaw.price,
-        sale_price: productRaw.sale_price || undefined,
-        currency: productRaw.currency || store.currency || 'SAR',
-        images: parsedImages,
-    };
-
-    return (
-        <LandingPageRenderer
-            template={(lp.template as LandingTemplate) || 'hype'}
-            content={lp.content || {}}
-            product={product}
-            language="ar"
-            storeSlug={params.storeSlug}
-            productId={params.productId}
-        />
-    );
 }
