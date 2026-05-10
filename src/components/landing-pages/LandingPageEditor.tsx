@@ -251,22 +251,42 @@ export function LandingPageEditor({
                         <Eye className="w-4 h-4 me-1" />
                         {language === 'ar' ? 'معاينة سريعة' : 'Quick Preview'}
                     </Button>
-                    {landingPageId && (
-                        <a href={previewUrl} target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline" size="sm" className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 hover:bg-amber-100 transition-colors">
-                                <ExternalLink className="w-4 h-4 me-1" />
-                                {language === 'ar' ? 'معاينة في صفحة جديدة' : 'Preview in New Tab'}
-                            </Button>
-                        </a>
-                    )}
-                    {landingPageId && isEnabled && (
-                        <a href={subdomainUrl} target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline" size="sm" className="border-green-200 bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-400 hover:bg-green-100 transition-colors">
-                                <ExternalLink className="w-4 h-4 me-1" />
-                                {language === 'ar' ? 'فتح الرابط المباشر' : 'Open Live Link'}
-                            </Button>
-                        </a>
-                    )}
+                    
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 hover:bg-amber-100 transition-colors"
+                        onClick={() => {
+                            if (!landingPageId) {
+                                toast.error(language === 'ar' ? 'يرجى حفظ الصفحة أولاً' : 'Please save the page first');
+                                return;
+                            }
+                            window.open(previewUrl, '_blank');
+                        }}
+                    >
+                        <ExternalLink className="w-4 h-4 me-1" />
+                        {language === 'ar' ? 'معاينة في صفحة جديدة' : 'Preview in New Tab'}
+                    </Button>
+
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className={`border-green-200 bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-400 hover:bg-green-100 transition-colors ${(!isEnabled || !landingPageId) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        onClick={() => {
+                            if (!landingPageId) {
+                                toast.error(language === 'ar' ? 'يرجى حفظ الصفحة أولاً' : 'Please save the page first');
+                                return;
+                            }
+                            if (!isEnabled) {
+                                toast.error(language === 'ar' ? 'يجب تفعيل الصفحة أولاً للوصول للرابط المباشر' : 'Please enable the page first to access the live link');
+                                return;
+                            }
+                            window.open(subdomainUrl, '_blank');
+                        }}
+                    >
+                        <ExternalLink className="w-4 h-4 me-1" />
+                        {language === 'ar' ? 'فتح الرابط المباشر' : 'Open Live Link'}
+                    </Button>
                     <Button size="sm" onClick={handleSave} disabled={saving}>
                         {saving ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <Save className="w-4 h-4 me-1" />}
                         {language === 'ar' ? 'حفظ' : 'Save'}
