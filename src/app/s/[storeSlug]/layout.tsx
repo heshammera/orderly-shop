@@ -99,7 +99,7 @@ export default async function Layout({
                 )
             )
         `)
-        .eq('slug', params.storeSlug)
+        .ilike('slug', params.storeSlug)
         .single();
 
     if (storeError || !store) {

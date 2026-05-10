@@ -183,6 +183,7 @@ export function LandingPageEditor({
 
     // Internal fallback path (for cases where subdomains are not configured)
     const internalUrl = `${SITE_BASE}/s/${storeSlug}/lp/${productId}`;
+    const previewUrl = `${subdomainUrl}?preview=true`;
 
     // Locked state for non-paying plans
     if (!canUseLandingPages) {
@@ -248,13 +249,21 @@ export function LandingPageEditor({
                 <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={() => setShowPreview(true)}>
                         <Eye className="w-4 h-4 me-1" />
-                        {language === 'ar' ? 'معاينة' : 'Preview'}
+                        {language === 'ar' ? 'معاينة سريعة' : 'Quick Preview'}
                     </Button>
+                    {landingPageId && (
+                        <a href={previewUrl} target="_blank" rel="noopener noreferrer">
+                            <Button variant="outline" size="sm" className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 hover:bg-amber-100 transition-colors">
+                                <ExternalLink className="w-4 h-4 me-1" />
+                                {language === 'ar' ? 'معاينة في صفحة جديدة' : 'Preview in New Tab'}
+                            </Button>
+                        </a>
+                    )}
                     {landingPageId && isEnabled && (
                         <a href={subdomainUrl} target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="sm" className="border-green-200 bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-400 hover:bg-green-100 transition-colors">
                                 <ExternalLink className="w-4 h-4 me-1" />
-                                {language === 'ar' ? 'فتح الرابط' : 'Open Link'}
+                                {language === 'ar' ? 'فتح الرابط المباشر' : 'Open Live Link'}
                             </Button>
                         </a>
                     )}

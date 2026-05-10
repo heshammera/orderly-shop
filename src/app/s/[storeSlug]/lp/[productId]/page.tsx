@@ -23,7 +23,7 @@ export async function generateMetadata({
         const supabase = getAdminClient();
         if (!supabase) return {};
 
-        const { data: store } = await supabase.from('stores').select('id').eq('slug', params.storeSlug).single();
+        const { data: store } = await supabase.from('stores').select('id').ilike('slug', params.storeSlug).single();
         if (!store) return {};
 
         const { data: lp } = await supabase
@@ -63,9 +63,12 @@ export async function generateMetadata({
 
 export default async function LandingPage({
     params,
+    searchParams,
 }: {
     params: { storeSlug: string; productId: string };
+    searchParams: { preview?: string };
 }) {
+    const isPreview = searchParams.preview === 'true';
     const supabase = getAdminClient();
     if (!supabase) return notFound();
 
@@ -73,20 +76,24 @@ export default async function LandingPage({
     const { data: store } = await supabase
         .from('stores')
         .select('id, name, slug, currency')
-        .eq('slug', params.storeSlug)
+        .ilike('slug', params.storeSlug) // Case-insensitive lookup
         .single();
     if (!store) {
         console.error(`[LandingPage] Store not found for slug: ${params.storeSlug}`);
         return notFound();
     }
 
-    const { data: lp } = await supabase
+    let lpQuery = supabase
         .from('product_landing_pages')
         .select('*')
         .eq('product_id', params.productId)
-        .eq('store_id', store.id)
-        .eq('is_enabled', true)
-        .maybeSingle();
+        .eq('store_id', store.id);
+    
+    if (!isPreview) {
+        lpQuery = lpQuery.eq('is_enabled', true);
+    }
+
+    const { data: lp } = await lpQuery.maybeSingle();
 
     if (!lp) {
         // Log more details to help merchant debug
@@ -98,23 +105,27 @@ export default async function LandingPage({
         
         if (!rawLp) {
             console.error(`[LandingPage] No record found in product_landing_pages for productId: ${params.productId}`);
-        } else if (!rawLp.is_enabled) {
-            console.error(`[LandingPage] Landing page found but is_enabled is FALSE for productId: ${params.productId}`);
+        } else if (!rawLp.is_enabled && !isPreview) {
+            console.error(`[LandingPage] Landing page found but is_enabled is FALSE for productId: ${params.productId}. (Accessing without preview=true)`);
         }
         return notFound();
     }
 
     // Fetch product
-    const { data: productRaw } = await supabase
+    let productQuery = supabase
         .from('products')
         .select('id, name, price, sale_price, images, currency')
         .eq('id', params.productId)
-        .eq('store_id', store.id)
-        .eq('status', 'active')
-        .single();
+        .eq('store_id', store.id);
+
+    if (!isPreview) {
+        productQuery = productQuery.eq('status', 'active');
+    }
+
+    const { data: productRaw } = await productQuery.single();
 
     if (!productRaw) {
-        console.error(`[LandingPage] Product not found or not active for productId: ${params.productId}`);
+        console.error(`[LandingPage] Product not found or not active for productId: ${params.productId}${isPreview ? ' (Preview mode)' : ''}`);
         return notFound();
     }
 
