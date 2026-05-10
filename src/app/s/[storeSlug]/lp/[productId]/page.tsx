@@ -23,23 +23,41 @@ export async function generateMetadata({
         const supabase = getAdminClient();
         if (!supabase) return {};
 
-        const { data: store } = await supabase.from('stores').select('id').ilike('slug', params.storeSlug).single();
-        if (!store) return {};
+        // 1. Fetch Store
+        const { data: store, error: storeError } = await supabase
+            .from('stores')
+            .select('id')
+            .ilike('slug', params.storeSlug)
+            .maybeSingle();
 
-        const { data: lp } = await supabase
+        if (storeError || !store) {
+            console.error(`[LP Metadata] Store not found for slug: ${params.storeSlug}`, storeError);
+            return {};
+        }
+
+        // 2. Fetch Landing Page
+        const { data: lp, error: lpError } = await supabase
             .from('product_landing_pages')
             .select('content, product_id')
             .eq('product_id', params.productId)
             .eq('is_enabled', true)
             .maybeSingle();
 
-        const { data: product } = await supabase
+        if (lpError) {
+            console.error(`[LP Metadata] Error fetching landing page for ${params.productId}`, lpError);
+        }
+
+        // 3. Fetch Product
+        const { data: product, error: productError } = await supabase
             .from('products')
             .select('name, images')
             .eq('id', params.productId)
-            .single();
+            .maybeSingle();
 
-        if (!product) return {};
+        if (productError || !product) {
+            console.error(`[LP Metadata] Product not found for id: ${params.productId}`, productError);
+            return {};
+        }
 
         const name = typeof product.name === 'string' ? JSON.parse(product.name) : product.name;
         const headline = lp?.content?.headline;

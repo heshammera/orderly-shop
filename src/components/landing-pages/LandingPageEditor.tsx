@@ -60,6 +60,7 @@ const TEMPLATES: { id: LandingTemplate; labelAr: string; labelEn: string; descAr
 const DEFAULT_CONTENT = {
     headline: { ar: '', en: '' },
     subheadline: { ar: '', en: '' },
+    cta_text: { ar: 'اطلب الآن 🚀', en: 'Order Now 🚀' },
     benefits: [
         { ar: '🔒 دفع عند الاستلام', en: '🔒 Cash on Delivery' },
         { ar: '🚚 شحن سريع لباب منزلك', en: '🚚 Fast delivery to your door' },
@@ -182,7 +183,7 @@ export function LandingPageEditor({
             if (host.includes('localhost')) {
                 // Extract "localhost:PORT" from any "sub.localhost:PORT"
                 if (hostParts.length > 1) {
-                    cleanHost = hostParts.slice(-1)[0]; // Just "localhost:3000"
+                    cleanHost = hostParts[hostParts.length - 1]; // "localhost:3000" or just "localhost"
                 }
                 subdomainUrl = `${protocol}//${storeSlug}.${cleanHost}/lp/${productId}`;
             } 
@@ -201,9 +202,12 @@ export function LandingPageEditor({
         subdomainUrl = `https://${storeSlug}.orderlyshops.com/lp/${productId}`;
     }
 
-    // Internal fallback path (for cases where subdomains are not configured)
-    const internalUrl = `${SITE_BASE}/s/${storeSlug}/lp/${productId}`;
-    const previewUrl = `${subdomainUrl}?preview=true`;
+    const previewUrl = `${subdomainUrl}${subdomainUrl.includes('?') ? '&' : '?'}preview=true`;
+
+    // Path-based fallback URL (useful for local debugging if subdomains aren't mapped)
+    const fallbackUrl = typeof window !== 'undefined' 
+        ? `${window.location.protocol}//${window.location.host}/s/${storeSlug}/lp/${productId}?preview=true`
+        : '';
 
     // Locked state for non-paying plans
     if (!canUseLandingPages) {
@@ -256,7 +260,6 @@ export function LandingPageEditor({
 
     return (
         <div className="space-y-6">
-            {/* Header Controls */}
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                     <Switch checked={isEnabled} onCheckedChange={setIsEnabled} id="lp-enabled" />
@@ -267,16 +270,19 @@ export function LandingPageEditor({
                     </Label>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setShowPreview(true)}>
+                    <Button type="button" variant="outline" size="sm" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowPreview(true); }}>
                         <Eye className="w-4 h-4 me-1" />
                         {language === 'ar' ? 'معاينة سريعة' : 'Quick Preview'}
                     </Button>
                     
                     <Button 
+                        type="button"
                         variant="outline" 
                         size="sm" 
                         className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 hover:bg-amber-100 transition-colors"
-                        onClick={() => {
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
                             if (!landingPageId) {
                                 toast.error(language === 'ar' ? 'يرجى حفظ الصفحة أولاً' : 'Please save the page first');
                                 return;
@@ -289,10 +295,13 @@ export function LandingPageEditor({
                     </Button>
 
                     <Button 
+                        type="button"
                         variant="outline" 
                         size="sm" 
                         className={`border-green-200 bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-400 hover:bg-green-100 transition-colors ${(!isEnabled || !landingPageId) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        onClick={() => {
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
                             if (!landingPageId) {
                                 toast.error(language === 'ar' ? 'يرجى حفظ الصفحة أولاً' : 'Please save the page first');
                                 return;
@@ -304,10 +313,26 @@ export function LandingPageEditor({
                             window.open(subdomainUrl, '_blank');
                         }}
                     >
-                        <ExternalLink className="w-4 h-4 me-1" />
+                        <Zap className="w-4 h-4 me-1" />
                         {language === 'ar' ? 'فتح الرابط المباشر' : 'Open Live Link'}
                     </Button>
-                    <Button size="sm" onClick={handleSave} disabled={saving}>
+
+                    <Button 
+                        type="button"
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-[10px] text-muted-foreground opacity-30 hover:opacity-100"
+                        title="Internal path (bypass subdomains)"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.open(fallbackUrl, '_blank');
+                        }}
+                    >
+                        {language === 'ar' ? 'رابط داخلي (للتجربة)' : 'Internal Link (Debug)'}
+                    </Button>
+
+                    <Button type="button" size="sm" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleSave(); }} disabled={saving}>
                         {saving ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <Save className="w-4 h-4 me-1" />}
                         {language === 'ar' ? 'حفظ' : 'Save'}
                     </Button>
@@ -338,10 +363,10 @@ export function LandingPageEditor({
                             {language === 'ar' ? '🔗 الرابط البديل (Path-based - استخدمه إذا لم يعمل الرابط أعلاه)' : '🔗 Alternative URL (Path-based - use if above link fails)'}
                         </p>
                         <div className="flex items-center gap-2">
-                            <code className="text-blue-700 dark:text-blue-400 flex-1 break-all text-xs font-mono">{internalUrl}</code>
+                            <code className="text-blue-700 dark:text-blue-400 flex-1 break-all text-xs font-mono">{fallbackUrl}</code>
                             <button
                                 type="button"
-                                onClick={() => { navigator.clipboard.writeText(internalUrl); toast.success(language === 'ar' ? 'تم نسخ الرابط!' : 'Link copied!'); }}
+                                onClick={() => { navigator.clipboard.writeText(fallbackUrl); toast.success(language === 'ar' ? 'تم نسخ الرابط!' : 'Link copied!'); }}
                                 className="flex-shrink-0 text-xs px-2 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-200 transition-colors"
                             >
                                 {language === 'ar' ? 'نسخ' : 'Copy'}
@@ -451,7 +476,7 @@ export function LandingPageEditor({
                 <CardHeader>
                     <div className="flex items-center justify-between">
                         <CardTitle className="text-base">{language === 'ar' ? '✅ المميزات والفوائد' : '✅ Benefits'}</CardTitle>
-                        <Button variant="outline" size="sm" onClick={addBenefit}><Plus className="w-3 h-3 me-1" />{language === 'ar' ? 'إضافة' : 'Add'}</Button>
+                        <Button type="button" variant="outline" size="sm" onClick={(e) => { e.preventDefault(); e.stopPropagation(); addBenefit(); }}><Plus className="w-3 h-3 me-1" />{language === 'ar' ? 'إضافة' : 'Add'}</Button>
                     </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -481,7 +506,7 @@ export function LandingPageEditor({
                 <CardHeader>
                     <div className="flex items-center justify-between">
                         <CardTitle className="text-base">{language === 'ar' ? '⭐ تقييمات العملاء' : '⭐ Testimonials'}</CardTitle>
-                        <Button variant="outline" size="sm" onClick={addTestimonial}><Plus className="w-3 h-3 me-1" />{language === 'ar' ? 'إضافة' : 'Add'}</Button>
+                        <Button type="button" variant="outline" size="sm" onClick={(e) => { e.preventDefault(); e.stopPropagation(); addTestimonial(); }}><Plus className="w-3 h-3 me-1" />{language === 'ar' ? 'إضافة' : 'Add'}</Button>
                     </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -505,7 +530,7 @@ export function LandingPageEditor({
 
             {/* Save Button */}
             <div className="flex justify-end pb-4">
-                <Button onClick={handleSave} disabled={saving} size="lg">
+                <Button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleSave(); }} disabled={saving} size="lg">
                     {saving ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <Save className="w-4 h-4 me-2" />}
                     {language === 'ar' ? 'حفظ صفحة الهبوط' : 'Save Landing Page'}
                 </Button>
