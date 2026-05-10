@@ -97,30 +97,39 @@ export function LandingPageEditor({
     const [content, setContent] = useState(DEFAULT_CONTENT);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-    // Track unsaved changes
+    /* 
+    // Temporarily disabled to prevent potential loops while debugging
     useEffect(() => {
         if (!loading) setHasUnsavedChanges(true);
     }, [template, isEnabled, isStandalone, content]);
+    */
 
-    // Load existing landing page data
     useEffect(() => {
         if (!productId || !canUseLandingPages) { setLoading(false); return; }
+        let isMounted = true;
         const load = async () => {
-            const { data } = await supabase
-                .from('product_landing_pages')
-                .select('*')
-                .eq('product_id', productId)
-                .maybeSingle();
-            if (data) {
-                setLandingPageId(data.id);
-                setTemplate(data.template || 'hype');
-                setIsEnabled(data.is_enabled || false);
-                setIsStandalone(data.is_standalone ?? true);
-                setContent({ ...DEFAULT_CONTENT, ...(data.content || {}) });
+            try {
+                const { data } = await supabase
+                    .from('product_landing_pages')
+                    .select('*')
+                    .eq('product_id', productId)
+                    .maybeSingle();
+                
+                if (data && isMounted) {
+                    setLandingPageId(data.id);
+                    setTemplate(data.template || 'hype');
+                    setIsEnabled(data.is_enabled || false);
+                    setIsStandalone(data.is_standalone ?? true);
+                    setContent(prev => ({ ...prev, ...(data.content || {}) }));
+                }
+            } catch (e) {
+                console.error("Error loading LP:", e);
+            } finally {
+                if (isMounted) setLoading(false);
             }
-            setLoading(false);
         };
         load();
+        return () => { isMounted = false; };
     }, [productId, canUseLandingPages]);
 
     const handleSave = async () => {
