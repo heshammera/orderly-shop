@@ -21,15 +21,16 @@ const getAdminClient = cache(() => {
 });
 
 // Generate dynamic metadata for the store
-export async function generateMetadata({ params }: { params: { storeSlug: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ storeSlug: string }> }): Promise<Metadata> {
     try {
+        const { storeSlug } = await params;
         const supabaseAdmin = getAdminClient();
         if (!supabaseAdmin) return { title: 'Store' };
 
         const { data: store } = await supabaseAdmin
             .from('stores')
             .select('name, description, logo_url')
-            .ilike('slug', params.storeSlug)
+            .ilike('slug', storeSlug)
             .maybeSingle();
 
         if (!store) return { title: 'Store Not Found' };
@@ -59,8 +60,9 @@ export default async function Layout({
     params,
 }: {
     children: React.ReactNode;
-    params: { storeSlug: string };
+    params: Promise<{ storeSlug: string }>;
 }) {
+    const { storeSlug } = await params;
     const headersList = headers();
     const host = headersList.get('host') || '';
     const hostname = host.replace(/:\d+$/, '').replace(/^\[(.+)\]$/, '$1').toLowerCase().trim();
@@ -72,7 +74,7 @@ export default async function Layout({
         hostname === 'orderlyshops.com' ||
         hostname === 'www.orderlyshops.com';
 
-    const baseUrl = isMainDomain ? `/s/${params.storeSlug}` : '';
+    const baseUrl = isMainDomain ? `/s/${storeSlug}` : '';
 
     const supabaseAdmin = getAdminClient();
     if (!supabaseAdmin) {
@@ -99,7 +101,7 @@ export default async function Layout({
                 )
             )
         `)
-        .ilike('slug', params.storeSlug)
+        .ilike('slug', storeSlug)
         .maybeSingle();
 
     if (storeError || !store) {
