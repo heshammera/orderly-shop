@@ -58,7 +58,7 @@ export async function generateMetadata({ params }: { params: Promise<{ storeSlug
 
 export default async function StorePage({ params }: { params: Promise<{ storeSlug: string }> }) {
     const { storeSlug } = await params;
-    const headersList = headers();
+    const headersList = await headers();
     const host = headersList.get('host') || '';
     const hostname = host.replace(/:\d+$/, '').replace(/^\[(.+)\]$/, '$1').toLowerCase().trim();
 

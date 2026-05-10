@@ -63,7 +63,7 @@ export default async function Layout({
     params: Promise<{ storeSlug: string }>;
 }) {
     const { storeSlug } = await params;
-    const headersList = headers();
+    const headersList = await headers();
     const host = headersList.get('host') || '';
     const hostname = host.replace(/:\d+$/, '').replace(/^\[(.+)\]$/, '$1').toLowerCase().trim();
 
