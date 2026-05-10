@@ -28,7 +28,7 @@ export async function generateMetadata({
         const { data: store, error: storeError } = await supabase
             .from('stores')
             .select('id')
-            .ilike('slug', params.storeSlug)
+            .ilike('slug', storeSlug)
             .maybeSingle();
 
         if (storeError || !store) {
@@ -40,7 +40,7 @@ export async function generateMetadata({
         const { data: lp, error: lpError } = await supabase
             .from('product_landing_pages')
             .select('content, product_id')
-            .eq('product_id', params.productId)
+            .eq('product_id', productId)
             .eq('is_enabled', true)
             .maybeSingle();
 
