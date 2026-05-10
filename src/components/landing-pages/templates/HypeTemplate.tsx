@@ -33,11 +33,13 @@ interface HypeTemplateProps {
 
 export function HypeTemplate({ content, product, language, storeSlug, productId, isPreview = false }: HypeTemplateProps) {
     const [timeLeft, setTimeLeft] = useState({ hours: 2, minutes: 34, seconds: 47 });
-    const [visitorCount, setVisitorCount] = useState(Math.floor(Math.random() * 40) + 18);
+    const [visitorCount, setVisitorCount] = useState(25);
     const isRTL = language === 'ar';
 
     const accent = content.accent_color || '#8B5CF6';
 
+    // Temporarily disabled timers to break potential loops
+    /*
     useEffect(() => {
         if (isPreview) return;
         const timer = setInterval(() => {
@@ -52,26 +54,19 @@ export function HypeTemplate({ content, product, language, storeSlug, productId,
         }, 1000);
         return () => clearInterval(timer);
     }, [isPreview]);
+    */
 
-    useEffect(() => {
-        if (isPreview) return;
-        const interval = setInterval(() => {
-            setVisitorCount(prev => prev + (Math.random() > 0.5 ? 1 : -1));
-        }, 4000);
-        return () => clearInterval(interval);
-    }, [isPreview]);
-
-    const pad = (n: number) => String(n).padStart(2, '0');
-
-    const headline = content.headline?.[language] || product.name[language];
+    const headline = content.headline?.[language] || product.name?.[language] || '';
     const subheadline = content.subheadline?.[language] || '';
     const ctaText = content.cta_text?.[language] || (language === 'ar' ? 'اطلب الآن' : 'Order Now');
     const benefits = content.benefits || [];
     const guarantee = content.guarantee_text?.[language] || '';
     const testimonials = content.testimonials || [];
-    const heroImage = content.hero_image || product.images?.[0];
-    const finalPrice = product.sale_price || product.price;
-    const originalPrice = product.sale_price ? product.price : null;
+    const heroImage = content.hero_image || (product.images && product.images[0]) || '';
+    
+    // Sanitize prices to prevent NaN/Infinity
+    const finalPrice = Math.max(0, Number(product.sale_price || product.price || 0));
+    const originalPrice = product.sale_price ? Math.max(0, Number(product.price || 0)) : null;
 
     // CTA goes to the actual product page.
     // On subdomain: tenant.orderlyshops.com/{productId} → product page via middleware.
