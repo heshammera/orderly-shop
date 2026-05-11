@@ -20,45 +20,31 @@ export async function generateMetadata({
     params: Promise<{ storeSlug: string; productId: string }>;
 }): Promise<Metadata> {
     try {
-        const { storeSlug, productId } = await params;
+        const resolvedParams = await params;
+        const storeSlug = resolvedParams?.storeSlug;
+        const productId = resolvedParams?.productId;
+        
+        if (!storeSlug || !productId) return { title: 'Product' };
+
         const supabase = getAdminClient();
-        if (!supabase) return {};
+        if (!supabase) return { title: 'Product' };
 
-        // 1. Fetch Store
-        const { data: store, error: storeError } = await supabase
-            .from('stores')
-            .select('id')
-            .ilike('slug', storeSlug)
-            .maybeSingle();
-
-        if (storeError || !store) {
-            console.error(`[LP Metadata] Store not found for slug: ${storeSlug}`, storeError);
-            return {};
-        }
-
-        // 2. Fetch Landing Page
-        const { data: lp, error: lpError } = await supabase
-            .from('product_landing_pages')
-            .select('content, product_id')
-            .eq('product_id', productId)
-            .eq('is_enabled', true)
-            .maybeSingle();
-
-        if (lpError) {
-            console.error(`[LP Metadata] Error fetching landing page for ${productId}`, lpError);
-        }
-
-        // 3. Fetch Product
-        const { data: product, error: productError } = await supabase
+        // 1. Fetch Product
+        const { data: product } = await supabase
             .from('products')
             .select('name, images')
             .eq('id', productId)
             .maybeSingle();
 
-        if (productError || !product) {
-            console.error(`[LP Metadata] Product not found for id: ${productId}`, productError);
-            return {};
-        }
+        if (!product) return { title: 'Product' };
+
+        // 2. Fetch Landing Page
+        const { data: lp } = await supabase
+            .from('product_landing_pages')
+            .select('content')
+            .eq('product_id', productId)
+            .eq('is_enabled', true)
+            .maybeSingle();
 
         const name = typeof product.name === 'string' ? JSON.parse(product.name) : product.name;
         const headline = lp?.content?.headline;
@@ -73,10 +59,14 @@ export async function generateMetadata({
 
         return {
             title,
-            openGraph: { images: heroImage ? [heroImage] : [] },
+            openGraph: { 
+                title,
+                images: heroImage ? [heroImage] : [] 
+            },
         };
-    } catch {
-        return {};
+    } catch (e) {
+        console.error("[LP Metadata] Error:", e);
+        return { title: 'Product' };
     }
 }
 
@@ -105,44 +95,52 @@ export default async function LandingPage({
         return <div className="p-10 text-red-500">CRITICAL: Supabase Admin Client could not be initialized. Check environment variables.</div>;
     }
 
+    // Pre-calculate all data outside the main try block to ensure we can catch failures
+    let store: any = null;
+    let product: any = null;
+    let lp: any = null;
+    let productError: any = null;
+
     try {
-        // 1. Fetch Product FIRST (most specific)
-        const { data: product, error: productError } = await supabase
+        // 1. Fetch Product
+        const { data: pData, error: pError } = await supabase
             .from('products')
-            .select('id, name, price, sale_price, images, currency, store_id, status')
+            .select('id, name, price, sale_price, images, store_id, status')
             .eq('id', productId)
             .maybeSingle();
-
+        
+        product = pData;
+        productError = pError;
         if (product) debugData.productFound = true;
         if (productError) debugData.error = productError;
 
         // 2. Fetch Store
-        const { data: store } = await supabase
+        const { data: sData } = await supabase
             .from('stores')
             .select('id, name, slug, currency')
             .ilike('slug', storeSlug)
             .maybeSingle();
         
+        store = sData;
         if (store) debugData.storeFound = true;
 
         // 3. Fetch Landing Page
-        let lpQuery = supabase
+        const { data: lpData } = await supabase
             .from('product_landing_pages')
             .select('*')
-            .eq('product_id', productId);
+            .eq('product_id', productId)
+            .maybeSingle();
         
-        const { data: lp } = await lpQuery.maybeSingle();
+        lp = lpData;
         if (lp) {
             debugData.lpRecordFoundButDisabled = !lp.is_enabled;
-            // Only consider it "Found" if it's enabled OR we are in preview mode
             if (lp.is_enabled || isPreview) {
                 debugData.lpFound = true;
             }
         }
 
         // If everything is found, render the page
-        if (debugData.lpFound && debugData.productFound && debugData.storeFound) {
-            // Ultra-Safe parsing helper
+        if (debugData.lpFound && product && store) {
             const safeParse = (val: any, fallback: any) => {
                 if (!val) return fallback;
                 if (typeof val === 'string') {
@@ -151,41 +149,53 @@ export default async function LandingPage({
                 return val;
             };
 
-            const rawName = safeParse(product!.name, { ar: 'منتج', en: 'Product' });
-            const rawImages = safeParse(product!.images, []);
-            const rawContent = lp!.content || {};
+            const rawName = safeParse(product.name, { ar: 'منتج', en: 'Product' });
+            const rawImages = safeParse(product.images, []);
+            const rawContent = lp.content || {};
 
+            // STICK TO PLAIN PRIMITIVES FOR SERIALIZATION SAFETY
             const productData = {
                 name: {
                     ar: String(rawName.ar || 'منتج'),
                     en: String(rawName.en || 'Product')
                 },
-                price: parseFloat(String(product!.price || 0)) || 0,
-                sale_price: product!.sale_price ? (parseFloat(String(product!.sale_price)) || undefined) : undefined,
-                currency: String(product!.currency || store!.currency || 'SAR').replace(/[^a-zA-Z]/g, ''),
+                price: Number(product.price || 0),
+                sale_price: product.sale_price ? Number(product.sale_price) : undefined,
+                currency: String(product.currency || store.currency || 'SAR').replace(/[^a-zA-Z]/g, ''),
                 images: Array.isArray(rawImages) ? rawImages.map(img => String(img)) : []
             };
 
             const safeContent = {
-                ...rawContent,
-                headline: { ar: rawContent.headline?.ar || '', en: rawContent.headline?.en || '' },
-                subheadline: { ar: rawContent.subheadline?.ar || '', en: rawContent.subheadline?.en || '' },
-                cta_text: { ar: rawContent.cta_text?.ar || 'اطلب الآن', en: rawContent.cta_text?.en || 'Order Now' },
-                benefits: rawContent.benefits || [],
-                testimonials: rawContent.testimonials || [],
-                guarantee_text: { ar: rawContent.guarantee_text?.ar || '', en: rawContent.guarantee_text?.en || '' },
-                hero_image: rawContent.hero_image || '',
-                accent_color: rawContent.accent_color || '#2563EB'
+                headline: { 
+                    ar: String(rawContent.headline?.ar || ''), 
+                    en: String(rawContent.headline?.en || '') 
+                },
+                subheadline: { 
+                    ar: String(rawContent.subheadline?.ar || ''), 
+                    en: String(rawContent.subheadline?.en || '') 
+                },
+                cta_text: { 
+                    ar: String(rawContent.cta_text?.ar || 'اطلب الآن'), 
+                    en: String(rawContent.cta_text?.en || 'Order Now') 
+                },
+                benefits: Array.isArray(rawContent.benefits) ? rawContent.benefits : [],
+                testimonials: Array.isArray(rawContent.testimonials) ? rawContent.testimonials : [],
+                guarantee_text: { 
+                    ar: String(rawContent.guarantee_text?.ar || ''), 
+                    en: String(rawContent.guarantee_text?.en || '') 
+                },
+                hero_image: String(rawContent.hero_image || ''),
+                accent_color: String(rawContent.accent_color || '#2563EB')
             };
 
             return (
                 <LandingPageRenderer
-                    template={(lp!.template as any) || 'hype'}
+                    template={String(lp.template || 'hype') as any}
                     content={safeContent}
                     product={productData}
                     language="ar"
-                    storeSlug={storeSlug}
-                    productId={productId}
+                    storeSlug={String(storeSlug)}
+                    productId={String(productId)}
                     isPreview={isPreview}
                 />
             );
@@ -230,25 +240,33 @@ export default async function LandingPage({
                         <div className="mt-4 pt-4 border-t border-blue-100 flex flex-col gap-1 text-[10px] font-mono text-blue-400 opacity-60">
                             <p>Store ID: {store?.id || "N/A"}</p>
                             <p>Product ID: {productId}</p>
-                            {debugData.error && <p className="text-red-400">DB Error: {JSON.stringify(debugData.error)}</p>}
+                            {debugData.error && <p className="text-red-400">DB Error: {typeof debugData.error === 'object' ? JSON.stringify(debugData.error) : String(debugData.error)}</p>}
                         </div>
                     </div>
 
-                    <button 
-                        onClick={() => window.location.reload()}
-                        className="px-6 py-2 bg-gray-900 text-white rounded-full text-sm font-medium hover:bg-gray-800 transition-colors"
+                    <a 
+                        href={`/lp/${productId}`}
+                        className="px-6 py-2 bg-gray-900 text-white rounded-full text-sm font-medium hover:bg-gray-800 transition-colors inline-block text-center"
                     >
                         تحديث الصفحة
-                    </button>
+                    </a>
                 </div>
             </div>
         );
 
     } catch (e: any) {
+        console.error("[LP Page] Critical Crash:", e);
         return (
-            <div className="p-10 bg-red-50 text-red-700 rounded-lg">
-                <h1 className="font-bold">Server Error during fetch:</h1>
-                <pre className="mt-2 text-xs">{e.message}</pre>
+            <div className="p-10 bg-red-50 text-red-700 rounded-lg max-w-2xl mx-auto mt-20 shadow-xl border border-red-100" dir="ltr">
+                <h1 className="font-bold text-xl mb-4">Critical Server Error</h1>
+                <div className="bg-white p-4 rounded border border-red-200 font-mono text-sm overflow-auto">
+                    <p className="font-bold text-red-600">{e.name}: {e.message}</p>
+                    {e.stack && <pre className="mt-2 text-[10px] opacity-60">{e.stack}</pre>}
+                </div>
+                <div className="mt-6 flex gap-4">
+                    <a href={`/lp/${productId}`} className="px-4 py-2 bg-red-600 text-white rounded text-sm">Retry Load</a>
+                    <a href="/" className="px-4 py-2 bg-gray-200 text-gray-700 rounded text-sm">Back Home</a>
+                </div>
             </div>
         );
     }

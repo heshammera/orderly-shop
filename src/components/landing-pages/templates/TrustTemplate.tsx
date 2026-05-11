@@ -1,5 +1,8 @@
 "use client";
 
+import { useState } from 'react';
+import { useCart } from '@/contexts/CartContext';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 interface LandingContent {
@@ -46,11 +49,29 @@ export function TrustTemplate({ content, product, language, storeSlug, productId
     const guarantee = content.guarantee_text?.[language] || '';
     const testimonials = content.testimonials || [];
     const heroImage = content.hero_image || (product.images && product.images[0]) || '';
+    const [selectedImage, setSelectedImage] = useState(heroImage);
     const finalPrice = product.sale_price || product.price || 0;
     const originalPrice = product.sale_price ? (product.price || null) : null;
 
-    // CTA goes to the actual product page.
-    const checkoutUrl = `/${productId}`;
+    const { addToCart } = useCart();
+    const router = useRouter();
+
+    const handleBuyNow = async () => {
+        if (isPreview) return;
+        
+        await addToCart({
+            productId,
+            productName: product.name,
+            productImage: heroImage,
+            basePrice: product.price,
+            unitPrice: finalPrice,
+            quantity: 1,
+            variants: [], 
+            addedAt: new Date().toISOString()
+        }, { skipOpen: true });
+
+        router.push(`/checkout`);
+    };
 
     return (
         <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen bg-white text-gray-900 overflow-x-hidden" style={{ fontFamily: "'Inter', 'Cairo', sans-serif" }}>
@@ -70,19 +91,39 @@ export function TrustTemplate({ content, product, language, storeSlug, productId
                     <div className="flex flex-col lg:flex-row items-center gap-10">
 
                         {/* Image */}
-                        <div className="flex-shrink-0 relative">
-                            {heroImage ? (
-                                <div className="relative">
-                                    <img
-                                        src={heroImage}
-                                        alt={headline}
-                                        className="w-64 h-64 sm:w-80 sm:h-80 object-cover rounded-2xl shadow-xl border border-gray-100"
-                                    />
-                                    {/* Sale badge */}
-                                    {originalPrice && originalPrice > 0 && finalPrice < originalPrice && (
-                                        <div className="absolute top-3 start-3 px-3 py-1 rounded-full text-white text-xs font-bold"
-                                            style={{ background: '#EF4444' }}>
-                                            {language === 'ar' ? 'خصم' : 'SALE'} {Math.round(((originalPrice - finalPrice) / originalPrice) * 100)}%
+                        <div className="flex-shrink-0 flex flex-col items-center gap-4">
+                            {selectedImage ? (
+                                <div className="space-y-4">
+                                    <div className="relative">
+                                        <img
+                                            src={selectedImage}
+                                            alt={headline}
+                                            className="w-64 h-64 sm:w-80 sm:h-80 object-cover rounded-2xl shadow-xl border border-gray-100 transition-all duration-300"
+                                        />
+                                        {/* Sale badge */}
+                                        {originalPrice && originalPrice > 0 && finalPrice < originalPrice && (
+                                            <div className="absolute top-3 start-3 px-3 py-1 rounded-full text-white text-xs font-bold"
+                                                style={{ background: '#EF4444' }}>
+                                                {language === 'ar' ? 'خصم' : 'SALE'} {Math.round(((originalPrice - finalPrice) / originalPrice) * 100)}%
+                                            </div>
+                                        )}
+                                    </div>
+                                    
+                                    {/* Professional Thumbnails */}
+                                    {product.images && product.images.length > 1 && (
+                                        <div className="flex gap-2 justify-center">
+                                            {product.images.map((img, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => setSelectedImage(img)}
+                                                    className={`w-12 h-12 rounded-lg overflow-hidden border-2 transition-all ${
+                                                        selectedImage === img ? 'border-blue-500 ring-2 ring-blue-100' : 'border-gray-200 hover:border-gray-300'
+                                                    }`}
+                                                    style={{ borderColor: selectedImage === img ? accent : undefined }}
+                                                >
+                                                    <img src={img} className="w-full h-full object-cover" alt="" />
+                                                </button>
+                                            ))}
                                         </div>
                                     )}
                                 </div>
@@ -136,19 +177,14 @@ export function TrustTemplate({ content, product, language, storeSlug, productId
 
                             {/* CTA */}
                             <div className="flex flex-col sm:flex-row gap-3">
-                                {!isPreview ? (
-                                    <Link href={checkoutUrl}
-                                        className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-bold text-base text-white transition-all hover:opacity-90 hover:shadow-lg active:scale-95 flex-1 sm:flex-none"
-                                        style={{ background: accent }}>
-                                        🛒 {ctaText}
-                                    </Link>
-                                ) : (
-                                    <button
-                                        className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-bold text-base text-white cursor-default flex-1 sm:flex-none"
-                                        style={{ background: accent }}>
-                                        🛒 {ctaText}
-                                    </button>
-                                )}
+                                <button 
+                                    onClick={handleBuyNow}
+                                    disabled={isPreview}
+                                    className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-bold text-base text-white transition-all hover:opacity-90 hover:shadow-lg active:scale-95 disabled:cursor-default flex-1 sm:flex-none"
+                                    style={{ background: accent }}
+                                >
+                                    🛒 {ctaText}
+                                </button>
                             </div>
 
                             {/* Micro-trust signals */}
@@ -246,19 +282,14 @@ export function TrustTemplate({ content, product, language, storeSlug, productId
                     {finalPrice} {product.currency}
                     {originalPrice && ` — ${language === 'ar' ? 'بدلاً من' : 'instead of'} ${originalPrice}`}
                 </p>
-                {!isPreview ? (
-                    <Link href={checkoutUrl}
-                        className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-bold text-base bg-white transition-all hover:bg-gray-50 hover:scale-105 active:scale-95"
-                        style={{ color: accent }}>
-                        🛒 {ctaText}
-                    </Link>
-                ) : (
-                    <button
-                        className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-bold text-base bg-white cursor-default"
-                        style={{ color: accent }}>
-                        🛒 {ctaText}
-                    </button>
-                )}
+                <button 
+                    onClick={handleBuyNow}
+                    disabled={isPreview}
+                    className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-bold text-base bg-white transition-all hover:bg-gray-50 hover:scale-105 active:scale-95 disabled:cursor-default"
+                    style={{ color: accent }}
+                >
+                    🛒 {ctaText}
+                </button>
             </section>
         </div>
     );

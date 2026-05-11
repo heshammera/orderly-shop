@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
+import { useCart } from '@/contexts/CartContext';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 interface LandingContent {
@@ -34,6 +36,8 @@ interface HypeTemplateProps {
 export function HypeTemplate({ content, product, language, storeSlug, productId, isPreview = false }: HypeTemplateProps) {
     const [timeLeft, setTimeLeft] = useState({ hours: 2, minutes: 34, seconds: 47 });
     const [visitorCount, setVisitorCount] = useState(25);
+    const heroImage = content.hero_image || (product.images && product.images[0]) || '';
+    const [selectedImage, setSelectedImage] = useState(heroImage);
     const isRTL = language === 'ar';
     const accent = content.accent_color || '#8B5CF6';
 
@@ -69,13 +73,30 @@ export function HypeTemplate({ content, product, language, storeSlug, productId,
     const benefits = content.benefits || [];
     const guarantee = content.guarantee_text?.[language] || '';
     const testimonials = content.testimonials || [];
-    const heroImage = content.hero_image || (product.images && product.images[0]) || '';
     
     const finalPrice = Number(product.sale_price || product.price || 0);
     const originalPrice = product.sale_price ? Number(product.price || 0) : null;
     const discount = 0; // Temporarily disabled to kill "â" error
 
-    const checkoutUrl = `/${productId}`;
+    const { addToCart } = useCart();
+    const router = useRouter();
+
+    const handleBuyNow = async () => {
+        if (isPreview) return;
+        
+        await addToCart({
+            productId,
+            productName: product.name,
+            productImage: heroImage,
+            basePrice: product.price,
+            unitPrice: finalPrice,
+            quantity: 1,
+            variants: [], // Default to no variants for LP for now
+            addedAt: new Date().toISOString()
+        }, { skipOpen: true });
+
+        router.push(`/checkout`);
+    };
 
     return (
         <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen bg-black text-white font-sans overflow-x-hidden" style={{ fontFamily: "'Inter', 'Cairo', sans-serif" }}>
@@ -133,18 +154,47 @@ export function HypeTemplate({ content, product, language, storeSlug, productId,
                     ))}
                 </div>
 
-                {/* Image & Price */}
-                <div className="relative mb-8 group max-w-md">
-                    <div className="absolute inset-0 rounded-2xl blur-2xl opacity-40 scale-95 transition-all group-hover:opacity-60"
-                        style={{ background: `radial-gradient(circle, ${accent}, transparent)` }} />
-                    <img src={heroImage} alt={headline} className="relative w-64 h-64 sm:w-80 sm:h-80 object-cover rounded-2xl border border-white/10 shadow-2xl" />
-                    {discount > 0 && (
-                        <div className="absolute -top-4 -start-4 w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xs text-center shadow-lg transform -rotate-12"
-                            style={{ background: `linear-gradient(135deg, ${accent}, #ef4444)` }}>
-                            <div>
-                                <div className="text-[10px] opacity-80">{language === 'ar' ? 'خصم' : 'SALE'}</div>
-                                <div className="text-sm font-black">{discount}%</div>
+                {/* Image Gallery & Price */}
+                <div className="relative mb-8 group max-w-2xl w-full flex flex-col items-center">
+                    {/* Main Image */}
+                    <div className="relative mb-6">
+                        <div className="absolute inset-0 rounded-2xl blur-3xl opacity-30 scale-95 transition-all group-hover:opacity-50"
+                            style={{ background: `radial-gradient(circle, ${accent}, transparent)` }} />
+                        <img 
+                            src={selectedImage || heroImage} 
+                            alt={headline} 
+                            className="relative w-72 h-72 sm:w-96 sm:h-96 object-cover rounded-3xl border border-white/10 shadow-2xl transition-all duration-500" 
+                        />
+                        
+                        {discount > 0 && (
+                            <div className="absolute -top-4 -start-4 w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xs text-center shadow-lg transform -rotate-12 z-20"
+                                style={{ background: `linear-gradient(135deg, ${accent}, #ef4444)` }}>
+                                <div>
+                                    <div className="text-[10px] opacity-80">{language === 'ar' ? 'خصم' : 'SALE'}</div>
+                                    <div className="text-sm font-black">{discount}%</div>
+                                </div>
                             </div>
+                        )}
+                    </div>
+
+                    {/* Thumbnails */}
+                    {product.images && product.images.length > 1 && (
+                        <div className="flex gap-3 px-4 py-2 overflow-x-auto no-scrollbar max-w-full">
+                            {product.images.map((img, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => setSelectedImage(img)}
+                                    className={`relative flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all duration-300 ${
+                                        selectedImage === img ? 'border-white scale-110 shadow-lg' : 'border-white/10 opacity-50 hover:opacity-100'
+                                    }`}
+                                    style={{ borderColor: selectedImage === img ? accent : undefined }}
+                                >
+                                    <img src={img} className="w-full h-full object-cover" alt="" />
+                                    {selectedImage === img && (
+                                        <div className="absolute inset-0 bg-white/10" />
+                                    )}
+                                </button>
+                            ))}
                         </div>
                     )}
                 </div>
@@ -154,17 +204,14 @@ export function HypeTemplate({ content, product, language, storeSlug, productId,
                     <span className="text-4xl font-black" style={{ color: accent }}>{finalPrice} {product.currency}</span>
                 </div>
 
-                {!isPreview ? (
-                    <Link href={checkoutUrl} className="inline-flex items-center gap-3 px-10 py-4 rounded-full font-black text-lg transition-all hover:scale-105"
-                        style={{ background: `linear-gradient(135deg, ${accent}, ${accent}dd)`, boxShadow: `0 0 40px ${accent}66` }}>
-                        <span>🛒</span> {ctaText} <span>→</span>
-                    </Link>
-                ) : (
-                    <button className="inline-flex items-center gap-3 px-10 py-4 rounded-full font-black text-lg cursor-default"
-                        style={{ background: `linear-gradient(135deg, ${accent}, ${accent}dd)`, boxShadow: `0 0 40px ${accent}66` }}>
-                        <span>🛒</span> {ctaText} <span>→</span>
-                    </button>
-                )}
+                <button 
+                    onClick={handleBuyNow}
+                    disabled={isPreview}
+                    className="inline-flex items-center gap-3 px-10 py-4 rounded-full font-black text-lg transition-all hover:scale-105 active:scale-95 disabled:cursor-default"
+                    style={{ background: `linear-gradient(135deg, ${accent}, ${accent}dd)`, boxShadow: `0 0 40px ${accent}66` }}
+                >
+                    <span>🛒</span> {ctaText} <span>→</span>
+                </button>
                 <p className="mt-4 text-[10px] text-white/30 uppercase tracking-widest">{language === 'ar' ? '🔒 دفع عند الاستلام | شحن سريع | معاينة قبل الاستلام' : '🔒 Cash on Delivery | Fast delivery | Inspection before delivery'}</p>
             </section>
 

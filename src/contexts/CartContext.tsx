@@ -23,7 +23,7 @@ interface CartContextType {
     isCartOpen: boolean;
     openCart: () => void;
     closeCart: () => void;
-    addToCart: (item: CartItem) => Promise<void>;
+    addToCart: (item: CartItem, options?: { skipOpen?: boolean }) => Promise<void>;
     removeFromCart: (productId: string, variants: any[]) => Promise<void>;
     updateQuantity: (productId: string, variants: any[], quantity: number) => Promise<void>;
     clearCart: () => Promise<void>;
@@ -179,7 +179,7 @@ export function CartProvider({ children, storeId }: { children: React.ReactNode;
         return data.id;
     };
 
-    const addToCart = async (newItem: CartItem) => {
+    const addToCart = async (newItem: CartItem, options?: { skipOpen?: boolean }) => {
         setCart(prev => {
             const existingIdx = prev.findIndex(item =>
                 item.productId === newItem.productId &&
@@ -195,8 +195,10 @@ export function CartProvider({ children, storeId }: { children: React.ReactNode;
             return [...prev, newItem];
         });
 
-        // Auto-open cart drawer when item is added
-        setIsCartOpen(true);
+        // Auto-open cart drawer when item is added, unless skipped
+        if (!options?.skipOpen) {
+            setIsCartOpen(true);
+        }
 
         // Sync to DB (Debounced ideal, but direct for now)
         try {

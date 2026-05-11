@@ -15,6 +15,7 @@ const HEADER_ROW = [
     'Quantity',
     'Unit Price',
     'Item Total',
+    'Total Pieces', // New Column
     'Order Total',
     'Notes'
 ];
@@ -185,33 +186,65 @@ export async function syncOrderToGoogleSheets(orderId: string, storeId: string):
                         allItemTotals.push(String(item.unit_price));
                     });
                 });
-
-                const rows = [
-                    [
-                        order.order_number,
-                        new Date(order.created_at).toLocaleString('en-US'),
-                        order.status,
-                        order.customer_snapshot?.name || order.customer?.name || 'Guest',
-                        order.customer_snapshot?.phone || order.customer?.phone || '',
-                        order.customer_snapshot?.alt_phone || order.customer?.address?.alt_phone || '',
-                        order.shipping_address?.city || '',
-                        order.shipping_address?.address || '',
-                        allProductNames.join('\n'),
-                        allVariants.join('\n'),
-                        allQuantities.join('\n'),
-                        allUnitPrices.join('\n'),
-                        allItemTotals.join('\n'),
-                        order.total,
-                        order.notes || ''
-                    ]
-                ];
+                
+                const totalPieces = itemsToExport.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
                 try {
-                    const existingValues = await getSheetValues(serviceAccount, sheetId, `${tabName}!A1:A1`);
-                    const rowsToExport = [...rows];
-                    if (!existingValues || existingValues.length === 0) {
+                    // Smart detection: check the header row of the sheet
+                    const headerData = await getSheetValues(serviceAccount, sheetId, `${tabName}!1:1`);
+                    const isSheetEmpty = !headerData || headerData.length === 0;
+                    
+                    // Check if the current sheet already uses the new 16-column format
+                    const existingHeader = isSheetEmpty ? [] : headerData[0];
+                    const isNewFormat = isSheetEmpty || existingHeader.length >= 16 || existingHeader.includes('Total Pieces');
+
+                    let finalRow;
+                    if (isNewFormat) {
+                        // New Format (16 columns)
+                        finalRow = [
+                            order.order_number,
+                            new Date(order.created_at).toLocaleString('en-US'),
+                            order.status,
+                            order.customer_snapshot?.name || order.customer?.name || 'Guest',
+                            order.customer_snapshot?.phone || order.customer?.phone || '',
+                            order.customer_snapshot?.alt_phone || order.customer?.address?.alt_phone || '',
+                            order.shipping_address?.city || '',
+                            order.shipping_address?.address || '',
+                            allProductNames.join('\n'),
+                            allVariants.join('\n'),
+                            allQuantities.join('\n'),
+                            allUnitPrices.join('\n'),
+                            allItemTotals.join('\n'),
+                            totalPieces, // Added column
+                            order.total,
+                            order.notes || ''
+                        ];
+                    } else {
+                        // Legacy Format (15 columns) - to avoid breaking existing sheets
+                        finalRow = [
+                            order.order_number,
+                            new Date(order.created_at).toLocaleString('en-US'),
+                            order.status,
+                            order.customer_snapshot?.name || order.customer?.name || 'Guest',
+                            order.customer_snapshot?.phone || order.customer?.phone || '',
+                            order.customer_snapshot?.alt_phone || order.customer?.address?.alt_phone || '',
+                            order.shipping_address?.city || '',
+                            order.shipping_address?.address || '',
+                            allProductNames.join('\n'),
+                            allVariants.join('\n'),
+                            allQuantities.join('\n'),
+                            allUnitPrices.join('\n'),
+                            allItemTotals.join('\n'),
+                            order.total,
+                            order.notes || ''
+                        ];
+                    }
+
+                    const rowsToExport = [finalRow];
+                    if (isSheetEmpty) {
                         rowsToExport.unshift(HEADER_ROW);
                     }
+                    
                     const response = await appendRow(serviceAccount, sheetId, tabName, rowsToExport);
                     results.push({ id: `${integration.id}-${sheetId}`, status: 'success' });
                 } catch (error: any) {

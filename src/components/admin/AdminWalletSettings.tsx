@@ -40,7 +40,8 @@ export function AdminWalletSettings() {
     const [loading, setLoading] = useState(true);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingWallet, setEditingWallet] = useState<PaymentWallet | null>(null);
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<Omit<PaymentWallet, 'id'>>({
+        number: '',
         name: '',
         name_ar: '',
         owner: '',

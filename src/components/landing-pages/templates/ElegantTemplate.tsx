@@ -1,5 +1,12 @@
 "use client";
 
+import { useState } from 'react';
+import { useCart } from '@/contexts/CartContext';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { Star, ShieldCheck, Zap, Check } from 'lucide-react';
 import Link from 'next/link';
 
 interface LandingContent {
@@ -42,11 +49,29 @@ export function ElegantTemplate({ content, product, language, storeSlug, product
     const guarantee = content.guarantee_text?.[language] || '';
     const testimonials = content.testimonials || [];
     const heroImage = content.hero_image || (product.images && product.images[0]) || '';
+    const [selectedImage, setSelectedImage] = useState(heroImage);
     const finalPrice = product.sale_price || product.price || 0;
     const originalPrice = product.sale_price ? (product.price || null) : null;
 
-    // CTA goes to the actual product page.
-    const checkoutUrl = `/${productId}`;
+    const { addToCart } = useCart();
+    const router = useRouter();
+
+    const handleBuyNow = async () => {
+        if (isPreview) return;
+        
+        await addToCart({
+            productId,
+            productName: product.name,
+            productImage: heroImage,
+            basePrice: product.price,
+            unitPrice: finalPrice,
+            quantity: 1,
+            variants: [], 
+            addedAt: new Date().toISOString()
+        }, { skipOpen: true });
+
+        router.push(`/checkout`);
+    };
 
     return (
         <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen bg-[#FAF8F5] text-gray-900 overflow-x-hidden" style={{ fontFamily: "'Playfair Display', 'Cairo', Georgia, serif" }}>
@@ -54,124 +79,106 @@ export function ElegantTemplate({ content, product, language, storeSlug, product
             {/* Top thin accent bar */}
             <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${accent}, #D4AF37, ${accent})` }} />
 
-            {/* Hero Section */}
-            <section className="relative min-h-screen flex flex-col lg:flex-row items-center px-6 py-16 max-w-7xl mx-auto gap-12">
+            {/* Hero Section - Luxury Centered Layout */}
+            <section className="relative pt-20 pb-32 px-6 overflow-hidden">
+                {/* Background decorative elements */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[1000px] bg-white rounded-full blur-[120px] opacity-20 -z-10" />
+                
+                <div className="max-w-4xl mx-auto text-center space-y-12">
+                    <div className="space-y-6 animate-in fade-in slide-in-from-top-10 duration-1000">
+                        <Badge variant="outline" className="px-6 py-1.5 rounded-full border-primary/20 text-primary font-bold tracking-widest uppercase text-[10px]">
+                            {language === 'ar' ? 'إصدار حصري' : 'Exclusive Edition'}
+                        </Badge>
+                        <h1 className="text-4xl md:text-7xl font-black tracking-tight leading-[1.1]" style={{ color: accent }}>
+                            {headline}
+                        </h1>
+                        <p className="text-lg md:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed italic">
+                            {subheadline}
+                        </p>
+                    </div>
 
-                {/* Left: Image */}
-                <div className="flex-1 flex justify-center">
-                    {heroImage ? (
-                        <div className="relative">
-                            <div className="absolute inset-4 rounded-3xl" style={{ background: `${accent}15` }} />
-                            <img
-                                src={heroImage}
-                                alt={headline}
-                                className="relative w-72 h-72 sm:w-96 sm:h-96 lg:w-[440px] lg:h-[440px] object-cover rounded-3xl shadow-2xl"
-                            />
-                            {/* Small decorative element */}
-                            <div className="absolute -bottom-4 -start-4 w-20 h-20 rounded-2xl flex items-center justify-center text-white font-bold text-xs text-center shadow-lg"
-                                style={{ background: `linear-gradient(135deg, ${accent}, #D4AF37)` }}>
-                                <div>
-                                    {originalPrice && originalPrice > 0 && finalPrice < originalPrice ? (
-                                        <>
-                                            <div className="text-xs opacity-80">{language === 'ar' ? 'خصم' : 'SALE'}</div>
-                                            <div className="text-base font-black">
-                                                {Math.round(((originalPrice - finalPrice) / originalPrice) * 100)}%
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <div className="text-xs">{language === 'ar' ? 'حصري' : 'EXCLUSIVE'}</div>
+                    {/* Main Image with Frame */}
+                    <div className="relative group max-w-2xl mx-auto animate-in zoom-in duration-1000 delay-300">
+                        <div className="absolute -inset-4 bg-gradient-to-b from-primary/10 to-transparent rounded-[4rem] blur-2xl opacity-50 group-hover:opacity-100 transition-opacity" style={{ background: `${accent}10` }} />
+                        <div className="relative p-2 bg-white rounded-[3rem] shadow-2xl border border-gray-100">
+                            {selectedImage && (
+                                <img
+                                    src={selectedImage}
+                                    alt={headline}
+                                    className="w-full aspect-square object-cover rounded-[2.5rem] shadow-inner transition-transform duration-700 group-hover:scale-[1.02]"
+                                />
+                            )}
+                            
+                            {/* Floating Price Tag */}
+                            <div className="absolute -bottom-6 right-1/2 translate-x-1/2 md:translate-x-0 md:-right-6 bg-white p-6 rounded-3xl shadow-2xl border border-gray-100 min-w-[180px] animate-bounce">
+                                <div className="text-center">
+                                    {originalPrice && originalPrice > 0 && (
+                                        <div className="text-sm text-gray-400 line-through mb-1">{originalPrice} {product.currency}</div>
                                     )}
+                                    <div className="text-3xl font-black" style={{ color: accent }}>
+                                        {finalPrice} <span className="text-sm opacity-60">{product.currency}</span>
+                                    </div>
+                                    <div className="mt-1 text-[9px] uppercase tracking-tighter font-black text-primary opacity-50">
+                                        {language === 'ar' ? 'سعر العرض المحدود' : 'Limited Time Offer'}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    ) : (
-                        <div className="w-96 h-96 rounded-3xl flex items-center justify-center" style={{ background: `${accent}10` }}>
-                            <span className="text-6xl">✨</span>
+                    </div>
+
+                    {/* Gallery Thumbnails */}
+                    {product.images.length > 1 && (
+                        <div className="flex flex-wrap justify-center gap-4 pt-10">
+                            {product.images.map((img, i) => (
+                                <button
+                                    key={i}
+                                    type="button"
+                                    onClick={() => setSelectedImage(img)}
+                                    className={cn(
+                                        "w-16 h-16 rounded-2xl border-2 transition-all duration-300 overflow-hidden shadow-sm hover:scale-110",
+                                        selectedImage === img ? "border-primary shadow-lg scale-110" : "border-transparent opacity-60 hover:opacity-100"
+                                    )}
+                                    style={{ borderColor: selectedImage === img ? accent : 'transparent' }}
+                                >
+                                    <img src={img} alt="" className="w-full h-full object-cover" />
+                                </button>
+                            ))}
                         </div>
                     )}
-                </div>
 
-                {/* Right: Content */}
-                <div className="flex-1 text-center lg:text-start space-y-6">
-                    {/* Thin decorative line */}
-                    <div className="flex items-center gap-3 justify-center lg:justify-start">
-                        <div className="h-px flex-1 max-w-12" style={{ background: accent }} />
-                        <span className="text-xs font-medium tracking-[0.3em] uppercase" style={{ color: accent }}>
-                            {language === 'ar' ? 'تجربة استثنائية' : 'Premium Experience'}
-                        </span>
-                        <div className="h-px flex-1 max-w-12" style={{ background: accent }} />
-                    </div>
-
-                    <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-tight text-gray-900">
-                        {headline}
-                    </h1>
-
-                    {subheadline && (
-                        <p className="text-lg text-gray-500 leading-relaxed max-w-lg">
-                            {subheadline}
-                        </p>
-                    )}
-
-                    {/* Price */}
-                    <div className="flex items-end gap-3 justify-center lg:justify-start">
-                        <span className="text-4xl font-black" style={{ color: accent }}>
-                            {finalPrice} {product.currency}
-                        </span>
-                        {originalPrice && (
-                            <span className="text-xl text-gray-400 line-through mb-1">
-                                {originalPrice} {product.currency}
+                    {/* Main CTA */}
+                    <div className="pt-10 flex flex-col items-center gap-6">
+                        <Button
+                            onClick={handleBuyNow}
+                            size="lg"
+                            className="h-16 px-16 rounded-full text-xl font-black shadow-2xl transition-all hover:scale-105 active:scale-95 group overflow-hidden relative"
+                            style={{ backgroundColor: accent }}
+                        >
+                            <span className="relative z-10 flex items-center gap-3">
+                                {ctaText}
+                                <Zap className="w-6 h-6 fill-white animate-pulse" />
                             </span>
-                        )}
+                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                        </Button>
+                        <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest">
+                            <ShieldCheck className="w-4 h-4 text-green-500" />
+                            {language === 'ar' ? 'دفع عند الاستلام وآمن 100%' : '100% Secure & COD available'}
+                        </div>
                     </div>
-
-                    {/* CTA */}
-                    {!isPreview ? (
-                        <Link href={checkoutUrl}
-                            className="inline-flex items-center gap-3 px-10 py-4 rounded-full font-bold text-base text-white transition-all hover:scale-105 hover:shadow-xl active:scale-95"
-                            style={{ background: `linear-gradient(135deg, ${accent}, #D4AF37)`, boxShadow: `0 8px 30px ${accent}44` }}>
-                            {ctaText}
-                            <span>→</span>
-                        </Link>
-                    ) : (
-                        <button
-                            className="inline-flex items-center gap-3 px-10 py-4 rounded-full font-bold text-base text-white cursor-default"
-                            style={{ background: `linear-gradient(135deg, ${accent}, #D4AF37)`, boxShadow: `0 8px 30px ${accent}44` }}>
-                            {ctaText}
-                            <span>→</span>
-                        </button>
-                    )}
-
-                    <p className="text-xs text-gray-400">
-                        {language === 'ar' ? '🔒 دفع عند الاستلام | شحن سريع | معاينة قبل الاستلام' : '🔒 Cash on Delivery | Fast shipping | Inspection before delivery'}
-                    </p>
                 </div>
             </section>
 
-            {/* Divider */}
-            <div className="max-w-5xl mx-auto px-6">
-                <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
-            </div>
-
             {/* Benefits */}
             {benefits.length > 0 && (
-                <section className="py-16 px-6">
-                    <div className="max-w-5xl mx-auto">
-                        <div className="text-center mb-12">
-                            <p className="text-xs tracking-[0.3em] uppercase mb-2" style={{ color: accent }}>
-                                {language === 'ar' ? 'لماذا تختارنا' : 'Why Choose Us'}
-                            </p>
-                            <h2 className="text-3xl font-black text-gray-900">
-                                {language === 'ar' ? 'مميزات استثنائية' : 'Exceptional Benefits'}
-                            </h2>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <section className="py-24 bg-white">
+                    <div className="max-w-6xl mx-auto px-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
                             {benefits.map((b, i) => (
-                                <div key={i} className="text-center p-6 group">
-                                    <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold"
-                                        style={{ background: `linear-gradient(135deg, ${accent}, #D4AF37)` }}>
-                                        {i + 1}
+                                <div key={i} className="text-center space-y-4 group">
+                                    <div className="w-16 h-16 rounded-3xl mx-auto flex items-center justify-center text-2xl transition-transform group-hover:rotate-12" style={{ background: `${accent}10`, color: accent }}>
+                                        <Check className="w-8 h-8" />
                                     </div>
-                                    <p className="text-gray-600 text-sm leading-relaxed">{b[language]}</p>
+                                    <p className="text-gray-600 font-medium leading-relaxed">{b[language]}</p>
                                 </div>
                             ))}
                         </div>
@@ -181,26 +188,29 @@ export function ElegantTemplate({ content, product, language, storeSlug, product
 
             {/* Testimonials */}
             {testimonials.length > 0 && (
-                <section className="py-16 px-6 bg-white">
-                    <div className="max-w-5xl mx-auto">
-                        <div className="text-center mb-12">
-                            <p className="text-xs tracking-[0.3em] uppercase mb-2" style={{ color: accent }}>
-                                {language === 'ar' ? 'آراء العملاء' : 'Client Reviews'}
-                            </p>
-                            <h2 className="text-3xl font-black text-gray-900">
-                                {language === 'ar' ? 'ثقة العملاء' : 'Trusted by Clients'}
+                <section className="py-24 bg-[#FAF8F5]">
+                    <div className="max-w-6xl mx-auto px-6">
+                        <div className="text-center mb-16 space-y-4">
+                            <h2 className="text-3xl font-black uppercase tracking-widest" style={{ color: accent }}>
+                                {language === 'ar' ? 'ماذا يقول عملاؤنا' : 'Customer Testimonials'}
                             </h2>
+                            <div className="h-1 w-20 bg-gray-200 mx-auto rounded-full" />
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {testimonials.map((t, i) => (
-                                <div key={i} className="p-6 border border-gray-100 rounded-2xl bg-[#FAF8F5] shadow-sm">
-                                    <div className="flex gap-1 mb-3">
+                                <div key={i} className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-6">
+                                    <div className="flex gap-1">
                                         {Array.from({ length: 5 }).map((_, s) => (
-                                            <span key={s} style={{ color: s < t.rating ? accent : '#D1D5DB' }}>★</span>
+                                            <Star key={s} className={cn("w-4 h-4", s < t.rating ? "fill-current" : "text-gray-200")} style={{ color: s < t.rating ? accent : undefined }} />
                                         ))}
                                     </div>
-                                    <p className="text-sm text-gray-600 mb-4 italic leading-relaxed">"{t.text[language]}"</p>
-                                    <p className="text-xs font-bold" style={{ color: accent }}>— {t.name}</p>
+                                    <p className="text-lg text-gray-700 italic leading-relaxed">"{t.text[language]}"</p>
+                                    <div className="flex items-center gap-4 pt-4">
+                                        <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white" style={{ backgroundColor: accent }}>
+                                            {t.name[0]}
+                                        </div>
+                                        <span className="font-bold text-gray-900">{t.name}</span>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -210,47 +220,21 @@ export function ElegantTemplate({ content, product, language, storeSlug, product
 
             {/* Guarantee */}
             {guarantee && (
-                <section className="py-12 px-6">
-                    <div className="max-w-2xl mx-auto text-center p-8 border border-gray-200 rounded-3xl bg-white shadow-sm">
-                        <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl text-white"
-                            style={{ background: `linear-gradient(135deg, ${accent}, #D4AF37)` }}>
+                <section className="py-24 bg-white border-y border-gray-100">
+                    <div className="max-w-3xl mx-auto px-6 text-center space-y-8">
+                        <div className="w-20 h-20 rounded-full mx-auto flex items-center justify-center text-4xl shadow-xl" style={{ background: `linear-gradient(135deg, ${accent}, #D4AF37)` }}>
                             🛡️
                         </div>
-                        <h3 className="font-black text-xl text-gray-900 mb-2">
-                            {language === 'ar' ? 'معاينة قبل الاستلام وضمان ارجاع' : 'Inspection before receipt & Return Guarantee'}
-                        </h3>
-                        <p className="text-gray-500 text-sm leading-relaxed">{guarantee}</p>
+                        <div className="space-y-4">
+                            <h3 className="text-2xl font-black">{language === 'ar' ? 'ضمان الرضا والجودة' : 'Satisfaction & Quality Guarantee'}</h3>
+                            <p className="text-gray-500 text-lg leading-relaxed">{guarantee}</p>
+                        </div>
                     </div>
                 </section>
             )}
 
-            {/* Final CTA */}
-            <section className="py-16 px-6 text-center" style={{ background: `linear-gradient(135deg, #FAF8F5, ${accent}10)` }}>
-                <p className="text-xs tracking-[0.3em] uppercase mb-4" style={{ color: accent }}>
-                    {language === 'ar' ? 'لا تتأخر' : 'Act Now'}
-                </p>
-                <h2 className="text-3xl font-black text-gray-900 mb-6">
-                    {headline}
-                </h2>
-                {!isPreview ? (
-                    <Link href={checkoutUrl}
-                        className="inline-flex items-center gap-3 px-10 py-4 rounded-full font-bold text-base text-white transition-all hover:scale-105 hover:shadow-xl"
-                        style={{ background: `linear-gradient(135deg, ${accent}, #D4AF37)`, boxShadow: `0 8px 30px ${accent}44` }}>
-                        {ctaText}
-                        <span>→</span>
-                    </Link>
-                ) : (
-                    <button
-                        className="inline-flex items-center gap-3 px-10 py-4 rounded-full font-bold text-base text-white cursor-default"
-                        style={{ background: `linear-gradient(135deg, ${accent}, #D4AF37)`, boxShadow: `0 8px 30px ${accent}44` }}>
-                        {ctaText}
-                        <span>→</span>
-                    </button>
-                )}
-            </section>
-
             {/* Bottom accent bar */}
-            <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${accent}, #D4AF37, ${accent})` }} />
+            <div className="h-2 w-full" style={{ background: `linear-gradient(90deg, ${accent}, #D4AF37, ${accent})` }} />
         </div>
     );
 }

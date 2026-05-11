@@ -59,13 +59,18 @@ interface AddOn {
 
 interface UpgradeRequest {
     id: string;
-    plan_id: string;
+    plan_id: string | null;
+    add_on_id: string | null;
     status: 'pending' | 'approved' | 'rejected';
     created_at: string;
-    plan: {
+    plan?: {
         name_ar: string;
         name_en: string;
-    };
+    } | null;
+    add_on?: {
+        name_ar: string;
+        name_en: string;
+    } | null;
 }
 
 export function BillingTab({ storeId }: BillingTabProps) {
@@ -109,7 +114,7 @@ export function BillingTab({ storeId }: BillingTabProps) {
             // 2. Check for pending requests
             const { data: requestsData } = await supabase
                 .from('subscription_requests')
-                .select('*, plan:plans(name_ar, name_en)')
+                .select('*, plan:plans(name_ar, name_en), add_on:add_ons(name_ar, name_en)')
                 .eq('store_id', storeId)
                 .eq('status', 'pending')
                 .maybeSingle();
@@ -200,7 +205,7 @@ export function BillingTab({ storeId }: BillingTabProps) {
     };
 
     const handleSubmitRequest = async () => {
-        if (!selectedPlan || !receiptUrl) return;
+        if (!(selectedPlan || selectedAddOn) || !receiptUrl) return;
 
         setIsSubmitting(true);
         try {
@@ -253,8 +258,12 @@ export function BillingTab({ storeId }: BillingTabProps) {
                             </CardTitle>
                             <CardDescription className="text-blue-700">
                                 {language === 'ar' 
-                                    ? `لقد طلبت الترقية إلى خطة ${pendingRequest.plan.name_ar}. طلبك قيد التنفيذ وسوف يظهر التغيير فور الموافقة عليه.`
-                                    : `You requested an upgrade to ${pendingRequest.plan.name_en}. Your request is being processed.`}
+                                    ? (pendingRequest.plan 
+                                        ? `لقد طلبت الترقية إلى خطة ${pendingRequest.plan.name_ar}. طلبك قيد التنفيذ وسوف يظهر التغيير فور الموافقة عليه.`
+                                        : `لقد طلبت شراء خدمة ${pendingRequest.add_on?.name_ar}. طلبك قيد التنفيذ.`)
+                                    : (pendingRequest.plan
+                                        ? `You requested an upgrade to ${pendingRequest.plan.name_en}. Your request is being processed.`
+                                        : `You requested to purchase ${pendingRequest.add_on?.name_en}. Your request is being processed.`)}
                             </CardDescription>
                         </div>
                     </CardHeader>

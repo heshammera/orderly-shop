@@ -187,7 +187,7 @@ export function PlanForm({ defaultValues, onSubmit, isSubmitting, featuresList }
                                 <FormItem>
                                     <FormLabel>Description (English)</FormLabel>
                                     <FormControl>
-                                        <Textarea placeholder="Short description..." {...field} />
+                                        <Textarea placeholder="Short description..." {...field} value={field.value ?? ''} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -200,7 +200,7 @@ export function PlanForm({ defaultValues, onSubmit, isSubmitting, featuresList }
                                 <FormItem>
                                     <FormLabel>Description (Arabic)</FormLabel>
                                     <FormControl>
-                                        <Textarea placeholder="وصف قصير..." className="text-right" {...field} />
+                                        <Textarea placeholder="وصف قصير..." className="text-right" {...field} value={field.value ?? ''} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -216,7 +216,7 @@ export function PlanForm({ defaultValues, onSubmit, isSubmitting, featuresList }
                                 <FormItem>
                                     <FormLabel>Display Features (English, comma separated)</FormLabel>
                                     <FormControl>
-                                        <Textarea placeholder="Unlimited products, 24/7 support..." {...field} />
+                                        <Textarea placeholder="Unlimited products, 24/7 support..." {...field} value={field.value ?? ''} />
                                     </FormControl>
                                     <FormDescription>Separate multiple features with a comma.</FormDescription>
                                     <FormMessage />
@@ -230,7 +230,7 @@ export function PlanForm({ defaultValues, onSubmit, isSubmitting, featuresList }
                                 <FormItem>
                                     <FormLabel>Display Features (Arabic, comma separated)</FormLabel>
                                     <FormControl>
-                                        <Textarea placeholder="منتجات غير محدودة، دعم فني..." className="text-right" {...field} />
+                                        <Textarea placeholder="منتجات غير محدودة، دعم فني..." className="text-right" {...field} value={field.value ?? ''} />
                                     </FormControl>
                                     <FormDescription className="text-right">افصل بين المميزات بفاصلة (,).</FormDescription>
                                     <FormMessage />
