@@ -19,6 +19,11 @@ interface LandingContent {
     hero_image?: string;
     accent_color?: string;
     bg_color?: string;
+    product_sections?: Array<{
+        image: string;
+        title: { ar: string; en: string };
+        description: { ar: string; en: string };
+    }>;
 }
 
 interface ProductData {
@@ -36,9 +41,10 @@ interface ElegantTemplateProps {
     storeSlug: string;
     productId: string;
     isPreview?: boolean;
+    forceMobile?: boolean;
 }
 
-export function ElegantTemplate({ content, product, language, storeSlug, productId, isPreview = false }: ElegantTemplateProps) {
+export function ElegantTemplate({ content, product, language, storeSlug, productId, isPreview = false, forceMobile = false }: ElegantTemplateProps) {
     const isRTL = language === 'ar';
     const accent = content.accent_color || '#B8860B';
 
@@ -89,10 +95,10 @@ export function ElegantTemplate({ content, product, language, storeSlug, product
                         <Badge variant="outline" className="px-6 py-1.5 rounded-full border-primary/20 text-primary font-bold tracking-widest uppercase text-[10px]">
                             {language === 'ar' ? 'إصدار حصري' : 'Exclusive Edition'}
                         </Badge>
-                        <h1 className="text-4xl md:text-7xl font-black tracking-tight leading-[1.1]" style={{ color: accent }}>
+                        <h1 className="text-3xl md:text-7xl font-black tracking-tight leading-[1.1]" style={{ color: accent }}>
                             {headline}
                         </h1>
-                        <p className="text-lg md:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed italic">
+                        <p className="text-base md:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed italic">
                             {subheadline}
                         </p>
                     </div>
@@ -151,12 +157,12 @@ export function ElegantTemplate({ content, product, language, storeSlug, product
                         <Button
                             onClick={handleBuyNow}
                             size="lg"
-                            className="h-16 px-16 rounded-full text-xl font-black shadow-2xl transition-all hover:scale-105 active:scale-95 group overflow-hidden relative"
+                            className="h-14 md:h-16 px-10 md:px-16 rounded-full text-lg md:text-xl font-black shadow-2xl transition-all hover:scale-105 active:scale-95 group overflow-hidden relative"
                             style={{ backgroundColor: accent }}
                         >
                             <span className="relative z-10 flex items-center gap-3">
                                 {ctaText}
-                                <Zap className="w-6 h-6 fill-white animate-pulse" />
+                                <Zap className="w-5 h-5 md:w-6 md:h-6 fill-white animate-pulse" />
                             </span>
                             <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                         </Button>
@@ -168,11 +174,44 @@ export function ElegantTemplate({ content, product, language, storeSlug, product
                 </div>
             </section>
 
+            {/* Product Grid Sections */}
+            {((content.product_sections || []).length > 0 || product.images.length > 1) && (
+                <section className="py-24 px-6 bg-[#FAF8F5]">
+                    <div className="max-w-7xl mx-auto">
+                        <div className={cn(
+                            "grid gap-6 md:gap-10",
+                            forceMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+                        )}>
+                            {((content.product_sections || []).length > 0 ? content.product_sections! : product.images.slice(1).map(img => ({
+                                image: img,
+                                title: { ar: 'لمسة أناقة', en: 'Elegant Touch' },
+                                description: { ar: 'وصف دقيق للميزة وكيفية استفادة العميل منها لزيادة الثقة.', en: 'Detailed feature description and customer benefit to build trust.' }
+                            }))).map((section, idx) => (
+                                <div key={idx} className="bg-white rounded-[2.5rem] overflow-hidden shadow-sm border border-gray-100 group hover:shadow-xl transition-all duration-500 flex flex-col">
+                                    <div className="aspect-[4/5] overflow-hidden">
+                                        <img src={section.image} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                    </div>
+                                    <div className="p-8 space-y-4 flex-1">
+                                        <h3 className="text-lg font-bold italic tracking-tight" style={{ color: accent }}>{section.title[language]}</h3>
+                                        <p className="text-gray-500 text-[10px] leading-relaxed italic border-s-2 ps-4" style={{ borderColor: `${accent}33` }}>
+                                            {section.description[language]}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
+
             {/* Benefits */}
             {benefits.length > 0 && (
                 <section className="py-24 bg-white">
                     <div className="max-w-6xl mx-auto px-6">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                        <div className={cn(
+                            "grid gap-8 md:gap-12",
+                            forceMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-3"
+                        )}>
                             {benefits.map((b, i) => (
                                 <div key={i} className="text-center space-y-4 group">
                                     <div className="w-16 h-16 rounded-3xl mx-auto flex items-center justify-center text-2xl transition-transform group-hover:rotate-12" style={{ background: `${accent}10`, color: accent }}>
@@ -196,7 +235,10 @@ export function ElegantTemplate({ content, product, language, storeSlug, product
                             </h2>
                             <div className="h-1 w-20 bg-gray-200 mx-auto rounded-full" />
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className={cn(
+                            "grid gap-8",
+                            forceMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"
+                        )}>
                             {testimonials.map((t, i) => (
                                 <div key={i} className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-6">
                                     <div className="flex gap-1">
@@ -233,8 +275,30 @@ export function ElegantTemplate({ content, product, language, storeSlug, product
                 </section>
             )}
 
+            {/* Sticky Buy Button */}
+            <div className="fixed bottom-0 inset-x-0 z-[100] p-4 flex justify-center pointer-events-none">
+                <div className="max-w-md w-full pointer-events-auto animate-in slide-in-from-bottom-10 duration-500">
+                    <Button 
+                        onClick={handleBuyNow}
+                        className="w-full h-16 rounded-full text-white font-black text-lg shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-all hover:scale-105 active:scale-95 group overflow-hidden border border-white/10"
+                        style={{ backgroundColor: accent }}
+                    >
+                        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                        <span className="flex items-center justify-between w-full px-8 relative z-10">
+                            <span className="flex items-center gap-3">
+                                <Zap className="w-5 h-5 fill-white animate-pulse" />
+                                {ctaText}
+                            </span>
+                            <span className="bg-black/10 px-4 py-1 rounded-full text-sm">
+                                {finalPrice} {product.currency}
+                            </span>
+                        </span>
+                    </Button>
+                </div>
+            </div>
+
             {/* Bottom accent bar */}
-            <div className="h-2 w-full" style={{ background: `linear-gradient(90deg, ${accent}, #D4AF37, ${accent})` }} />
+            <div className="h-2 w-full mb-24 md:mb-20" style={{ background: `linear-gradient(90deg, ${accent}, #D4AF37, ${accent})` }} />
         </div>
     );
 }

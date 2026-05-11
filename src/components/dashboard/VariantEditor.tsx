@@ -402,121 +402,129 @@ export function VariantEditor({ productId, value, onChange, standalone = true, s
                                     </div>
 
                                     {variant.options.map((option, oIndex) => (
-                                        <div key={oIndex} className="flex items-center gap-2 p-2 bg-muted/30 rounded-md">
-                                            {variant.option_type === 'color' && (
-                                                <input
-                                                    type="color"
-                                                    value={option.value || '#000000'}
-                                                    onChange={(e) => updateOption(vIndex, oIndex, 'value', e.target.value)}
-                                                    className="w-8 h-8 rounded cursor-pointer border-0 p-0"
-                                                />
-                                            )}
-                                            <Input
-                                                value={option.label.ar}
-                                                onChange={(e) => updateOption(vIndex, oIndex, 'label', { ...option.label, ar: e.target.value })}
-                                                placeholder={language === 'ar' ? 'عربي' : 'Arabic'}
-                                                className="h-8 text-xs flex-1"
-                                            />
-                                            <Input
-                                                value={option.label.en}
-                                                onChange={(e) => updateOption(vIndex, oIndex, 'label', { ...option.label, en: e.target.value })}
-                                                placeholder="English"
-                                                className="h-8 text-xs flex-1"
-                                            />
-                                            {variant.option_type === 'text' && (
-                                                <Input
-                                                    value={option.value}
-                                                    onChange={(e) => updateOption(vIndex, oIndex, 'value', e.target.value)}
-                                                    placeholder={language === 'ar' ? 'القيمة' : 'Value'}
-                                                    className="h-8 text-xs w-20"
-                                                />
-                                            )}
-                                            {variant.option_type === 'image' && (
-                                                <div className="flex items-center gap-2">
-                                                    {option.value ? (
-                                                        <div className="relative w-8 h-8 rounded border overflow-hidden group">
-                                                            <img src={option.value} alt="" className="w-full h-full object-cover" />
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => updateOption(vIndex, oIndex, 'value', '')}
-                                                                className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                                            >
-                                                                <Trash2 className="w-3 h-3 text-white" />
-                                                            </button>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="w-8 h-8 rounded border border-dashed flex items-center justify-center bg-muted">
-                                                            <ImageIcon className="w-3 h-3 text-muted-foreground" />
-                                                        </div>
-                                                    )}
-                                                    <div className="relative">
-                                                        <Input
-                                                            id={`up-${vIndex}-${oIndex}`}
-                                                            type="file"
-                                                            accept="image/*"
-                                                            className="hidden"
-                                                            onChange={(e) => handleImageUpload(vIndex, oIndex, e)}
-                                                            disabled={uploading[`${vIndex}-${oIndex}`]}
-                                                        />
-                                                        <Label
-                                                            htmlFor={`up-${vIndex}-${oIndex}`}
-                                                            className="h-8 px-2 flex items-center gap-1 border rounded-md cursor-pointer hover:bg-accent text-xs"
-                                                        >
-                                                            {uploading[`${vIndex}-${oIndex}`] ? (
-                                                                <Loader2 className="w-3 h-3 animate-spin" />
-                                                            ) : (
-                                                                <Upload className="w-3 h-3" />
-                                                            )}
-                                                        </Label>
-                                                    </div>
+                                        <div key={oIndex} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-3 sm:p-2 bg-muted/30 rounded-xl border border-transparent hover:border-primary/20 transition-all">
+                                            <div className="flex items-center gap-2 flex-1">
+                                                {variant.option_type === 'color' && (
+                                                    <input
+                                                        type="color"
+                                                        value={option.value || '#000000'}
+                                                        onChange={(e) => updateOption(vIndex, oIndex, 'value', e.target.value)}
+                                                        className="w-10 h-10 sm:w-8 sm:h-8 rounded-lg cursor-pointer border-0 p-0 shadow-sm"
+                                                    />
+                                                )}
+                                                <div className="grid grid-cols-2 gap-2 flex-1">
+                                                    <Input
+                                                        value={option.label.ar}
+                                                        onChange={(e) => updateOption(vIndex, oIndex, 'label', { ...option.label, ar: e.target.value })}
+                                                        placeholder={language === 'ar' ? 'عربي' : 'Arabic'}
+                                                        className="h-9 sm:h-8 text-xs"
+                                                    />
+                                                    <Input
+                                                        value={option.label.en}
+                                                        onChange={(e) => updateOption(vIndex, oIndex, 'label', { ...option.label, en: e.target.value })}
+                                                        placeholder="English"
+                                                        className="h-9 sm:h-8 text-xs"
+                                                    />
                                                 </div>
-                                            )}
-                                            <Input
-                                                type="number"
-                                                required
-                                                value={option.price !== undefined ? option.price : ''}
-                                                onChange={(e) => updateOption(vIndex, oIndex, 'price', parseFloat(e.target.value) || 0)}
-                                                placeholder={language === 'ar' ? 'السعر' : 'Price'}
-                                                className="h-8 text-xs w-20"
-                                            />
-                                            <div className="flex items-center gap-1">
+                                            </div>
+
+                                            <div className="grid grid-cols-3 sm:flex items-center gap-2">
+                                                {variant.option_type === 'text' && (
+                                                    <Input
+                                                        value={option.value}
+                                                        onChange={(e) => updateOption(vIndex, oIndex, 'value', e.target.value)}
+                                                        placeholder={language === 'ar' ? 'القيمة' : 'Value'}
+                                                        className="h-9 sm:h-8 text-xs w-full sm:w-20"
+                                                    />
+                                                )}
+                                                {variant.option_type === 'image' && (
+                                                    <div className="flex items-center gap-2 justify-center">
+                                                        {option.value ? (
+                                                            <div className="relative w-9 h-9 sm:w-8 sm:h-8 rounded-lg border overflow-hidden group">
+                                                                <img src={option.value} alt="" className="w-full h-full object-cover" />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => updateOption(vIndex, oIndex, 'value', '')}
+                                                                    className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                >
+                                                                    <Trash2 className="w-3 h-3 text-white" />
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="w-9 h-9 sm:w-8 sm:h-8 rounded-lg border border-dashed flex items-center justify-center bg-muted">
+                                                                <ImageIcon className="w-3 h-3 text-muted-foreground" />
+                                                            </div>
+                                                        )}
+                                                        <div className="relative">
+                                                            <Input
+                                                                id={`up-${vIndex}-${oIndex}`}
+                                                                type="file"
+                                                                accept="image/*"
+                                                                className="hidden"
+                                                                onChange={(e) => handleImageUpload(vIndex, oIndex, e)}
+                                                                disabled={uploading[`${vIndex}-${oIndex}`]}
+                                                            />
+                                                            <Label
+                                                                htmlFor={`up-${vIndex}-${oIndex}`}
+                                                                className="h-9 sm:h-8 px-2 flex items-center justify-center gap-1 border rounded-lg cursor-pointer hover:bg-accent text-xs"
+                                                            >
+                                                                {uploading[`${vIndex}-${oIndex}`] ? (
+                                                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                                                ) : (
+                                                                    <Upload className="w-3 h-3" />
+                                                                )}
+                                                            </Label>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                <Input
+                                                    type="number"
+                                                    required
+                                                    value={option.price !== undefined ? option.price : ''}
+                                                    onChange={(e) => updateOption(vIndex, oIndex, 'price', parseFloat(e.target.value) || 0)}
+                                                    placeholder={language === 'ar' ? 'السعر' : 'Price'}
+                                                    className="h-9 sm:h-8 text-xs w-full sm:w-20"
+                                                />
                                                 <Input
                                                     type={globalIgnoreStock || !option.manage_stock ? "text" : "number"}
                                                     required={!globalIgnoreStock && option.manage_stock}
                                                     disabled={globalIgnoreStock || !option.manage_stock}
-                                                    value={globalIgnoreStock || !option.manage_stock ? (language === 'ar' ? '∞ غير محدود' : '∞ Unlimited') : (option.stock !== undefined ? option.stock : '')}
+                                                    value={globalIgnoreStock || !option.manage_stock ? (language === 'ar' ? '∞' : '∞') : (option.stock !== undefined ? option.stock : '')}
                                                     onChange={(e) => updateOption(vIndex, oIndex, 'stock', parseInt(e.target.value) || 0)}
                                                     placeholder={language === 'ar' ? 'الكمية' : 'Qty'}
-                                                    className={cn("h-8 text-xs w-16", (globalIgnoreStock || !option.manage_stock) && "font-bold text-blue-600 bg-blue-50/50")}
+                                                    className={cn("h-9 sm:h-8 text-xs w-full sm:w-16", (globalIgnoreStock || !option.manage_stock) && "font-bold text-blue-600 bg-blue-50/50")}
                                                 />
-                                                <div className="flex flex-col items-center gap-0.5" title={language === 'ar' ? 'تخطي المخزون' : 'Ignore Stock'}>
-                                                    <Switch
-                                                        checked={globalIgnoreStock || !option.manage_stock}
-                                                        disabled={globalIgnoreStock}
-                                                        onCheckedChange={(v) => updateOption(vIndex, oIndex, 'manage_stock', !v)}
-                                                        className="scale-75 data-[state=checked]:bg-blue-500"
-                                                    />
-                                                    <span className="text-[8px] text-muted-foreground whitespace-nowrap leading-none font-medium">
-                                                        {globalIgnoreStock
-                                                            ? (language === 'ar' ? 'عام' : 'Global')
-                                                            : (language === 'ar' ? 'تخطي' : 'Ignore')}
-                                                    </span>
+                                            </div>
+
+                                            <div className="flex items-center justify-between sm:justify-end gap-3 px-1 sm:px-0">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex flex-col items-center gap-0.5" title={language === 'ar' ? 'تخطي المخزون' : 'Ignore Stock'}>
+                                                        <Switch
+                                                            checked={globalIgnoreStock || !option.manage_stock}
+                                                            disabled={globalIgnoreStock}
+                                                            onCheckedChange={(v) => updateOption(vIndex, oIndex, 'manage_stock', !v)}
+                                                            className="scale-75 data-[state=checked]:bg-blue-500"
+                                                        />
+                                                        <span className="text-[8px] text-muted-foreground whitespace-nowrap leading-none font-medium">
+                                                            {language === 'ar' ? 'مخزون' : 'Stock'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex flex-col items-center gap-0.5" title={language === 'ar' ? 'متوفر بالمخزون' : 'In Stock'}>
+                                                        <Switch
+                                                            checked={option.in_stock !== false}
+                                                            onCheckedChange={(v) => updateOption(vIndex, oIndex, 'in_stock', v)}
+                                                            className="scale-75 data-[state=unchecked]:bg-destructive"
+                                                        />
+                                                        <span className="text-[8px] text-muted-foreground whitespace-nowrap leading-none font-medium">
+                                                            {language === 'ar' ? 'توفر' : 'In Stock'}
+                                                        </span>
+                                                    </div>
                                                 </div>
+                                                <Button type="button" variant="ghost" size="icon" className="h-9 w-9 sm:h-7 sm:w-7 shrink-0 text-destructive hover:bg-destructive/10"
+                                                    onClick={() => removeOption(vIndex, oIndex)}>
+                                                    <Trash2 className="w-4 h-4 sm:w-3 sm:h-3" />
+                                                </Button>
                                             </div>
-                                            <div className="flex flex-col items-center gap-0.5" title={language === 'ar' ? 'متوفر بالمخزون' : 'In Stock'}>
-                                                <Switch
-                                                    checked={option.in_stock !== false}
-                                                    onCheckedChange={(v) => updateOption(vIndex, oIndex, 'in_stock', v)}
-                                                    className="scale-75 data-[state=unchecked]:bg-destructive"
-                                                />
-                                                <span className="text-[10px] text-muted-foreground whitespace-nowrap leading-none">
-                                                    {option.in_stock !== false ? (language === 'ar' ? 'متوفر' : 'In Stock') : (language === 'ar' ? 'نفد' : 'Out')}
-                                                </span>
-                                            </div>
-                                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0"
-                                                onClick={() => removeOption(vIndex, oIndex)}>
-                                                <Trash2 className="w-3 h-3 text-destructive" />
-                                            </Button>
                                         </div>
                                     ))}
                                 </div>

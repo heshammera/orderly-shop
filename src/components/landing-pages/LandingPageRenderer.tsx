@@ -3,8 +3,12 @@
 import { HypeTemplate } from './templates/HypeTemplate';
 import { ElegantTemplate } from './templates/ElegantTemplate';
 import { TrustTemplate } from './templates/TrustTemplate';
+import { NoirTemplate } from './templates/NoirTemplate';
+import { CyberTemplate } from './templates/CyberTemplate';
+import { FlashTemplate } from './templates/FlashTemplate';
+import { ModernTemplate } from './templates/ModernTemplate';
 
-export type LandingTemplate = 'hype' | 'elegant' | 'trust';
+export type LandingTemplate = 'hype' | 'elegant' | 'trust' | 'noir' | 'cyber' | 'flash' | 'modern';
 
 interface LandingContent {
     headline?: { ar: string; en: string };
@@ -16,6 +20,11 @@ interface LandingContent {
     hero_image?: string;
     accent_color?: string;
     bg_color?: string;
+    product_sections?: Array<{
+        image: string;
+        title: { ar: string; en: string };
+        description: { ar: string; en: string };
+    }>;
 }
 
 interface ProductData {
@@ -34,6 +43,7 @@ interface LandingPageRendererProps {
     storeSlug: string;
     productId: string;
     isPreview?: boolean;
+    forceMobile?: boolean;
 }
 
 export function LandingPageRenderer({
@@ -44,6 +54,7 @@ export function LandingPageRenderer({
     storeSlug,
     productId,
     isPreview = false,
+    forceMobile = false,
 }: LandingPageRendererProps) {
     // Ensure all props are safe and defined
     const safeContent = content || {};
@@ -56,7 +67,8 @@ export function LandingPageRenderer({
         language: safeLang, 
         storeSlug, 
         productId, 
-        isPreview 
+        isPreview,
+        forceMobile
     };
 
     try {
@@ -67,6 +79,14 @@ export function LandingPageRenderer({
                 return <ElegantTemplate {...props} />;
             case 'trust':
                 return <TrustTemplate {...props} />;
+            case 'noir':
+                return <NoirTemplate {...props} />;
+            case 'cyber':
+                return <CyberTemplate {...props} />;
+            case 'flash':
+                return <FlashTemplate {...props} />;
+            case 'modern':
+                return <ModernTemplate {...props} />;
             default:
                 return <TrustTemplate {...props} />;
         }

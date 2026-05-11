@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { ImagePlus, Trash, Loader2, Star } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
@@ -24,6 +24,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     const [isUploading, setIsUploading] = useState(false);
     const { language } = useLanguage();
     const supabase = createClient();
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const onUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
@@ -68,7 +69,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         } finally {
             setIsUploading(false);
             // Reset the input so the same files can be selected again
-            e.target.value = '';
+            if (fileInputRef.current) fileInputRef.current.value = '';
         }
     };
 
@@ -129,7 +130,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                     type="button"
                     variant="secondary"
                     disabled={disabled || isUploading}
-                    onClick={() => document.getElementById('image-upload-input')?.click()}
+                    onClick={() => fileInputRef.current?.click()}
                 >
                     {isUploading ? (
                         <>
@@ -144,7 +145,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                     )}
                 </Button>
                 <input
-                    id="image-upload-input"
+                    ref={fileInputRef}
                     type="file"
                     accept="image/*"
                     multiple

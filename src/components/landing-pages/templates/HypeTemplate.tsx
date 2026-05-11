@@ -4,6 +4,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { useCart } from '@/contexts/CartContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
+import { Star, ShieldCheck, Zap, Check } from 'lucide-react';
 
 interface LandingContent {
     headline?: { ar: string; en: string };
@@ -14,6 +16,11 @@ interface LandingContent {
     testimonials?: Array<{ name: string; text: { ar: string; en: string }; rating: number }>;
     hero_image?: string;
     accent_color?: string;
+    product_sections?: Array<{
+        image: string;
+        title: { ar: string; en: string };
+        description: { ar: string; en: string };
+    }>;
 }
 
 interface ProductData {
@@ -31,9 +38,10 @@ interface HypeTemplateProps {
     storeSlug: string;
     productId: string;
     isPreview?: boolean;
+    forceMobile?: boolean;
 }
 
-export function HypeTemplate({ content, product, language, storeSlug, productId, isPreview = false }: HypeTemplateProps) {
+export function HypeTemplate({ content, product, language, storeSlug, productId, isPreview = false, forceMobile = false }: HypeTemplateProps) {
     const [timeLeft, setTimeLeft] = useState({ hours: 2, minutes: 34, seconds: 47 });
     const [visitorCount, setVisitorCount] = useState(25);
     const heroImage = content.hero_image || (product.images && product.images[0]) || '';
@@ -99,9 +107,9 @@ export function HypeTemplate({ content, product, language, storeSlug, productId,
     };
 
     return (
-        <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen bg-black text-white font-sans overflow-x-hidden" style={{ fontFamily: "'Inter', 'Cairo', sans-serif" }}>
+        <div dir={isRTL ? 'rtl' : 'ltr'} className="relative min-h-screen bg-black text-white font-sans overflow-x-hidden" style={{ fontFamily: "'Inter', 'Cairo', sans-serif" }}>
             {/* Ambient glow */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full opacity-20 blur-3xl"
                     style={{ background: `radial-gradient(circle, ${accent}, transparent)` }} />
             </div>
@@ -124,7 +132,7 @@ export function HypeTemplate({ content, product, language, storeSlug, productId,
                     {language === 'ar' ? 'عرض محدود الوقت' : 'Limited Time Offer'}
                 </div>
 
-                <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black leading-tight mb-4 max-w-4xl">
+                <h1 className="text-3xl sm:text-5xl lg:text-7xl font-black leading-tight mb-4 max-w-4xl px-2">
                     <span style={{
                         background: `linear-gradient(135deg, #fff 40%, ${accent})`,
                         WebkitBackgroundClip: 'text',
@@ -138,7 +146,7 @@ export function HypeTemplate({ content, product, language, storeSlug, productId,
                 {subheadline && <p className="text-lg sm:text-xl text-white/60 mb-8 max-w-2xl leading-relaxed">{subheadline}</p>}
 
                 {/* Countdown */}
-                <div className="flex items-center gap-3 mb-8">
+                <div className="flex items-center gap-2 sm:gap-3 mb-8">
                     {[
                         { val: pad(timeLeft.hours), label: language === 'ar' ? 'ساعة' : 'HRS' },
                         { val: pad(timeLeft.minutes), label: language === 'ar' ? 'دقيقة' : 'MIN' },
@@ -146,10 +154,10 @@ export function HypeTemplate({ content, product, language, storeSlug, productId,
                     ].map((item, i) => (
                         <div key={i} className="flex items-center">
                             <div className="flex flex-col items-center">
-                                <div className="text-2xl sm:text-4xl font-black tabular-nums">{item.val}</div>
-                                <div className="text-[10px] opacity-40 font-bold uppercase">{item.label}</div>
+                                <div className="text-xl sm:text-4xl font-black tabular-nums">{item.val}</div>
+                                <div className="text-[9px] sm:text-[10px] opacity-40 font-bold uppercase">{item.label}</div>
                             </div>
-                            {i < 2 && <span className="text-2xl font-bold mx-2" style={{ color: accent }}>:</span>}
+                            {i < 2 && <span className="text-xl sm:text-2xl font-bold mx-1 sm:mx-2" style={{ color: accent }}>:</span>}
                         </div>
                     ))}
                 </div>
@@ -163,7 +171,7 @@ export function HypeTemplate({ content, product, language, storeSlug, productId,
                         <img 
                             src={selectedImage || heroImage} 
                             alt={headline} 
-                            className="relative w-72 h-72 sm:w-96 sm:h-96 object-cover rounded-3xl border border-white/10 shadow-2xl transition-all duration-500" 
+                            className="relative w-64 h-64 sm:w-96 sm:h-96 object-cover rounded-3xl border border-white/10 shadow-2xl transition-all duration-500" 
                         />
                         
                         {discount > 0 && (
@@ -200,8 +208,8 @@ export function HypeTemplate({ content, product, language, storeSlug, productId,
                 </div>
 
                 <div className="flex items-center gap-4 mb-6">
-                    {originalPrice && <span className="text-xl text-white/30 line-through">{originalPrice} {product.currency}</span>}
-                    <span className="text-4xl font-black" style={{ color: accent }}>{finalPrice} {product.currency}</span>
+                    {originalPrice && originalPrice > 0 && <span className="text-lg sm:text-xl text-white/30 line-through">{originalPrice} {product.currency}</span>}
+                    <span className="text-3xl sm:text-4xl font-black" style={{ color: accent }}>{finalPrice} {product.currency}</span>
                 </div>
 
                 <button 
@@ -215,12 +223,48 @@ export function HypeTemplate({ content, product, language, storeSlug, productId,
                 <p className="mt-4 text-[10px] text-white/30 uppercase tracking-widest">{language === 'ar' ? '🔒 دفع عند الاستلام | شحن سريع | معاينة قبل الاستلام' : '🔒 Cash on Delivery | Fast delivery | Inspection before delivery'}</p>
             </section>
 
+            {/* Product Grid Sections */}
+            {((content.product_sections || []).length > 0 || product.images.length > 1) && (
+                <section className="relative z-10 py-24 px-4 bg-white/[0.01]">
+                    <div className="max-w-7xl mx-auto">
+                        <div className={cn(
+                            "grid gap-6 md:gap-8",
+                            forceMobile ? "grid-cols-2" : "grid-cols-2 lg:grid-cols-4"
+                        )}>
+                            {((content.product_sections || []).length > 0 ? content.product_sections! : product.images.slice(1).map(img => ({
+                                image: img,
+                                title: { ar: 'ميزة فائقة', en: 'Ultra Feature' },
+                                description: { ar: 'وصف دقيق للميزة وكيفية استفادة العميل منها لزيادة الثقة.', en: 'Detailed feature description and customer benefit to build trust.' }
+                            }))).map((section, idx) => (
+                                <div key={idx} className="group relative rounded-[2rem] overflow-hidden border border-white/5 bg-white/[0.02] backdrop-blur-xl flex flex-col">
+                                    <div className="aspect-square overflow-hidden relative">
+                                        <img src={section.image} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60" />
+                                        <div className="absolute bottom-4 inset-x-4">
+                                            <h3 className="text-lg font-black italic tracking-tighter uppercase" style={{ color: accent }}>{section.title[language]}</h3>
+                                        </div>
+                                    </div>
+                                    <div className="p-6 flex-1">
+                                        <p className="text-white/60 text-[10px] leading-relaxed font-medium">
+                                            {section.description[language]}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
+
             {/* Features & Benefits */}
             {benefits.length > 0 && (
                 <section className="relative z-10 py-20 px-4 bg-white/[0.02]">
                     <div className="max-w-5xl mx-auto">
                         <h2 className="text-3xl sm:text-5xl font-black text-center mb-16 italic">{language === 'ar' ? 'مميزات المنتج' : 'Key Features'}</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className={cn(
+                            "grid gap-8",
+                            forceMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"
+                        )}>
                             {benefits.map((b, i) => (
                                 <div key={i} className="flex gap-6 p-8 rounded-3xl border border-white/5 bg-white/[0.03] backdrop-blur-sm group hover:border-white/20 transition-all">
                                     <div className="w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl flex-shrink-0"
@@ -242,7 +286,10 @@ export function HypeTemplate({ content, product, language, storeSlug, productId,
                             {language === 'ar' ? 'آراء العملاء' : 'Testimonials'}
                             <span className="h-px flex-1 bg-white/10" />
                         </h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className={cn(
+                            "grid gap-6",
+                            forceMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                        )}>
                             {testimonials.map((t, i) => (
                                 <div key={i} className="p-8 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all">
                                     <div className="flex gap-1 mb-4">
@@ -267,7 +314,26 @@ export function HypeTemplate({ content, product, language, storeSlug, productId,
                 </section>
             )}
 
-            <footer className="relative z-10 py-12 text-center border-t border-white/5 opacity-30 text-[10px] uppercase tracking-widest">
+            {/* Sticky Buy Button */}
+            <div className="fixed bottom-0 inset-x-0 z-[100] p-4 flex justify-center pointer-events-none">
+                <div className="max-w-md w-full pointer-events-auto animate-in slide-in-from-bottom-10 duration-500">
+                    <button 
+                        onClick={handleBuyNow}
+                        className="w-full h-16 rounded-full font-black text-lg transition-all hover:scale-105 active:scale-95 flex items-center justify-between px-8 border border-white/10 shadow-[0_-20px_50px_rgba(0,0,0,0.5)]"
+                        style={{ background: `linear-gradient(135deg, ${accent}, ${accent}dd)`, boxShadow: `0 0 50px ${accent}44` }}
+                    >
+                        <span className="flex items-center gap-3">
+                            <Zap className="w-5 h-5 fill-white animate-pulse" />
+                            {ctaText}
+                        </span>
+                        <span className="bg-white/20 px-4 py-1 rounded-full text-sm">
+                            {finalPrice} {product.currency}
+                        </span>
+                    </button>
+                </div>
+            </div>
+
+            <footer className="relative z-10 py-12 pb-32 text-center border-t border-white/5 opacity-30 text-[10px] uppercase tracking-widest">
                 {language === 'ar' ? 'جميع الحقوق محفوظة' : 'All Rights Reserved'} &copy; {new Date().getFullYear()}
             </footer>
         </div>

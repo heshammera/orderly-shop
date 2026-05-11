@@ -360,18 +360,18 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-6 p-4 md:p-6">
                     <Tabs defaultValue={language === 'ar' ? "ar" : "en"} className="w-full">
-                        <TabsList className="grid w-full grid-cols-4">
-                            <TabsTrigger value="ar">العربية</TabsTrigger>
-                            <TabsTrigger value="en">English</TabsTrigger>
-                            <TabsTrigger value="advanced" className="flex items-center gap-2">
-                                <Settings2 className="w-4 h-4" />
+                        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto gap-1 bg-muted/50 p-1">
+                            <TabsTrigger value="ar" className="text-xs py-2">{language === 'ar' ? 'العربية' : 'Arabic'}</TabsTrigger>
+                            <TabsTrigger value="en" className="text-xs py-2">{language === 'ar' ? 'الإنجليزية' : 'English'}</TabsTrigger>
+                            <TabsTrigger value="advanced" className="flex items-center gap-1 text-xs py-2">
+                                <Settings2 className="w-3 h-3" />
                                 {language === 'ar' ? 'متقدم' : 'Advanced'}
                             </TabsTrigger>
-                            <TabsTrigger value="landing" className="flex items-center gap-2">
-                                🚀
-                                {language === 'ar' ? 'صفحة الهبوط' : 'Landing Page'}
+                            <TabsTrigger value="landing" className="flex items-center gap-1 text-xs py-2">
+                                <Rocket className="w-3 h-3" />
+                                {language === 'ar' ? 'صفحة الهبوط' : 'Landing'}
                             </TabsTrigger>
                         </TabsList>
                         <TabsContent value="ar" className="space-y-4">
@@ -766,14 +766,14 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                 </CardContent>
             </Card>
 
-            <div className="flex items-center gap-4">
-                <Button type="submit" disabled={loading} size="lg">
+            <div className="flex flex-col sm:flex-row items-center gap-4 pt-4 border-t">
+                <Button type="submit" disabled={loading} size="lg" className="w-full sm:w-auto">
                     {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                     <Save className="w-4 h-4 mr-2" />
                     {initialData ? (language === 'ar' ? 'تحديث المنتج' : 'Update Product') : (language === 'ar' ? 'إنشاء المنتج' : 'Create Product')}
                 </Button>
                 {onCancel && (
-                    <Button type="button" variant="outline" onClick={onCancel}>
+                    <Button type="button" variant="outline" onClick={onCancel} className="w-full sm:w-auto">
                         {language === 'ar' ? 'إلغاء' : 'Cancel'}
                     </Button>
                 )}

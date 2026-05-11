@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useCart } from '@/contexts/CartContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 interface LandingContent {
     headline?: { ar: string; en: string };
@@ -14,6 +15,11 @@ interface LandingContent {
     testimonials?: Array<{ name: string; text: { ar: string; en: string }; rating: number }>;
     hero_image?: string;
     accent_color?: string;
+    product_sections?: Array<{
+        image: string;
+        title: { ar: string; en: string };
+        description: { ar: string; en: string };
+    }>;
 }
 
 interface ProductData {
@@ -31,6 +37,7 @@ interface TrustTemplateProps {
     storeSlug: string;
     productId: string;
     isPreview?: boolean;
+    forceMobile?: boolean;
 }
 
 const TRUST_BADGES = {
@@ -38,7 +45,7 @@ const TRUST_BADGES = {
     en: ['🔒 Cash on Delivery', '🚚 Fast Shipping', '↩️ Inspection before delivery', '⭐ Quality Guarantee'],
 };
 
-export function TrustTemplate({ content, product, language, storeSlug, productId, isPreview = false }: TrustTemplateProps) {
+export function TrustTemplate({ content, product, language, storeSlug, productId, isPreview = false, forceMobile = false }: TrustTemplateProps) {
     const isRTL = language === 'ar';
     const accent = content.accent_color || '#2563EB';
 
@@ -88,7 +95,10 @@ export function TrustTemplate({ content, product, language, storeSlug, productId
             {/* Hero Section */}
             <section className="relative py-12 px-4">
                 <div className="max-w-5xl mx-auto">
-                    <div className="flex flex-col lg:flex-row items-center gap-10">
+                    <div className={cn(
+                        "flex flex-col gap-10",
+                        forceMobile ? "lg:flex-col" : "lg:flex-row items-center"
+                    )}>
 
                         {/* Image */}
                         <div className="flex-shrink-0 flex flex-col items-center gap-4">
@@ -148,7 +158,7 @@ export function TrustTemplate({ content, product, language, storeSlug, productId
                                 </span>
                             </div>
 
-                            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black leading-tight text-gray-900">
+                            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black leading-tight text-gray-900">
                                 {headline}
                             </h1>
 
@@ -158,11 +168,11 @@ export function TrustTemplate({ content, product, language, storeSlug, productId
 
                             {/* Price */}
                             <div className="flex items-end gap-3 flex-wrap">
-                                <span className="text-4xl font-black" style={{ color: accent }}>
+                                <span className="text-3xl sm:text-4xl font-black" style={{ color: accent }}>
                                     {finalPrice} {product.currency}
                                 </span>
                                 {originalPrice && (
-                                    <span className="text-xl text-gray-400 line-through mb-1">
+                                    <span className="text-lg sm:text-xl text-gray-400 line-through mb-1">
                                         {originalPrice} {product.currency}
                                     </span>
                                 )}
@@ -198,6 +208,36 @@ export function TrustTemplate({ content, product, language, storeSlug, productId
                 </div>
             </section>
 
+            {/* Product Grid Sections */}
+            {((content.product_sections || []).length > 0 || product.images.length > 1) && (
+                <section className="py-16 px-4 bg-white">
+                    <div className="max-w-7xl mx-auto">
+                        <div className={cn(
+                            "grid gap-6 md:gap-8",
+                            forceMobile ? "grid-cols-2" : "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+                        )}>
+                            {((content.product_sections || []).length > 0 ? content.product_sections! : product.images.slice(1).map(img => ({
+                                image: img,
+                                title: { ar: 'ثقة ومصداقية', en: 'Trust & Quality' },
+                                description: { ar: 'وصف دقيق للميزة وكيفية استفادة العميل منها لزيادة الثقة.', en: 'Detailed feature description and customer benefit to build trust.' }
+                            }))).map((section, idx) => (
+                                <div key={idx} className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col">
+                                    <div className="aspect-square">
+                                        <img src={section.image} alt="" className="w-full h-full object-cover" />
+                                    </div>
+                                    <div className="p-4 space-y-2 flex-1">
+                                        <h3 className="font-bold text-sm text-gray-900 line-clamp-1">{section.title[language]}</h3>
+                                        <p className="text-gray-500 text-[10px] leading-relaxed border-s-2 ps-2 line-clamp-2" style={{ borderColor: `${accent}33` }}>
+                                            {section.description[language]}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
+
             {/* Section divider */}
             <div className="max-w-5xl mx-auto px-4">
                 <hr className="border-gray-100" />
@@ -232,7 +272,10 @@ export function TrustTemplate({ content, product, language, storeSlug, productId
                         <h2 className="text-2xl font-black text-gray-900 text-center mb-10">
                             {language === 'ar' ? 'آراء العملاء الحقيقيين' : 'Real Customer Reviews'}
                         </h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                        <div className={cn(
+                            "grid gap-5",
+                            forceMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                        )}>
                             {testimonials.map((t, i) => (
                                 <div key={i} className="p-5 rounded-xl border border-gray-100 shadow-sm bg-gray-50">
                                     {/* Avatar */}
@@ -291,6 +334,26 @@ export function TrustTemplate({ content, product, language, storeSlug, productId
                     🛒 {ctaText}
                 </button>
             </section>
+            {/* Sticky Buy Button */}
+            <div className="fixed bottom-0 inset-x-0 z-[100] p-4 flex justify-center pointer-events-none">
+                <div className="max-w-md w-full pointer-events-auto animate-in slide-in-from-bottom-10 duration-500">
+                    <button 
+                        onClick={handleBuyNow}
+                        className="w-full h-16 rounded-xl text-white font-black text-lg shadow-[0_20px_40px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-between px-8 border border-white/10"
+                        style={{ background: accent }}
+                    >
+                        <span className="flex items-center gap-3">
+                            <span className="text-xl">🛒</span>
+                            {ctaText}
+                        </span>
+                        <span className="bg-black/10 px-4 py-1 rounded-lg text-sm">
+                            {finalPrice} {product.currency}
+                        </span>
+                    </button>
+                </div>
+            </div>
+
+            <div className="pb-32" />
         </div>
     );
 }

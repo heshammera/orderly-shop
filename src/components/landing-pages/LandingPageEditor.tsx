@@ -13,8 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { 
-    ExternalLink, Lock, Loader2, Plus, Trash2, Save, Eye, Zap, 
-    Image as ImageIcon, Star, ShieldCheck, Palette, Layout, Settings2, Check 
+    ExternalLink, Lock, Loader2, Plus, Trash2, Save, Eye, Zap, Sparkles,
+    Image as ImageIcon, Star, ShieldCheck, Palette, Layout, Settings2, Check, Cpu 
 } from 'lucide-react';
 import { LandingPageRenderer } from './LandingPageRenderer';
 import type { LandingTemplate } from './LandingPageRenderer';
@@ -50,7 +50,8 @@ const DEFAULT_CONTENT = {
         { name: 'أحمد محمد', text: { ar: 'منتج رائع جداً وتوصيل سريع!', en: 'Great product and fast delivery!' }, rating: 5 },
     ],
     hero_image: '',
-    accent_color: '#2563EB'
+    accent_color: '#2563EB',
+    product_sections: [] as Array<{ image: string; title: { ar: string; en: string }; description: { ar: string; en: string } }>
 };
 
 export function LandingPageEditor({
@@ -242,18 +243,16 @@ export function LandingPageEditor({
                     <div className="w-20" /> {/* Spacer */}
                 </div>
 
-                <div className="flex-1 bg-slate-100 rounded-[2.5rem] border-8 border-slate-900 shadow-2xl overflow-hidden relative">
+                <div className="flex-1 bg-slate-100 rounded-[2.5rem] border-[8px] border-slate-900 shadow-2xl overflow-hidden relative flex flex-col mx-auto transition-all duration-500"
+                    style={{ width: previewMode === 'mobile' ? '375px' : '100%', maxWidth: '100%' }}>
                     {/* Notch */}
                     <div className="absolute top-0 inset-x-0 h-6 bg-slate-900 z-50 flex justify-center items-center">
-                        <div className="w-20 h-1.5 bg-slate-800 rounded-full" />
+                        <div className="w-16 h-1 bg-slate-800 rounded-full" />
                     </div>
 
-                    <div className="h-full pt-6 overflow-y-auto overflow-x-hidden no-scrollbar flex justify-center">
-                        <div className={cn(
-                            "bg-white transition-all duration-500 shadow-xl min-h-full",
-                            previewMode === 'mobile' ? "w-[375px]" : "w-full"
-                        )}>
-                            <CartProvider storeId={storeId}>
+                    <div className="flex-1 overflow-y-auto no-scrollbar bg-white relative" style={{ transform: 'translateZ(0)' }}>
+                        <CartProvider storeId={storeId}>
+                            <div className="min-h-full w-full">
                                 <LandingPageRenderer 
                                     template={template} 
                                     content={stableContent} 
@@ -262,9 +261,10 @@ export function LandingPageEditor({
                                     storeSlug={storeSlug} 
                                     productId={productId} 
                                     isPreview={true} 
+                                    forceMobile={previewMode === 'mobile'}
                                 />
-                            </CartProvider>
-                        </div>
+                            </div>
+                        </CartProvider>
                     </div>
                 </div>
             </div>
@@ -274,7 +274,7 @@ export function LandingPageEditor({
     return (
         <div className="space-y-6 pb-10 animate-in fade-in slide-in-from-bottom-4 duration-500 max-h-[85vh] overflow-y-auto px-1 no-scrollbar">
             {/* Header Control Panel */}
-            <div className="flex flex-col md:flex-row items-center justify-between bg-white dark:bg-slate-900 p-6 rounded-3xl border shadow-sm sticky top-0 z-40 backdrop-blur-md gap-4">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between bg-white dark:bg-slate-900 p-4 md:p-6 rounded-3xl border shadow-sm sticky top-0 z-40 backdrop-blur-md gap-4">
                 <div className="flex items-center gap-4">
                     <div className={cn(
                         "p-3 rounded-2xl shadow-sm transition-all duration-500", 
@@ -311,51 +311,56 @@ export function LandingPageEditor({
                 </div>
             </div>
 
+            {/* Template Selection - Full Width Modern Grid */}
+            <Card className="border-none shadow-sm bg-muted/30 overflow-hidden rounded-3xl">
+                <CardHeader className="bg-white/50 border-b py-3">
+                    <CardTitle className="text-xs font-black flex items-center gap-2">
+                        <Palette className="w-3.5 h-3.5 text-primary" /> 
+                        {language === 'ar' ? 'اختر تصميم الصفحة' : 'Choose Page Design'}
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="p-3 md:p-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 md:gap-3">
+                        {[
+                            { id: 'hype', name: 'Hype', icon: Zap, color: 'bg-purple-500', desc: 'Modern & High Energy' },
+                            { id: 'elegant', name: 'Elegant', icon: Star, color: 'bg-amber-500', desc: 'Luxury & Clean' },
+                            { id: 'trust', name: 'Trust', icon: ShieldCheck, color: 'bg-blue-500', desc: 'Professional & Solid' },
+                            { id: 'noir', name: 'Noir', icon: Palette, color: 'bg-zinc-900', desc: 'Luxury & Minimalist' },
+                            { id: 'cyber', name: 'Cyber', icon: Cpu, color: 'bg-cyan-500', desc: 'Futuristic & Techy' },
+                            { id: 'flash', name: 'Flash', icon: Zap, color: 'bg-red-600', desc: 'Energy & Urgency' },
+                            { id: 'modern', name: 'Modern', icon: Sparkles, color: 'bg-zinc-400', desc: 'Clean & Premium' }
+                        ].map((t) => (
+                            <button
+                                key={t.id}
+                                type="button"
+                                onClick={() => setTemplate(t.id as any)}
+                                className={cn(
+                                    "relative flex flex-col items-center p-2 md:p-3 rounded-2xl border-2 transition-all duration-300 group",
+                                    template === t.id 
+                                        ? "bg-white border-primary shadow-lg shadow-primary/5 scale-[1.02]" 
+                                        : "bg-white/50 border-transparent hover:border-primary/30 hover:bg-white"
+                                )}
+                            >
+                                <div className={cn("w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center text-white mb-1.5 md:mb-2 shadow-lg transition-transform group-hover:scale-110", t.color)}>
+                                    <t.icon className="w-4 h-4 md:w-5 md:h-5" />
+                                </div>
+                                <span className="text-[10px] md:text-xs font-black uppercase tracking-tighter text-center break-words">{t.name}</span>
+                                <span className="text-[8px] opacity-50 text-center hidden xl:block">{t.desc}</span>
+                                {template === t.id && (
+                                    <div className="absolute top-1 right-1 w-4 h-4 bg-primary text-white rounded-full flex items-center justify-center animate-in zoom-in">
+                                        <Check className="w-2.5 h-2.5" />
+                                    </div>
+                                )}
+                            </button>
+                        ))}
+                    </div>
+                </CardContent>
+            </Card>
+
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 {/* Left Column: Editor Sections */}
                 <div className="lg:col-span-8 space-y-6">
                     
-                    {/* Template Selection - Modern Grid */}
-                    <Card className="border-none shadow-sm bg-muted/30 overflow-hidden rounded-3xl">
-                        <CardHeader className="bg-white/50 border-b">
-                            <CardTitle className="text-sm font-black flex items-center gap-2">
-                                <Palette className="w-4 h-4 text-primary" /> 
-                                {language === 'ar' ? 'اختر تصميم الصفحة' : 'Choose Page Design'}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-6">
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                {[
-                                    { id: 'hype', name: 'Hype', icon: Zap, color: 'bg-purple-500', desc: 'Modern & High Energy' },
-                                    { id: 'elegant', name: 'Elegant', icon: Star, color: 'bg-amber-500', desc: 'Luxury & Clean' },
-                                    { id: 'trust', name: 'Trust', icon: ShieldCheck, color: 'bg-blue-500', desc: 'Professional & Solid' }
-                                ].map((t) => (
-                                    <button
-                                        key={t.id}
-                                        type="button"
-                                        onClick={() => setTemplate(t.id as any)}
-                                        className={cn(
-                                            "relative flex flex-col items-center p-5 rounded-2xl border-2 transition-all duration-300 group",
-                                            template === t.id 
-                                                ? "bg-white border-primary shadow-lg shadow-primary/5 scale-[1.02]" 
-                                                : "bg-white/50 border-transparent hover:border-primary/30 hover:bg-white"
-                                        )}
-                                    >
-                                        <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center text-white mb-3 shadow-lg transition-transform group-hover:scale-110", t.color)}>
-                                            <t.icon className="w-6 h-6" />
-                                        </div>
-                                        <span className="font-bold text-sm mb-1">{t.name}</span>
-                                        <span className="text-[10px] opacity-50">{t.desc}</span>
-                                        {template === t.id && (
-                                            <div className="absolute top-2 right-2 w-5 h-5 bg-primary text-white rounded-full flex items-center justify-center animate-in zoom-in">
-                                                <Check className="w-3 h-3" />
-                                            </div>
-                                        )}
-                                    </button>
-                                ))}
-                            </div>
-                        </CardContent>
-                    </Card>
 
                     {/* Content Section */}
                     <Card className="border-none shadow-sm bg-muted/30 overflow-hidden rounded-3xl">
@@ -389,32 +394,98 @@ export function LandingPageEditor({
                         </CardContent>
                     </Card>
 
-                    {/* Features/Benefits */}
+                    {/* Product Sections Grid */}
                     <Card className="border-none shadow-sm bg-muted/30 overflow-hidden rounded-3xl">
                         <CardHeader className="flex flex-row justify-between items-center bg-white/50 border-b">
                             <CardTitle className="text-sm font-black flex items-center gap-2">
-                                <Zap className="w-4 h-4 text-primary" /> 
-                                {language === 'ar' ? 'مميزات المنتج' : 'Product Features'}
+                                <Layout className="w-4 h-4 text-primary" /> 
+                                {language === 'ar' ? 'أقسام عرض المنتج (Grid)' : 'Product Sections Grid'}
                             </CardTitle>
-                            <Button type="button" variant="ghost" size="sm" onClick={() => setContent(c => ({ ...c, benefits: [...c.benefits, { ar: '', en: '' }] }))} className="rounded-xl hover:bg-primary hover:text-white transition-colors">
-                                <Plus className="w-4 h-4 mr-1" /> {language === 'ar' ? 'إضافة ميزة' : 'Add Feature'}
-                            </Button>
+                            <div className="flex items-center gap-2">
+                                <Button 
+                                    type="button" 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => {
+                                        const sectionsFromImages = productImages.slice(1).map(img => ({
+                                            image: img,
+                                            title: { ar: 'ميزة جديدة', en: 'New Feature' },
+                                            description: { ar: 'وصف الميزة هنا', en: 'Feature description here' }
+                                        }));
+                                        setContent(c => ({ 
+                                            ...c, 
+                                            product_sections: [...(c.product_sections || []), ...sectionsFromImages] 
+                                        }));
+                                    }} 
+                                    className="rounded-xl border-primary/20 text-primary hover:bg-primary/5 text-[10px]"
+                                >
+                                    <Sparkles className="w-3 h-3 mr-1" /> {language === 'ar' ? 'استيراد من صور المنتج' : 'Import from Images'}
+                                </Button>
+                                <Button type="button" variant="ghost" size="sm" onClick={() => setContent(c => ({ ...c, product_sections: [...(c.product_sections || []), { image: '', title: { ar: '', en: '' }, description: { ar: '', en: '' } }] }))} className="rounded-xl hover:bg-primary hover:text-white transition-colors">
+                                    <Plus className="w-4 h-4 mr-1" /> {language === 'ar' ? 'إضافة قسم' : 'Add Section'}
+                                </Button>
+                            </div>
                         </CardHeader>
-                        <CardContent className="p-6 space-y-4">
-                            {content.benefits.map((b, i) => (
-                                <div key={i} className="flex gap-4 items-start bg-white p-4 rounded-2xl shadow-sm border border-transparent hover:border-primary/10 transition-all group">
-                                    <div className="pt-3 opacity-20 group-hover:opacity-100 transition-opacity">
-                                        <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold">{i + 1}</div>
-                                    </div>
-                                    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
-                                        <Input value={b.ar} onChange={e => { const nb = [...content.benefits]; nb[i].ar = e.target.value; setContent(c => ({ ...c, benefits: nb })); }} placeholder="الميزة بالعربية" className="border-none bg-muted/30 h-10 rounded-xl" />
-                                        <Input value={b.en} onChange={e => { const nb = [...content.benefits]; nb[i].en = e.target.value; setContent(c => ({ ...c, benefits: nb })); }} placeholder="Feature in English" className="border-none bg-muted/30 h-10 rounded-xl" />
-                                    </div>
-                                    <Button type="button" variant="ghost" size="icon" onClick={() => setContent(c => ({ ...c, benefits: c.benefits.filter((_, idx) => idx !== i) }))} className="text-destructive opacity-0 group-hover:opacity-100 transition-all">
+                        <CardContent className="p-6 space-y-6">
+                            <p className="text-[10px] text-muted-foreground bg-blue-50 p-3 rounded-xl border border-blue-100 italic">
+                                {language === 'ar' 
+                                    ? '💡 تظهر هذه الأقسام تحت بعضها في الجوال وفي شكل شبكة في الكمبيوتر. مثالية لشرح مميزات المنتج بالتفصيل.' 
+                                    : '💡 These sections appear stacked on mobile and in a grid on desktop. Perfect for detailed product feature explanations.'}
+                            </p>
+                            {(content.product_sections || []).map((s, i) => (
+                                <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-transparent hover:border-primary/10 transition-all space-y-4 relative group">
+                                    <Button type="button" variant="ghost" size="icon" onClick={() => setContent(c => ({ ...c, product_sections: c.product_sections?.filter((_, idx) => idx !== i) }))} className="absolute top-2 left-2 text-destructive opacity-0 group-hover:opacity-100 transition-all z-10">
                                         <Trash2 className="w-4 h-4" />
                                     </Button>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                        <div className="md:col-span-1">
+                                            <Label className="text-[10px] font-bold uppercase mb-2 block">{language === 'ar' ? 'صورة القسم' : 'Section Image'}</Label>
+                                            <ImageUpload 
+                                                value={s.image ? [s.image] : []} 
+                                                onChange={urls => {
+                                                    const ns = [...(content.product_sections || [])];
+                                                    ns[i].image = urls[urls.length-1] || '';
+                                                    setContent(c => ({ ...c, product_sections: ns }));
+                                                }} 
+                                                onRemove={() => {
+                                                    const ns = [...(content.product_sections || [])];
+                                                    ns[i].image = '';
+                                                    setContent(c => ({ ...c, product_sections: ns }));
+                                                }} 
+                                            />
+                                        </div>
+                                        <div className="md:col-span-3 space-y-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label className="text-[10px] font-bold opacity-50 uppercase">{language === 'ar' ? 'العنوان (عربي)' : 'Title (AR)'}</Label>
+                                                    <Input value={s.title.ar} onChange={e => { const ns = [...(content.product_sections || [])]; ns[i].title.ar = e.target.value; setContent(c => ({ ...c, product_sections: ns })); }} className="h-10 rounded-xl" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label className="text-[10px] font-bold opacity-50 uppercase">{language === 'ar' ? 'العنوان (إنجليزي)' : 'Title (EN)'}</Label>
+                                                    <Input value={s.title.en} onChange={e => { const ns = [...(content.product_sections || [])]; ns[i].title.en = e.target.value; setContent(c => ({ ...c, product_sections: ns })); }} className="h-10 rounded-xl" />
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label className="text-[10px] font-bold opacity-50 uppercase">{language === 'ar' ? 'الوصف (عربي)' : 'Desc (AR)'}</Label>
+                                                    <Textarea value={s.description.ar} onChange={e => { const ns = [...(content.product_sections || [])]; ns[i].description.ar = e.target.value; setContent(c => ({ ...c, product_sections: ns })); }} rows={2} className="rounded-xl text-xs" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label className="text-[10px] font-bold opacity-50 uppercase">{language === 'ar' ? 'الوصف (إنجليزي)' : 'Desc (EN)'}</Label>
+                                                    <Textarea value={s.description.en} onChange={e => { const ns = [...(content.product_sections || [])]; ns[i].description.en = e.target.value; setContent(c => ({ ...c, product_sections: ns })); }} rows={2} className="rounded-xl text-xs" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             ))}
+                            {(content.product_sections || []).length === 0 && (
+                                <div className="text-center py-10 border-2 border-dashed rounded-3xl opacity-30">
+                                    <ImageIcon className="mx-auto w-10 h-10 mb-2" />
+                                    <p className="text-xs font-bold">{language === 'ar' ? 'لا توجد أقسام عرض حتى الآن' : 'No display sections yet'}</p>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </div>
