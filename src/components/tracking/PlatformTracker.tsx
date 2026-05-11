@@ -14,11 +14,17 @@ export function PlatformTracker() {
 
     // Initialize visitor ID
     useEffect(() => {
-        const visitorId = localStorage.getItem('visitor_id') || crypto.randomUUID();
-        if (!localStorage.getItem('visitor_id')) {
-            localStorage.setItem('visitor_id', visitorId);
+        let visitorId = localStorage.getItem('visitor_id');
+        if (!visitorId) {
+            if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+                visitorId = crypto.randomUUID();
+            } else {
+                // Fallback for non-secure contexts
+                visitorId = Math.random().toString(36).substring(2) + Date.now().toString(36);
+            }
+            localStorage.setItem('visitor_id', visitorId!);
         }
-        visitorIdRef.current = visitorId;
+        visitorIdRef.current = visitorId!;
     }, []);
 
     // Send heartbeat
