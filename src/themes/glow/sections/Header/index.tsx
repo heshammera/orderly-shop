@@ -79,11 +79,11 @@ export default function Header({ settings, blocks = [], sectionId = 'header_1', 
                 </div>
             )}
 
-            <div className="container mx-auto px-6 h-20 flex items-center justify-between">
+            <div className="container mx-auto px-6 h-20 md:h-28 flex items-center justify-between">
                 {/* Minimalist Logo */}
                 <Link href={storeSlug ? '' : '/'} className="shrink-0 flex items-center gap-1 group">
                     {settings.logo || store?.logo_url ? (
-                        <div className="h-10 md:h-12 w-auto max-w-[150px]">
+                        <div className="h-12 md:h-16 w-auto max-w-[250px]">
                             <img src={settings.logo || store?.logo_url} alt={storeName} className="h-full w-auto object-contain" />
                         </div>
                     ) : (

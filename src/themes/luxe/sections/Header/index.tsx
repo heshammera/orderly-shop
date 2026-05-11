@@ -79,11 +79,11 @@ export default function Header({ settings, blocks = [], sectionId = 'header_1', 
                 </div>
             )}
 
-            <div className="container mx-auto px-6 h-20 md:h-24 flex items-center justify-between gap-8">
+            <div className="container mx-auto px-6 h-20 md:h-28 flex items-center justify-between gap-8">
                 {/* Luxe Logo */}
                 <Link href={storeSlug ? '' : '/'} className="shrink-0 flex flex-col items-center">
                     {settings.logo || store?.logo_url ? (
-                        <div className="h-10 md:h-12 w-auto max-w-[150px]">
+                        <div className="h-12 md:h-16 w-auto max-w-[250px]">
                             <img src={settings.logo || store?.logo_url} alt={storeName} className="h-full w-auto object-contain" />
                         </div>
                     ) : (

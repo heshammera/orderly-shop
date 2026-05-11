@@ -79,16 +79,16 @@ export default function Header({ settings, blocks = [], sectionId = 'header_1', 
                 </div>
             )}
 
-            <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-4">
+            <div className="container mx-auto px-4 h-20 md:h-28 flex items-center justify-between gap-4">
                 {/* FreshCart Logo */}
                 <Link href={storeSlug ? '' : '/'} className="shrink-0 flex items-center gap-2 group">
                     {settings.logo || store?.logo_url ? (
-                        <div className="h-10 md:h-12 w-auto max-w-[150px]">
+                        <div className="h-12 md:h-16 w-auto max-w-[250px]">
                             <img src={settings.logo || store?.logo_url} alt={storeName} className="h-full w-auto object-contain" />
                         </div>
                     ) : (
                         <>
-                            <div className="bg-[#10b981] w-10 h-10 rounded-full flex items-center justify-center shadow-lg group-hover:rotate-12 transition-transform">
+                            <div className="bg-[#10b981] w-10 h-10 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-lg group-hover:rotate-12 transition-transform">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>
                             </div>
                             <span className="text-2xl font-black text-slate-800 tracking-tighter">
