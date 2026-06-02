@@ -734,9 +734,9 @@ export function IntegrationsManager({ storeId }: IntegrationsManagerProps) {
 
             {/* Edit/Add Sheet Dialog — Professional Stepper */}
             <Dialog open={isSheetModalOpen} onOpenChange={setIsSheetModalOpen}>
-                <DialogContent className="max-w-2xl p-0">
-                    <div dir={language === 'ar' ? 'rtl' : 'ltr'} className="flex flex-col h-full">
-                    <DialogHeader className="p-6 pb-0">
+                <DialogContent className="max-w-2xl p-0 max-h-[90vh] flex flex-col">
+                    <div dir={language === 'ar' ? 'rtl' : 'ltr'} className="flex flex-col h-full overflow-hidden">
+                    <DialogHeader className="p-6 pb-0 shrink-0">
                         <DialogTitle className="text-right rtl:text-right ltr:text-left">
                             {editingSheet?.id
                                 ? (language === 'ar' ? 'تعديل ربط جوجل شيت' : 'Edit Google Sheet')
@@ -748,7 +748,7 @@ export function IntegrationsManager({ storeId }: IntegrationsManagerProps) {
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="space-y-5 px-6 py-4">
+                    <div className="space-y-5 px-6 py-4 overflow-y-auto flex-1">
                         {/* Step 1: Share with platform email */}
                         {process.env.NEXT_PUBLIC_GOOGLE_SERVICE_EMAIL && (
                             <div className="space-y-3 p-4 border rounded-lg bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30">
@@ -933,7 +933,7 @@ export function IntegrationsManager({ storeId }: IntegrationsManagerProps) {
                         )}
                     </div>
 
-                    <DialogFooter className="px-6 py-4 bg-slate-50/50 dark:bg-slate-900/50 gap-2 flex flex-row justify-end">
+                    <DialogFooter className="px-6 py-4 bg-slate-50/50 dark:bg-slate-900/50 gap-2 flex flex-row justify-end shrink-0">
                         <Button variant="ghost" onClick={() => setIsSheetModalOpen(false)}>
                             {language === 'ar' ? 'إلغاء' : 'Cancel'}
                         </Button>
