@@ -1,0 +1,8 @@
+[Unit]
+Description=Orderly database and uploaded files backup
+After=docker.service
+Requires=docker.service
+[Service]
+Type=oneshot
+ExecStart=/opt/orderly-shop/backup.sh
+UMask=0077

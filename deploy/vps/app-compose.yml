@@ -1,0 +1,25 @@
+name: orderly-web
+services:
+  app:
+    image: orderly-shop:current
+    container_name: orderly-app
+    restart: unless-stopped
+    env_file: /opt/orderly-shop/app.env
+    ports:
+      - 127.0.0.1:3000:3000
+    extra_hosts:
+      - api.orderlyshops.com:host-gateway
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/login',{headers:{host:'orderlyshops.com'}}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s

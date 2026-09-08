@@ -46,7 +46,7 @@ export async function POST(request: Request) {
             )
         }
 
-        console.log('[Admin Login] RPC Success, Result:', data);
+        console.log('[Admin Login] RPC completed:', Boolean(data?.success));
 
         if (!data || !data.success) {
             console.warn('[Admin Login] Failed login logic:', data?.message);
