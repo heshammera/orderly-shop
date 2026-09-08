@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Loader2, Store, Plus, ArrowRight, Trash2, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
+import { getStorefrontUrl } from '@/lib/store-url';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from '@/hooks/use-toast';
 import {
@@ -267,7 +268,7 @@ export default function DashboardPage() {
                                                 </a>
                                             </Button>
                                             <Button variant="outline" asChild>
-                                                <Link href={`/s/${store.slug}`} target="_blank">
+                                                <Link href={getStorefrontUrl(store.slug)} target="_blank">
                                                     {language === 'ar' ? 'عرض المتجر' : 'View Store'}
                                                 </Link>
                                             </Button>

@@ -36,7 +36,7 @@ export default async function ProductsPage({ params }: { params: { storeSlug: st
             currency, 
             settings, 
             slug,
-            subscriptions (
+            subscriptions:store_subscriptions (
                 status,
                 plans (
                     features
@@ -169,7 +169,8 @@ export default async function ProductsPage({ params }: { params: { storeSlug: st
     };
 
     // Check AI Features
-    const activeSubscription = store?.subscriptions?.find((s: any) => s.status === 'active' || s.status === 'trialing');
+    const subscriptions = Array.isArray(store.subscriptions) ? store.subscriptions : [store.subscriptions];
+    const activeSubscription = subscriptions.find((s: any) => s && (s.status === 'active' || s.status === 'trialing'));
     const planFeatures = activeSubscription?.plans?.features || {};
     const canUseAI = planFeatures.ai_features === true || planFeatures.ai_features === 'true';
     const hasApiKey = !!store?.settings?.ai?.gemini_api_key;
@@ -192,4 +193,3 @@ export default async function ProductsPage({ params }: { params: { storeSlug: st
         </main>
     );
 }
-

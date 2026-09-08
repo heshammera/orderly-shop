@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 import { createServerClient } from '@supabase/ssr';
+import { getStorefrontUrl, isValidStoreSlug, STORE_ROOT_DOMAIN } from '@/lib/store-url';
 
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
@@ -27,6 +28,32 @@ export async function middleware(request: NextRequest) {
         hostname.endsWith('.vercel.app') || // Treat Vercel deployments as main domain
         hostname === 'orderlyshops.com' ||
         hostname === 'www.orderlyshops.com';
+
+    // Public storefronts have canonical tenant hostnames. Keep authenticated
+    // editor previews on their current origin so editor sessions keep working.
+    const legacyStorePath = pathname.match(/^\/s\/([^/]+)(\/.*)?$/);
+    if (legacyStorePath && !request.nextUrl.searchParams.has('preview') &&
+        (request.method === 'GET' || request.method === 'HEAD')) {
+        const [, slug, suffix = '/'] = legacyStorePath;
+        const isPlatformHost = hostname === STORE_ROOT_DOMAIN || hostname === `www.${STORE_ROOT_DOMAIN}`;
+        const isMatchingStoreHost = hostname === `${slug}.${STORE_ROOT_DOMAIN}`;
+        if (isValidStoreSlug(slug) && (isPlatformHost || isMatchingStoreHost) &&
+            !/^\/(dashboard|editor)(\/|$)/.test(suffix)) {
+            try {
+                const result = await fetch(`${supabaseUrl}/rest/v1/rpc/get_store_id_by_slug`, {
+                    method: 'POST',
+                    headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${supabaseAnonKey}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ p_slug: slug }),
+                });
+                if (result.ok && await result.json()) {
+                    const target = new URL(getStorefrontUrl(slug));
+                    target.pathname = suffix;
+                    target.search = request.nextUrl.search;
+                    return NextResponse.redirect(target, 307);
+                }
+            } catch { /* Existing path rendering remains available on lookup failure. */ }
+        }
+    }
 
     // 3. SECURE ADMIN ROUTES (BLOCK ON SUBDOMAINS)
     if (pathname.startsWith('/admin')) {

@@ -102,7 +102,7 @@ export default function AffiliatesPage({ params }: { params: { storeId: string }
     };
 
     const copyLink = (code: string) => {
-        const url = `${window.location.origin}/s/${storeSlug}?ref=${code}`;
+        const url = `https://${storeSlug}.orderlyshops.com?ref=${code}`;
         navigator.clipboard.writeText(url);
         toast.success(language === 'ar' ? 'تم نسخ الرابط' : 'Link copied to clipboard');
     };

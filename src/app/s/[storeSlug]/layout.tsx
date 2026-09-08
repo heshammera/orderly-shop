@@ -94,7 +94,7 @@ export default async function Layout({
             slug, 
             status, 
             has_removed_copyright,
-            subscriptions (
+            subscriptions:store_subscriptions (
                 status,
                 plans (
                     features
@@ -139,7 +139,8 @@ export default async function Layout({
     const integrations = store?.settings?.integrations || {};
 
     // Check AI Features
-    const activeSubscription = store?.subscriptions?.find((s: any) => s.status === 'active' || s.status === 'trialing');
+    const subscriptions = Array.isArray(store.subscriptions) ? store.subscriptions : [store.subscriptions];
+    const activeSubscription = subscriptions.find((s: any) => s && (s.status === 'active' || s.status === 'trialing'));
     const planFeatures = (activeSubscription?.plans as any)?.features || (activeSubscription?.plans as any)?.[0]?.features || {};
     const canUseAI = planFeatures.ai_features === true || planFeatures.ai_features === 'true';
     const hasApiKey = !!store?.settings?.ai?.gemini_api_key;

@@ -10,6 +10,7 @@ import { Store, Loader2, ArrowRight, AlertCircle, Lock } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from '@/hooks/use-toast';
+import { isValidStoreSlug, STORE_ROOT_DOMAIN } from '@/lib/store-url';
 
 export default function CreateStorePage() {
     const { language } = useLanguage();
@@ -63,7 +64,7 @@ export default function CreateStorePage() {
 
         try {
             // 1. Basic Slug Validation (alphanumeric and hyphens)
-            if (!/^[a-z0-9-]+$/.test(slug)) {
+            if (!isValidStoreSlug(slug)) {
                 throw new Error(language === 'ar' ? 'يجب أن يحتوي اسم الرابط على أحرف وأرقام وعلامات طرح فقط' : 'Slug must only contain lowercase letters, numbers, and hyphens');
             }
 
@@ -243,7 +244,7 @@ export default function CreateStorePage() {
                                     disabled={loading}
                                 />
                                 <div className="h-10 px-3 flex items-center bg-muted border border-s-0 rounded-e-md text-sm text-muted-foreground">
-                                    .site.com
+                                    .{STORE_ROOT_DOMAIN}
                                 </div>
                             </div>
                             <p className="text-[10px] text-muted-foreground px-1">
