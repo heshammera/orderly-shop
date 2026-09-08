@@ -4,18 +4,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ArrowLeft, ArrowRight, Play, BookOpen, X, ChevronRight, ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/client';
 import useEmblaCarousel from 'embla-carousel-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { VideoPlayer } from '@/components/tutorials/VideoPlayer';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-
-const supabaseParams = {
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-};
-const supabase = createClient(supabaseParams.url, supabaseParams.key);
 
 interface Tutorial {
     id: string;
@@ -30,6 +24,7 @@ interface Tutorial {
 }
 
 export function TutorialsSection() {
+    const supabase = createClient();
     const { language, dir } = useLanguage();
     const [tutorials, setTutorials] = useState<Tutorial[]>([]);
     const [loading, setLoading] = useState(true);

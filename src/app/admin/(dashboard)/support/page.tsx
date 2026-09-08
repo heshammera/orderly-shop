@@ -8,13 +8,7 @@ import { MessageCircle, Search, X, Send, Loader2, Store as StoreIcon, User, Mail
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseParams = {
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-};
-const supabase = createClient(supabaseParams.url, supabaseParams.key);
+import { createClient } from '@/lib/supabase/client';
 
 interface Store {
     name: string;
@@ -45,6 +39,7 @@ interface SupportMessage {
 }
 
 export default function AdminSupportPage() {
+    const supabase = createClient();
     const { language, dir } = useLanguage();
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [selectedConv, setSelectedConv] = useState<Conversation | null>(null);
