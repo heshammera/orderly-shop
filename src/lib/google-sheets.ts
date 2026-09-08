@@ -23,9 +23,6 @@ async function getGoogleAuthToken(serviceAccountJson: string): Promise<string> {
             '-----END PRIVATE KEY-----'
         ].join('\n');
 
-        console.log('[Google Sheets] RECONSTRUCTED KEY START:', formattedKey.substring(0, 100));
-        console.log('[Google Sheets] RECONSTRUCTED KEY END:', formattedKey.substring(formattedKey.length - 50));
-
         const auth = new google.auth.JWT({
             email: credentials.client_email,
             key: formattedKey,
