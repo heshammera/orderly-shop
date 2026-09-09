@@ -6,7 +6,8 @@ def sql(text):
 r=sql('CREATE SCHEMA IF NOT EXISTS orderly_deploy; CREATE TABLE IF NOT EXISTS orderly_deploy.migrations (name text PRIMARY KEY, checksum text NOT NULL, applied_at timestamptz DEFAULT now());')
 if r.returncode: raise SystemExit(r.stderr)
 files=sorted((root/'supabase/migrations').glob('20*.sql'))
-# Two files dated 2025 are duplicate ALTERs; the correct 2026 versions run after table creation.
+# Defer legacy 2025 ALTER scripts until their tables exist.
+# Their catalog fields are restored by 20260909180000_complete_catalog_fields.sql.
 files=[f for f in files if not f.name.startswith('2025')]
 files += [root/'sql'/n for n in ['addons_system.sql','ai_features_migration.sql','full_addons_seed.sql','seed_ai_addon.sql','landing_pages_migration.sql','change_admin_password_rpc.sql','admin_advanced_stats.sql','20260308000000_get_unverified_user.sql']]
 final=root/'supabase/migrations/20260909000000_complete_fresh_install.sql'
