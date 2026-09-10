@@ -1,103 +1,142 @@
 "use client";
 
-import { HypeTemplate } from './templates/HypeTemplate';
-import { ElegantTemplate } from './templates/ElegantTemplate';
-import { TrustTemplate } from './templates/TrustTemplate';
-import { NoirTemplate } from './templates/NoirTemplate';
-import { CyberTemplate } from './templates/CyberTemplate';
-import { FlashTemplate } from './templates/FlashTemplate';
-import { ModernTemplate } from './templates/ModernTemplate';
+import { PremiumLanding } from "./PremiumLanding";
+import { HypeTemplate } from "./templates/HypeTemplate";
+import { ElegantTemplate } from "./templates/ElegantTemplate";
+import { TrustTemplate } from "./templates/TrustTemplate";
+import { NoirTemplate } from "./templates/NoirTemplate";
+import { CyberTemplate } from "./templates/CyberTemplate";
+import { FlashTemplate } from "./templates/FlashTemplate";
+import { ModernTemplate } from "./templates/ModernTemplate";
 
-export type LandingTemplate = 'hype' | 'elegant' | 'trust' | 'noir' | 'cyber' | 'flash' | 'modern';
+export type LandingTemplate =
+  | "hype"
+  | "elegant"
+  | "trust"
+  | "noir"
+  | "cyber"
+  | "flash"
+  | "modern";
 
 interface LandingContent {
-    headline?: { ar: string; en: string };
-    subheadline?: { ar: string; en: string };
-    cta_text?: { ar: string; en: string };
-    benefits?: Array<{ ar: string; en: string }>;
-    guarantee_text?: { ar: string; en: string };
-    testimonials?: Array<{ name: string; text: { ar: string; en: string }; rating: number }>;
-    hero_image?: string;
-    accent_color?: string;
-    bg_color?: string;
-    product_sections?: Array<{
-        image: string;
-        title: { ar: string; en: string };
-        description: { ar: string; en: string };
-    }>;
+  headline?: { ar: string; en: string };
+  subheadline?: { ar: string; en: string };
+  cta_text?: { ar: string; en: string };
+  benefits?: Array<{ ar: string; en: string }>;
+  guarantee_text?: { ar: string; en: string };
+  testimonials?: Array<{
+    name: string;
+    text: { ar: string; en: string };
+    rating: number;
+  }>;
+  hero_image?: string;
+  accent_color?: string;
+  bg_color?: string;
+  product_sections?: Array<{
+    image: string;
+    title: { ar: string; en: string };
+    description: { ar: string; en: string };
+  }>;
 }
 
 interface ProductData {
-    name: { ar: string; en: string };
-    price: number;
-    sale_price?: number;
-    currency: string;
-    images: string[];
+  name: { ar: string; en: string };
+  price: number;
+  sale_price?: number;
+  currency: string;
+  images: string[];
 }
 
 interface LandingPageRendererProps {
-    template: LandingTemplate;
-    content: LandingContent;
-    product: ProductData;
-    language: 'ar' | 'en';
-    storeSlug: string;
-    productId: string;
-    isPreview?: boolean;
-    forceMobile?: boolean;
+  template: LandingTemplate;
+  content: LandingContent;
+  product: ProductData;
+  language: "ar" | "en";
+  storeSlug: string;
+  productId: string;
+  isPreview?: boolean;
+  forceMobile?: boolean;
 }
 
 export function LandingPageRenderer({
-    template,
-    content,
-    product,
-    language = 'ar',
+  template,
+  content,
+  product,
+  language = "ar",
+  storeSlug,
+  productId,
+  isPreview = false,
+  forceMobile = false,
+}: LandingPageRendererProps) {
+  // Ensure all props are safe and defined
+  if ((content as any)?.design_version === 2)
+    return (
+      <PremiumLanding
+        content={content}
+        product={product}
+        language={language}
+        template={template}
+        storeSlug={storeSlug}
+        productId={productId}
+        isPreview={isPreview}
+        forceMobile={forceMobile}
+      />
+    );
+  const safeContent = content || {};
+  const safeProduct = product || {
+    name: { ar: "", en: "" },
+    price: 0,
+    currency: "SAR",
+    images: [],
+  };
+  const safeLang = language || "ar";
+
+  const props = {
+    content: safeContent,
+    product: safeProduct,
+    language: safeLang,
     storeSlug,
     productId,
-    isPreview = false,
-    forceMobile = false,
-}: LandingPageRendererProps) {
-    // Ensure all props are safe and defined
-    const safeContent = content || {};
-    const safeProduct = product || { name: { ar: '', en: '' }, price: 0, currency: 'SAR', images: [] };
-    const safeLang = language || 'ar';
+    isPreview,
+    forceMobile,
+  };
 
-    const props = { 
-        content: safeContent, 
-        product: safeProduct, 
-        language: safeLang, 
-        storeSlug, 
-        productId, 
-        isPreview,
-        forceMobile
-    };
-
-    try {
-        switch (template) {
-            case 'hype':
-                return <HypeTemplate {...props} />;
-            case 'elegant':
-                return <ElegantTemplate {...props} />;
-            case 'trust':
-                return <TrustTemplate {...props} />;
-            case 'noir':
-                return <NoirTemplate {...props} />;
-            case 'cyber':
-                return <CyberTemplate {...props} />;
-            case 'flash':
-                return <FlashTemplate {...props} />;
-            case 'modern':
-                return <ModernTemplate {...props} />;
-            default:
-                return <TrustTemplate {...props} />;
-        }
-    } catch (error) {
-        console.error("LandingPageRenderer Error:", error);
-        return (
-            <div className="p-10 text-center bg-red-50 text-red-800 rounded-xl border border-red-200" dir="rtl">
-                <h2 className="text-xl font-bold mb-2">عذراً، حدث خطأ أثناء عرض القالب</h2>
-                <p className="text-sm opacity-80">يرجى محاولة تغيير القالب من لوحة التحكم أو التواصل مع الدعم التقني.</p>
-                <div className="mt-4 text-[10px] font-mono opacity-50">Template: {template}</div>
-            </div>
-        );
+  try {
+    switch (template) {
+      case "hype":
+        return <HypeTemplate {...props} />;
+      case "elegant":
+        return <ElegantTemplate {...props} />;
+      case "trust":
+        return <TrustTemplate {...props} />;
+      case "noir":
+        return <NoirTemplate {...props} />;
+      case "cyber":
+        return <CyberTemplate {...props} />;
+      case "flash":
+        return <FlashTemplate {...props} />;
+      case "modern":
+        return <ModernTemplate {...props} />;
+      default:
+        return <TrustTemplate {...props} />;
     }
+  } catch (error) {
+    console.error("LandingPageRenderer Error:", error);
+    return (
+      <div
+        className="p-10 text-center bg-red-50 text-red-800 rounded-xl border border-red-200"
+        dir="rtl"
+      >
+        <h2 className="text-xl font-bold mb-2">
+          عذراً، حدث خطأ أثناء عرض القالب
+        </h2>
+        <p className="text-sm opacity-80">
+          يرجى محاولة تغيير القالب من لوحة التحكم أو التواصل مع الدعم التقني.
+        </p>
+        <div className="mt-4 text-[10px] font-mono opacity-50">
+          Template: {template}
+        </div>
+      </div>
+    );
+  }
 }
