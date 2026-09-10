@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useRef, useEffect, ReactNode } from 'react';
 import { useCart } from '@/contexts/CartContext';
+import { validateCheckout, focusCheckoutError, CheckoutErrors } from '@/lib/checkout-validation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -10,6 +11,7 @@ import { useRouter } from 'next/navigation';
 import { trackInitiateCheckout, trackPurchase } from '@/lib/pixelTracker';
 
 interface CheckoutContextType {
+    fieldErrors: CheckoutErrors;
     // State
     formData: any;
     setFormData: (data: any) => void;
@@ -76,6 +78,8 @@ export function CheckoutProvider({ store, children, isEditable = false }: Checko
     const router = useRouter();
     const supabase = createClient();
 
+    const [fieldErrors, setFieldErrors] = useState<CheckoutErrors>({});
+    const [validationStarted, setValidationStarted] = useState(false);
     const requestKey = useRef<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -153,6 +157,19 @@ export function CheckoutProvider({ store, children, isEditable = false }: Checko
     const pointsToRedeem = pointsDiscount * redemptionRate;
 
     const bumpOfferTotal = bumpOffer?.selected ? bumpOffer.price : 0;
+
+    useEffect(() => {
+        if (validationStarted) {
+            const errors = validateCheckout(formData, shippingSettings, selectedGovernorate, language).errors;
+            document.querySelectorAll<HTMLInputElement>('#checkout-form [required]').forEach(input => {
+                if (!String(input.value).trim() && !errors[input.id]) {
+                    const label = document.querySelector<HTMLLabelElement>(`label[for="${CSS.escape(input.id)}"]`)?.textContent || input.id;
+                    errors[input.id] = language === 'ar' ? `${label}: هذا الحقل مطلوب؛ يرجى تعبئته.` : `${label}: this field is required.`;
+                }
+            });
+            setFieldErrors(errors);
+        }
+    }, [formData, selectedGovernorate, language, validationStarted]);
 
     const total = Math.max(0, subtotal - discount - pointsDiscount + shippingCost + bumpOfferTotal);
 
@@ -249,14 +266,20 @@ export function CheckoutProvider({ store, children, isEditable = false }: Checko
         if (e) e.preventDefault();
         if (!store?.id) return;
 
-        if (shippingSettings.type === 'dynamic' && !selectedGovernorate) {
-            toast({
-                variant: "destructive",
-                title: language === 'ar' ? 'تنبيه' : 'Alert',
-                description: language === 'ar' ? 'يرجى اختيار المحافظة لحساب الشحن' : 'Please select a governorate to calculate shipping',
-            });
+        const checked = validateCheckout(formData, shippingSettings, selectedGovernorate, language);
+        document.querySelectorAll<HTMLInputElement>('#checkout-form [required]').forEach(input => {
+            if (!String(input.value).trim() && !checked.errors[input.id]) {
+                const label = document.querySelector<HTMLLabelElement>(`label[for="${CSS.escape(input.id)}"]`)?.textContent || input.id;
+                checked.errors[input.id] = language === 'ar' ? `${label}: هذا الحقل مطلوب؛ يرجى تعبئته.` : `${label}: this field is required.`;
+            }
+        });
+        setValidationStarted(true);
+        setFieldErrors(checked.errors);
+        if (Object.keys(checked.errors).length) {
+            focusCheckoutError(checked.errors, '');
             return;
         }
+        setFormData(checked.data);
 
         setLoading(true);
 
@@ -282,7 +305,7 @@ export function CheckoutProvider({ store, children, isEditable = false }: Checko
                         productName: item.productName,
                         variants: item.variants,
                     })),
-                    formData: { ...formData },
+                    formData: { ...checked.data, city: cityOrGovName },
                     selectedGovernorate,
                     cityOrGovName,
                     shippingCost,
@@ -304,6 +327,7 @@ export function CheckoutProvider({ store, children, isEditable = false }: Checko
             const result = await res.json();
 
             if (!res.ok) {
+                if (result.fieldErrors) { setFieldErrors(result.fieldErrors); focusCheckoutError(result.fieldErrors, ''); return; }
                 throw new Error(result.error || 'Failed to place order');
             }
 
@@ -334,7 +358,7 @@ export function CheckoutProvider({ store, children, isEditable = false }: Checko
 
     return (
         <CheckoutContext.Provider value={{
-            formData, setFormData,
+            fieldErrors, formData, setFormData,
             selectedGovernorate, setSelectedGovernorate,
             couponCode, setCouponCode,
             subtotal, shippingCost, discount, total,

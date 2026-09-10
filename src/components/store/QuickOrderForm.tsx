@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { validateCheckout, focusCheckoutError, CheckoutErrors } from '@/lib/checkout-validation';
+import { CheckoutErrorSummary, CheckoutFieldError } from '@/components/store/checkout/CheckoutErrors';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +29,8 @@ export function QuickOrderForm({ isOpen, onClose, product, quantity, subtotal, v
     const { language } = useLanguage();
     const { toast } = useToast();
 
+    const [fieldErrors, setFieldErrors] = useState<CheckoutErrors>({});
+    const [validationStarted, setValidationStarted] = useState(false);
     const requestKey = useRef<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -65,20 +69,24 @@ export function QuickOrderForm({ isOpen, onClose, product, quantity, subtotal, v
         return 0;
     })();
 
+    useEffect(() => {
+        if (validationStarted) setFieldErrors(validateCheckout(formData, shippingSettings, selectedGovernorate, language).errors);
+    }, [formData, selectedGovernorate, language, validationStarted]);
+
     const total = subtotal + shippingCost;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!store?.id) return;
 
-        if (shippingSettings.type === 'dynamic' && !selectedGovernorate) {
-            toast({
-                title: language === 'ar' ? 'تنبيه' : 'Alert',
-                description: language === 'ar' ? 'يرجى اختيار المحافظة لحساب الشحن' : 'Please select a governorate to calculate shipping',
-                variant: "destructive"
-            });
+        const checked = validateCheckout(formData, shippingSettings, selectedGovernorate, language);
+        setValidationStarted(true);
+        setFieldErrors(checked.errors);
+        if (Object.keys(checked.errors).length) {
+            focusCheckoutError(checked.errors, 'qo-');
             return;
         }
+        setFormData(checked.data);
 
         setLoading(true);
 
@@ -106,10 +114,11 @@ export function QuickOrderForm({ isOpen, onClose, product, quantity, subtotal, v
                     variants,
                     selections,
                     formData: {
-                        ...formData,
+                        ...checked.data,
                         city: cityOrGovName
                     },
                     selectedGovernorate,
+                    language,
                     shippingCost,
                     subtotal,
                     total,
@@ -120,6 +129,7 @@ export function QuickOrderForm({ isOpen, onClose, product, quantity, subtotal, v
             const result = await response.json();
 
             if (!response.ok) {
+                if (result.fieldErrors) { setFieldErrors(result.fieldErrors); focusCheckoutError(result.fieldErrors, 'qo-'); return; }
                 throw new Error(result.error || 'Failed to place order');
             }
 
@@ -154,6 +164,8 @@ export function QuickOrderForm({ isOpen, onClose, product, quantity, subtotal, v
 
     const resetAndClose = () => {
         setSuccess(false);
+        setFieldErrors({});
+        setValidationStarted(false);
         requestKey.current = null;
         setFormData({
             name: '',
@@ -205,44 +217,48 @@ export function QuickOrderForm({ isOpen, onClose, product, quantity, subtotal, v
                     </DialogDescription>
                 </DialogHeader>
 
-                <form onSubmit={handleSubmit} className="space-y-4 py-4">
+                <form data-checkout-validation="detailed" noValidate onSubmit={handleSubmit} className="space-y-4 py-4 [&_[aria-invalid=true]]:border-red-500">
+                    <CheckoutErrorSummary errors={fieldErrors} prefix="qo-" language={language} />
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="qo-name">{language === 'ar' ? 'الاسم' : 'Name'}</Label>
                             <Input
-                                id="qo-name"
+                                id="qo-name" aria-invalid={!!fieldErrors.name} aria-describedby={fieldErrors.name ? 'qo-name-error' : undefined}
                                 required
                                 value={formData.name}
                                 onChange={e => setFormData({ ...formData, name: e.target.value })}
                             />
+                        <CheckoutFieldError id="qo-name-error" message={fieldErrors.name} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="qo-phone">{language === 'ar' ? 'رقم الهاتف' : 'Phone'}</Label>
                             <Input
-                                id="qo-phone"
+                                id="qo-phone" aria-invalid={!!fieldErrors.phone} aria-describedby={fieldErrors.phone ? 'qo-phone-error' : undefined}
                                 required
                                 type="tel"
                                 value={formData.phone}
                                 onChange={e => setFormData({ ...formData, phone: e.target.value })}
                             />
+                        <CheckoutFieldError id="qo-phone-error" message={fieldErrors.phone} />
                         </div>
                     </div>
 
                     <div className="space-y-2">
                         <Label htmlFor="qo-alt-phone">{language === 'ar' ? 'رقم بديل (اختياري)' : 'Alt Phone (Optional)'}</Label>
                         <Input
-                            id="qo-alt-phone"
+                            id="qo-alt-phone" aria-invalid={!!fieldErrors.alt_phone} aria-describedby={fieldErrors.alt_phone ? 'qo-alt-phone-error' : undefined}
                             type="tel"
                             value={formData.alt_phone}
                             onChange={e => setFormData({ ...formData, alt_phone: e.target.value })}
                         />
+                        <CheckoutFieldError id="qo-alt-phone-error" message={fieldErrors.alt_phone} />
                     </div>
 
                     <div className="space-y-2">
                         <Label htmlFor="qo-city">{language === 'ar' ? 'المحافظة / المدينة' : 'Governorate / City'}</Label>
                         {shippingSettings.type === 'dynamic' ? (
                             <select
-                                id="qo-city"
+                                id="qo-city" aria-invalid={!!fieldErrors.city} aria-describedby={fieldErrors.city ? 'qo-city-error' : undefined}
                                 required
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                 value={selectedGovernorate}
@@ -257,34 +273,37 @@ export function QuickOrderForm({ isOpen, onClose, product, quantity, subtotal, v
                             </select>
                         ) : (
                             <Input
-                                id="qo-city"
+                                id="qo-city" aria-invalid={!!fieldErrors.city} aria-describedby={fieldErrors.city ? 'qo-city-error' : undefined}
                                 required
                                 value={formData.city}
                                 onChange={e => setFormData({ ...formData, city: e.target.value })}
                                 placeholder={language === 'ar' ? 'اسم مدينتك' : 'Your City'}
                             />
                         )}
+                        <CheckoutFieldError id="qo-city-error" message={fieldErrors.city} />
                     </div>
 
                     <div className="space-y-2">
                         <Label htmlFor="qo-address">{language === 'ar' ? 'العنوان' : 'Address'}</Label>
                         <Textarea
-                            id="qo-address"
+                            id="qo-address" aria-invalid={!!fieldErrors.address} aria-describedby={fieldErrors.address ? 'qo-address-error' : undefined}
                             required
                             value={formData.address}
                             onChange={e => setFormData({ ...formData, address: e.target.value })}
                             placeholder={language === 'ar' ? 'العنوان بالتفصيل...' : 'Detailed address...'}
                         />
+                        <CheckoutFieldError id="qo-address-error" message={fieldErrors.address} />
                     </div>
 
                     <div className="space-y-2">
                         <Label htmlFor="qo-notes">{language === 'ar' ? 'ملاحظات (اختياري)' : 'Notes (Optional)'}</Label>
                         <Textarea
-                            id="qo-notes"
+                            id="qo-notes" aria-invalid={!!fieldErrors.notes} aria-describedby={fieldErrors.notes ? 'qo-notes-error' : undefined}
                             value={formData.notes}
                             onChange={e => setFormData({ ...formData, notes: e.target.value })}
                             placeholder={language === 'ar' ? 'أي ملاحظات إضافية...' : 'Any additional notes...'}
                         />
+                        <CheckoutFieldError id="qo-notes-error" message={fieldErrors.notes} />
                     </div>
 
                     <div className="bg-muted p-4 rounded-lg space-y-2 text-sm">

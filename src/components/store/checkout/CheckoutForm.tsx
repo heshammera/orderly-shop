@@ -1,3 +1,4 @@
+import { CheckoutErrorSummary, CheckoutFieldError } from './CheckoutErrors';
 
 import { useEffect, useRef } from 'react';
 import { useCheckout } from '@/contexts/CheckoutContext';
@@ -23,11 +24,19 @@ export function CheckoutForm({ data }: { data: ComponentSchema }) {
     const { cart: items } = useCart();
     const cartTotal = items?.reduce((acc, item) => acc + (item.unitPrice * item.quantity), 0) || 0;
     const {
-        formData, setFormData,
+        fieldErrors, formData, setFormData,
         selectedGovernorate, setSelectedGovernorate,
         store, formatPrice, shippingCost
     } = useCheckout();
 
+    useEffect(() => {
+        const form = document.getElementById('checkout-form');
+        form?.querySelectorAll<HTMLInputElement>('input,textarea,select').forEach(input => {
+            input.setAttribute('aria-invalid', String(!!fieldErrors[input.id]));
+            if (fieldErrors[input.id]) input.setAttribute('aria-describedby', `${input.id}-error`);
+            else input.removeAttribute('aria-describedby');
+        });
+    }, [fieldErrors]);
     const abandonedCartIdRef = useRef<string | null>(null);
 
     // Abandoned Cart Auto-Save
@@ -78,6 +87,12 @@ export function CheckoutForm({ data }: { data: ComponentSchema }) {
         formFields = DEFAULT_FORM_FIELDS || [];
     }
 
+    // Always expose fields required by the order API, even in older theme configurations.
+    const mandatory = ['name', 'phone', 'city', 'address'];
+    formFields = formFields.map(field => mandatory.includes(field.field_id || field.id) ? {...field, visible:true, required:true} : field);
+    for (const id of mandatory) {
+        if (!formFields.some(field => (field.field_id || field.id) === id)) formFields.push({id, type:'checkout_field', field_id:id, required:true, visible:true});
+    }
     // Filter visible fields and sort by order
     const visibleFields = [...formFields]
         .filter((f: any) => f.visible !== false)
@@ -314,10 +329,14 @@ export function CheckoutForm({ data }: { data: ComponentSchema }) {
                 </CardTitle>
             </CardHeader>
             <CardContent className="p-6 sm:p-8">
-                <form id="checkout-form" onSubmit={(e) => e.preventDefault()} className="space-y-8">
+                <form data-checkout-validation="detailed" noValidate id="checkout-form" onSubmit={(e) => e.preventDefault()} className="space-y-8 [&_[aria-invalid=true]]:border-red-500">
+                    <CheckoutErrorSummary errors={fieldErrors} language={language} />
                     {/* All Fields */}
                     <div className="space-y-6">
-                        {visibleFields.map(renderField)}
+                        {visibleFields.map(field => {
+                            const id = field.type === 'checkout_field' ? field.field_id : field.id;
+                            return <div key={id}>{renderField(field)}<CheckoutFieldError id={`${id}-error`} message={fieldErrors[id]} /></div>;
+                        })}
                     </div>
 
                     {/* Payment */}

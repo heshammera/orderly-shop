@@ -213,11 +213,6 @@ export function OrderSummary({ data }: { data: ComponentSchema }) {
                     <Button
                         onClick={(e) => {
                             e.preventDefault();
-                            const form = document.getElementById('checkout-form') as HTMLFormElement;
-                            if (form && !form.checkValidity()) {
-                                form.reportValidity();
-                                return;
-                            }
                             handlePlaceOrder(e);
                         }}
                         size="lg"
