@@ -270,44 +270,18 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                 }
             }
 
-            // Save Categories
+            // Persist each selected category once; surface failed deletions.
             if (savedProductId) {
-                // Delete existing category relations
                 if (initialData) {
-                    await supabase.from('product_categories').delete().eq('product_id', savedProductId);
+                    const { error: deleteError } = await supabase.from('product_categories').delete().eq('product_id', savedProductId);
+                    if (deleteError) throw deleteError;
                 }
-
-                if (selectedCategories.length > 0) {
-                    const categoryPayloads = selectedCategories.map(categoryId => ({
-                        product_id: savedProductId,
-                        category_id: categoryId
-                    }));
-
-                    const { error: catError } = await supabase
-                        .from('product_categories')
-                        .insert(categoryPayloads);
-
-                    if (catError) throw catError;
-                }
-            }
-
-            // Save Categories
-            if (savedProductId) {
-                // Delete existing category relations
-                if (initialData) {
-                    await supabase.from('product_categories').delete().eq('product_id', savedProductId);
-                }
-
-                if (selectedCategories.length > 0) {
-                    const categoryPayloads = selectedCategories.map(categoryId => ({
-                        product_id: savedProductId,
-                        category_id: categoryId
-                    }));
-
-                    const { error: catError } = await supabase
-                        .from('product_categories')
-                        .insert(categoryPayloads);
-
+                const categoryPayloads = [...new Set(selectedCategories)].map(categoryId => ({
+                    product_id: savedProductId, category_id: categoryId
+                }));
+                if (categoryPayloads.length) {
+                    const { error: catError } = await supabase.from('product_categories')
+                        .upsert(categoryPayloads, { onConflict: 'product_id,category_id' });
                     if (catError) throw catError;
                 }
             }
