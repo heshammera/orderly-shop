@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
     Dialog,
@@ -38,70 +37,54 @@ export function ManageAddOnsDialog({ open, onOpenChange, storeId, storeName }: M
     const [selectedAddOnId, setSelectedAddOnId] = useState<string>('');
     const [processing, setProcessing] = useState(false);
     
-    const supabase = createClient();
-
+    const endpoint = `/api/admin/stores/${storeId}/add-ons`;
+    const callApi = async (method = 'GET', body?: any) => {
+        const response = await fetch(endpoint, {
+            method, cache: 'no-store',
+            headers: {'Content-Type':'application/json'},
+            ...(body ? {body:JSON.stringify(body)} : {})
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'تعذر تنفيذ العملية');
+        return result;
+    };
     const fetchData = async () => {
         if (!storeId) return;
         setLoading(true);
-        
-        // 1. Fetch current store add-ons
-        const { data: current, error: curError } = await supabase
-            .from('store_add_ons')
-            .select('*, add_on:add_ons(*)')
-            .eq('store_id', storeId);
-            
-        if (curError) toast.error(curError.message);
-        else setStoreAddOns(current || []);
-
-        // 2. Fetch all available add-ons
-        const { data: available, error: availError } = await supabase
-            .from('add_ons')
-            .select('*')
-            .eq('is_active', true);
-
-        if (availError) toast.error(availError.message);
-        else setAvailableAddOns(available || []);
-
-        setLoading(false);
+        try {
+            const result = await callApi();
+            setStoreAddOns(result.current || []);
+            setAvailableAddOns(result.available || []);
+        } catch (error: any) {
+            setStoreAddOns([]);
+            setAvailableAddOns([]);
+            toast.error(error.message);
+        } finally {setLoading(false);}
     };
-
     useEffect(() => {
+        setSelectedAddOnId('');
         if (open) fetchData();
     }, [open, storeId]);
-
     const handleAdd = async () => {
-        if (!selectedAddOnId) return;
+        if (!selectedAddOnId || processing) return;
         setProcessing(true);
-        
-        const { error } = await supabase
-            .from('store_add_ons')
-            .insert([{ store_id: storeId, add_on_id: selectedAddOnId, status: 'active' }]);
-
-        if (error) {
-            if (error.code === '23505') toast.error(language === 'ar' ? 'هذا المتجر يمتلك هذه الخدمة بالفعل' : 'Store already has this add-on');
-            else toast.error(error.message);
-        } else {
+        try {
+            await callApi('POST', {add_on_id:selectedAddOnId});
             toast.success(language === 'ar' ? 'تم تفعيل الخدمة بنجاح' : 'Add-on activated');
-            fetchData();
-        }
-        setProcessing(false);
+            setSelectedAddOnId('');
+            await fetchData();
+        } catch (error: any) {toast.error(error.message);}
+        finally {setProcessing(false);}
     };
-
     const handleRemove = async (id: string) => {
-        if (!confirm(language === 'ar' ? 'هل أنت متأكد من إزالة هذه الخدمة؟' : 'Are you sure you want to remove this add-on?')) return;
+        if (processing || !confirm(language === 'ar' ? 'هل أنت متأكد من إزالة هذه الخدمة؟' : 'Are you sure you want to remove this add-on?')) return;
         setProcessing(true);
-        
-        const { error } = await supabase
-            .from('store_add_ons')
-            .delete()
-            .eq('id', id);
-
-        if (error) toast.error(error.message);
-        else {
+        try {
+            await callApi('DELETE', {id});
             toast.success(language === 'ar' ? 'تمت إزالة الخدمة' : 'Add-on removed');
-            fetchData();
-        }
-        setProcessing(false);
+            await fetchData();
+        } catch (error: any) {toast.error(error.message);}
+        finally {setProcessing(false);}
     };
 
     return (
