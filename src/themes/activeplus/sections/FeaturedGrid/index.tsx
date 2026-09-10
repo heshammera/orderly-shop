@@ -136,17 +136,7 @@ export default function FeaturedGrid({ settings, blocks, storeContext, sectionId
         };
     };
 
-    const products = blocks?.length > 0
-        ? blocks.map((b, idx) => {
-            const realFound = realProducts.find((p: any) => p.id === b.settings?.product_id);
-            if (realFound) return formatProduct(realFound);
-
-            const mockFound = mockProducts.find(p => p.id === b.settings?.product_id);
-            // Fallback to the mock product at the same index if no ID is provided or product not found
-            const fallback = mockFound || mockProducts[idx % mockProducts.length];
-            return { ...fallback, href: `${baseUrl}/${fallback.handle}` };
-        })
-        : mockProducts.map(p => ({ ...p, href: `${baseUrl}/${p.handle}` }));
+    const products = (blocks?.length ? blocks.map(b => realProducts.find((p:any)=>p.id===b.settings?.product_id)).filter(Boolean) : realProducts).map(formatProduct);
 
     if (!products || products.length === 0) return null;
 

@@ -46,11 +46,8 @@ export function WalletBalance({ storeId, currency }: WalletBalanceProps) {
             const pendingRechargeAmount = pendingRecharges?.reduce((sum, req) => sum + (req.amount_local || 0), 0) || 0;
 
             // 3. Get other wallet stats (earnings, etc) - optional if store_wallets view exists
-            const { data: walletStats } = await supabase
-                .from('store_wallets')
-                .select('pending_balance, total_earnings')
-                .eq('store_id', storeId)
-                .single();
+            const {data: earnings} = await supabase.from('orders').select('total').eq('store_id',storeId).eq('status','delivered');
+            const walletStats = {pending_balance:0,total_earnings:(earnings||[]).reduce((sum,x)=>sum+Number(x.total||0),0)};
 
             // Store balance is already in local currency in the DB
             if (storeData) {

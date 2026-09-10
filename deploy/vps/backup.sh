@@ -20,6 +20,7 @@ cp /etc/caddy/Caddyfile "$stage/Caddyfile"
 cp /etc/nginx/sites-available/orderly "$stage/nginx-orderly.conf"
 cp "$root/caddy-domain-check.py" "$stage/"
 cp /etc/systemd/system/orderly-domain-check.service "$stage/"
+python3 /opt/orderly-shop/backup-n8n.py "$stage"
 tar -czf "$destination/$stamp.tar.gz" -C "$stage" .
 tar -tzf "$destination/$stamp.tar.gz" >/dev/null
 find "$destination" -maxdepth 1 -type f -name '*.tar.gz' -mtime +7 -delete

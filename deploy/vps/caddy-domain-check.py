@@ -12,7 +12,7 @@ class Handler(BaseHTTPRequestHandler):
         host=parse_qs(url.query).get('domain',[''])[0].lower()
         status=403
         if url.path=='/check':
-            if host in {'orderlyshops.com','www.orderlyshops.com','api.orderlyshops.com'}:
+            if host in {'orderlyshops.com','www.orderlyshops.com','api.orderlyshops.com','n8n.orderlyshops.com'}:
                 status=200
             elif host.endswith('.orderlyshops.com'):
                 slug=host.removesuffix('.orderlyshops.com')

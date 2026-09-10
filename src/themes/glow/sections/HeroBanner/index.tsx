@@ -56,7 +56,7 @@ export default function HeroBanner({ settings, sectionId = 'hero_banner_1' }: He
 
                     {settings.button_label && (
                         <Link
-                            href={settings.button_link || '#'}
+                            href={settings.button_link || '/products'}
                             className="inline-flex items-center justify-center px-10 py-4 text-base font-bold text-white bg-[#e0afa0] rounded-full shadow-[0_10px_30px_rgba(224,175,160,0.3)] hover:bg-[#d4a373] transition-all transform hover:scale-105 active:scale-95"
                         >
                             <InlineEditableText

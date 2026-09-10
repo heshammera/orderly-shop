@@ -11,7 +11,7 @@ export default async function PrivacyPolicyPage({ params }: PrivacyPolicyPagePro
     const supabase = createAdminClient();
 
     const { data: store, error } = await supabase
-        .from('stores')
+        .from('public_stores')
         .select('*')
         .eq('slug', params.storeSlug)
         .single();

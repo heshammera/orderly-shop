@@ -19,13 +19,13 @@ export async function generateMetadata({ params }: { params: Promise<{ storeSlug
         const supabaseAdmin = getAdminClient();
         if (!supabaseAdmin) return {};
 
-        const { data: store } = await supabaseAdmin.from('stores').select('id').eq('slug', storeSlug).single();
+        const { data: store } = await supabaseAdmin.from('public_stores').select('id').eq('slug', storeSlug).single();
         if (!store) return {};
 
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(productSlug);
 
         let query = supabaseAdmin
-            .from('products')
+            .from('public_products')
             .select('name, description, images')
             .eq('store_id', store.id);
 
@@ -68,7 +68,7 @@ export default async function ProductPage({ params }: { params: Promise<{ storeS
 
     // Fetch Store by Slug to get details + settings
     const { data: store, error: storeError } = await supabaseAdmin
-        .from('stores')
+        .from('public_stores')
         .select('id, name, logo_url, description, currency, settings, slug')
         .eq('slug', storeSlug)
         .single();
@@ -80,7 +80,7 @@ export default async function ProductPage({ params }: { params: Promise<{ storeS
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(productSlug);
 
     let productQuery = supabaseAdmin
-        .from('products')
+        .from('public_products')
         .select('*')
         .eq('store_id', store.id)
         .eq('status', 'active');
@@ -260,4 +260,3 @@ export default async function ProductPage({ params }: { params: Promise<{ storeS
         </main>
     );
 }
-

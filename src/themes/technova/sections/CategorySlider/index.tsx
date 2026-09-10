@@ -22,12 +22,8 @@ interface CategorySliderProps {
 }
 
 export default function CategorySlider({ settings, blocks = [], sectionId = 'category_slider_1' }: CategorySliderProps) {
-    const displayBlocks = blocks.length > 0 ? blocks : [
-        { id: '1', type: 'category', settings: { title: 'هواتف ذكية', image_url: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&q=80', link: '#' } },
-        { id: '2', type: 'category', settings: { title: 'لابتوب', image_url: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400&q=80', link: '#' } },
-        { id: '3', type: 'category', settings: { title: 'سماعات', image_url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&q=80', link: '#' } },
-        { id: '4', type: 'category', settings: { title: 'ساعات ذكية', image_url: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=400&q=80', link: '#' } },
-    ];
+    const displayBlocks = blocks;
+    if (!displayBlocks.length) return null;
 
     return (
         <section className="py-20 px-4" style={{ background: '#0a0a1a' }}>

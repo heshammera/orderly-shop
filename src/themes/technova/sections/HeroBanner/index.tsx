@@ -67,7 +67,7 @@ export default function HeroBanner({ settings, sectionId = 'hero_banner_1' }: He
 
                 {settings.button_label && (
                     <Link
-                        href={settings.button_link || '#'}
+                        href={settings.button_link || '/products'}
                         className="inline-flex items-center gap-2 px-10 py-4 text-base font-bold text-white rounded-full shadow-lg transition-all transform hover:scale-105 hover:shadow-cyan-500/25"
                         style={{ background: 'linear-gradient(135deg, #00d4ff, #7c3aed)', boxShadow: '0 0 30px rgba(0,212,255,0.3)' }}
                     >

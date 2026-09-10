@@ -31,7 +31,7 @@ export function QuickViewModal({
             setLoading(true);
             try {
                 // Determine if storeId is ID or Slug
-                let storeQuery = supabase.from('stores').select('*');
+                let storeQuery = supabase.from('public_stores').select('*');
                 // Simple heuristic: if it's uuid shape, it's ID, otherwise slug.
                 const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(storeId);
 
@@ -46,7 +46,7 @@ export function QuickViewModal({
 
                 const [productRes, variantsRes, upsellRes] = await Promise.all([
                     supabase
-                        .from('products')
+                        .from('public_products')
                         .select('*')
                         .eq('id', productId)
                         .single(),

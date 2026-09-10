@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: { params: Promise<{ storeSlug
         if (!supabaseAdmin) return { title: 'Store' };
 
         const { data: store } = await supabaseAdmin
-            .from('stores')
+            .from('public_stores')
             .select('name, description, logo_url')
             .eq('slug', storeSlug)
             .single();
@@ -79,7 +79,7 @@ export default async function StorePage({ params }: { params: Promise<{ storeSlu
 
     // Fetch Store
     const { data: store, error: storeError } = await supabaseAdmin
-        .from('stores')
+        .from('public_stores')
         .select('id, name, logo_url, description, currency, settings, status, slug, has_removed_copyright')
         .eq('slug', storeSlug)
         .single();
@@ -155,7 +155,7 @@ export default async function StorePage({ params }: { params: Promise<{ storeSlu
             .order('sort_order'),
         // Fetch store products
         supabaseAdmin
-            .from('products')
+            .from('public_products')
             .select('id, name, price, sale_price, images, category_id:product_categories(category_id)')
             .eq('store_id', store.id)
             .eq('status', 'active')
@@ -247,5 +247,3 @@ export default async function StorePage({ params }: { params: Promise<{ storeSlu
         </main>
     );
 }
-
-

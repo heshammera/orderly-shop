@@ -30,14 +30,14 @@ export default function Footer({ settings, blocks = [], sectionId = 'footer_1', 
     const publicContact = storeContext?.store?.settings?.public_contact || {};
 
     const displayEmail = settings.contact_email || publicContact.email || 'support@technova.com';
-    const displayPhone = settings.contact_phone || publicContact.phone || '+966 000 000 000';
+    const displayPhone = settings.contact_phone || publicContact.phone || '';
     const displayAbout = settings.about_text || storeContext?.store?.description?.ar || storeContext?.store?.description?.en || 'وجهتك الأولى لأحدث التقنيات والأجهزة الإلكترونية بأفضل الأسعار.';
 
     const defaultLinks = [
         { settings: { label: 'الرئيسية', url: '/' } },
         { settings: { label: 'المنتجات', url: '/products' } },
-        { settings: { label: 'من نحن', url: '#' } },
-        { settings: { label: 'تواصل معنا', url: '#' } },
+        { settings: { label: 'الخصوصية', url: '/pages/privacy' } },
+        { settings: { label: 'الشروط', url: '/pages/terms' } },
     ];
 
     const displayLinks = blocks.length > 0 ? blocks : defaultLinks;

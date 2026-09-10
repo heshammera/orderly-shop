@@ -40,8 +40,8 @@ export function ProductRecommendations() {
             const cartProductIds = cart.map(item => item.productId);
 
             let query = supabase
-                .from('products')
-                .select('id, name, price, images, compare_at_price, max_per_order, quantity')
+                .from('public_products')
+                .select('id, name, price, images, compare_at_price, max_per_order, quantity:stock_quantity')
                 .eq('store_id', store.id)
                 .eq('status', 'active');
 
@@ -77,7 +77,7 @@ export function ProductRecommendations() {
             basePrice: product.price,
             unitPrice: product.price,
             quantity: 1,
-            maxQuantity: product.max_per_order || product.quantity || 100,
+            maxQuantity: product.max_per_order ?? product.quantity ?? 100,
             variants: [],
             addedAt: new Date().toISOString()
         });

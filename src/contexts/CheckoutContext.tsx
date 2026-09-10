@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useRef, useEffect, ReactNode } from 'react';
 import { useCart } from '@/contexts/CartContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { createClient } from '@/lib/supabase/client';
@@ -76,6 +76,7 @@ export function CheckoutProvider({ store, children, isEditable = false }: Checko
     const router = useRouter();
     const supabase = createClient();
 
+    const requestKey = useRef<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
 
@@ -174,26 +175,7 @@ export function CheckoutProvider({ store, children, isEditable = false }: Checko
         });
     }, []);
 
-    // Fetch Points
-    useEffect(() => {
-        if (!store.settings?.loyalty_program_enabled || formData.phone.length < 10) return;
-
-        const fetchPoints = async () => {
-            const { data } = await supabase
-                .from('customers')
-                .select('loyalty_points')
-                .eq('store_id', store.id)
-                .eq('phone', formData.phone)
-                .single();
-
-            if (data) {
-                setCustomerPoints(data.loyalty_points || 0);
-            }
-        };
-        const timer = setTimeout(fetchPoints, 1000);
-        return () => clearTimeout(timer);
-    }, [formData.phone, store.id, store.settings]);
-
+    // Verified loyalty redemption is enabled only after messaging setup.
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat(language === 'ar' ? 'ar-SA' : 'en-SA', {
             style: 'currency',
@@ -205,36 +187,16 @@ export function CheckoutProvider({ store, children, isEditable = false }: Checko
         if (!couponCode) return;
         setLoading(true);
         try {
-            const { data: rawData, error } = await supabase
-                .from('coupons')
-                .select('*')
-                .eq('store_id', store.id)
-                .eq('code', couponCode)
-                .eq('is_active', true)
-                .single();
-
-            if (error || !rawData) throw new Error('Invalid coupon code');
-
-            const data = rawData;
+            const response = await fetch('/api/checkout/coupon',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({store_id:store.id,code:couponCode,cart})});
+            const result = await response.json();
+            if(!response.ok)throw new Error(result.error);
+            const data = result.coupon;
             const now = new Date();
             if (data.expires_at && new Date(data.expires_at) < now) throw new Error('Coupon expired');
             if (data.usage_limit && data.used_count >= data.usage_limit) throw new Error('Coupon usage limit reached');
             if (data.min_order_amount && subtotal < data.min_order_amount) throw new Error(`Minimum order amount is ${data.min_order_amount}`);
 
-            // Check max_per_customer limit
-            if (data.max_per_customer && formData.phone) {
-                const { count: customerUses, error: usesError } = await supabase
-                    .from('orders')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('store_id', store.id)
-                    .eq('coupon_code', couponCode)
-                    .eq('customer_phone', formData.phone);
-
-                if (!usesError && customerUses !== null && customerUses >= data.max_per_customer) {
-                    throw new Error('Coupon max usage per customer reached');
-                }
-            }
-
+            // Customer usage is checked atomically on submission.
             let discountValue = 0;
             if (data.discount_type === 'percentage') {
                 discountValue = (subtotal * data.discount_value) / 100;
@@ -311,6 +273,7 @@ export function CheckoutProvider({ store, children, isEditable = false }: Checko
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    request_key: requestKey.current ||= crypto.randomUUID(),
                     store_id: store.id,
                     cart: cart.map(item => ({
                         productId: item.productId,
@@ -348,7 +311,7 @@ export function CheckoutProvider({ store, children, isEditable = false }: Checko
             trackPurchase({
                 content_ids: cart.map(item => item.productId),
                 currency: store.currency,
-                value: total,
+                value: result.total,
                 num_items: cartCount,
                 order_id: result.order_number,
             });

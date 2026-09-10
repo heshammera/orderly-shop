@@ -26,7 +26,7 @@ export default async function Page({ params }: { params: { storeSlug: string } }
     );
 
     const { data: store, error: storeError } = await supabase
-        .from('stores')
+        .from('public_stores')
         .select('id, currency, slug')
         .eq('slug', params.storeSlug)
         .eq('status', 'active')

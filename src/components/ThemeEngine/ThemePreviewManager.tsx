@@ -27,7 +27,7 @@ export default function ThemePreviewManager({
 
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
-            // In production, we'd verify the origin (e.g. event.origin === window.location.origin)
+            if (event.origin !== window.location.origin || event.source !== window.parent) return;
             const data = event.data;
 
             if (data?.type === 'UPDATE_SECTION_SETTING') {

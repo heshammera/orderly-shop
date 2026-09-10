@@ -27,7 +27,7 @@ export default async function ProductsPage({ params }: { params: { storeSlug: st
 
     // Fetch Store
     const { data: store, error: storeError } = await supabaseAdmin
-        .from('stores')
+        .from('public_stores')
         .select(`
             id, 
             name, 
@@ -60,7 +60,7 @@ export default async function ProductsPage({ params }: { params: { storeSlug: st
             .eq('status', 'active')
             .order('sort_order'),
         supabaseAdmin
-            .from('products')
+            .from('public_products')
             .select('id, name, price, compare_at_price, images')
             .eq('store_id', store.id)
             .eq('status', 'active')

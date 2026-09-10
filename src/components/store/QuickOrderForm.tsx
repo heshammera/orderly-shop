@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +27,7 @@ export function QuickOrderForm({ isOpen, onClose, product, quantity, subtotal, v
     const { language } = useLanguage();
     const { toast } = useToast();
 
+    const requestKey = useRef<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [orderId, setOrderId] = useState<string | null>(null);
@@ -94,6 +95,7 @@ export function QuickOrderForm({ isOpen, onClose, product, quantity, subtotal, v
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    request_key: requestKey.current ||= crypto.randomUUID(),
                     store_id: store.id,
                     product: {
                         id: product.id,
@@ -129,7 +131,7 @@ export function QuickOrderForm({ isOpen, onClose, product, quantity, subtotal, v
                 content_ids: [product.id],
                 content_type: 'product',
                 currency: store.currency,
-                value: total,
+                value: result.total,
                 num_items: quantity,
             });
 
@@ -152,6 +154,7 @@ export function QuickOrderForm({ isOpen, onClose, product, quantity, subtotal, v
 
     const resetAndClose = () => {
         setSuccess(false);
+        requestKey.current = null;
         setFormData({
             name: '',
             phone: '',

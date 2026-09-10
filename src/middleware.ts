@@ -124,6 +124,7 @@ export async function middleware(request: NextRequest) {
     if (
         pathname.startsWith('/_next') ||
         pathname.startsWith('/static') ||
+        pathname === '/sitemap.xml' || pathname === '/robots.txt' ||
         pathname.includes('/favicon.ico') ||
         pathname.match(/\.(ico|png|jpg|jpeg|gif|svg|css|js|woff|woff2|ttf|eot|webp|map)$/)
     ) {

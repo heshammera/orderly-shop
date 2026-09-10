@@ -1,3 +1,4 @@
+import { publicSettings } from '@/lib/public-store';
 import { createClient } from '@supabase/supabase-js';
 import { notFound } from 'next/navigation';
 import { StoreClientLayout } from '@/components/store/StoreClientLayout';
@@ -130,13 +131,14 @@ export default async function Layout({
     // Parse JSON fields safely
     const parsedStore = {
         ...store,
+        settings: publicSettings(store.settings),
         name: typeof store.name === 'string' ? JSON.parse(store.name) : store.name,
         description: typeof store.description === 'string' ? JSON.parse(store.description) : store.description,
         baseUrl: baseUrl,
     };
 
     // Get integrations from store settings
-    const integrations = store?.settings?.integrations || {};
+    const integrations = publicSettings(store.settings).integrations;
 
     // Check AI Features
     const subscriptions = Array.isArray(store.subscriptions) ? store.subscriptions : [store.subscriptions];

@@ -23,11 +23,8 @@ interface CategorySliderProps {
 
 export default function CategorySlider({ settings, blocks = [], sectionId = 'category_slider_1' }: CategorySliderProps) {
     // Provide some default dummy blocks if none exist
-    const displayBlocks = blocks.length > 0 ? blocks : [
-        { id: '1', type: 'category', settings: { title: 'Men', image_url: 'https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?w=600&q=80', link: '/category/men' } },
-        { id: '2', type: 'category', settings: { title: 'Women', image_url: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=600&q=80', link: '/category/women' } },
-        { id: '3', type: 'category', settings: { title: 'Accessories', image_url: 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=600&q=80', link: '/category/accessories' } },
-    ];
+    const displayBlocks = blocks;
+    if (!displayBlocks.length) return null;
 
     return (
         <section id="product-banners" className="py-10 bg-white">

@@ -16,7 +16,7 @@ export default async function Page({ params, searchParams }: { params: { storeSl
     );
 
     const { data: store } = await supabase
-        .from('stores')
+        .from('public_stores')
         .select('id, name, slug, logo_url, currency, settings')
         .eq('slug', params.storeSlug)
         .single();

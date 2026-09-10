@@ -24,6 +24,7 @@ const ORDER_STATUSES = {
 
 export default function TrackOrderPage({ params }: { params: { storeSlug: string } }) {
     const { language, dir } = useLanguage();
+    const [phone, setPhone] = useState('');
     const [searchQuery, setSearchQuery] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -46,7 +47,7 @@ export default function TrackOrderPage({ params }: { params: { storeSlug: string
         setResults(null);
 
         try {
-            const res = await trackOrder(params.storeSlug, searchQuery);
+            const res = await trackOrder(params.storeSlug, searchQuery, phone);
             if (res.error) {
                 setError(language === 'ar' ? "لم يتم العثور على طلبات مطابقة أو أرقام الهواتف" : res.error);
             } else if (res.orders) {
@@ -73,7 +74,7 @@ export default function TrackOrderPage({ params }: { params: { storeSlug: string
                     <p className="text-slate-500 dark:text-slate-400 max-w-xl mx-auto">
                         {language === 'ar'
                             ? 'أدخل رقم الطلب الخاص بك (مثال: ORD-123456) أو رقم الهاتف المستخدم أثناء الطلب لمعرفة حالة طلبك الحالية.'
-                            : 'Enter your order number (e.g. ORD-123456) or phone number to see the current status.'}
+                            : 'Enter the full order number and the phone used for your order.'}
                     </p>
                 </div>
 
@@ -86,11 +87,12 @@ export default function TrackOrderPage({ params }: { params: { storeSlug: string
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder={language === 'ar' ? 'رقم الطلب أو رقم الموبايل...' : 'Order number or phone...'}
+                                    placeholder={language === 'ar' ? 'رقم الطلب كاملًا' : 'Full order number'}
                                     className={cn("h-12 text-lg shadow-sm bg-white dark:bg-slate-900", language === 'ar' ? 'pr-10' : 'pl-10')}
                                 />
                             </div>
-                            <Button type="submit" size="lg" disabled={loading} className="h-12 px-8 font-semibold">
+                            <Input aria-label="رقم هاتف الطلب" placeholder="رقم الهاتف المستخدم في الطلب" value={phone} onChange={e=>setPhone(e.target.value)} required />
+                                <Button type="submit" size="lg" disabled={loading} className="h-12 px-8 font-semibold">
                                 {loading ? (
                                     <Loader2 className="w-5 h-5 animate-spin" />
                                 ) : (

@@ -27,13 +27,8 @@ export async function POST(req: Request) {
             .single();
 
         if (!storeMember) {
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('is_super_admin')
-                .eq('id', user.id)
-                .single();
-
-            if (!profile?.is_super_admin) {
+            const {data: ownerStore} = await supabase.from('stores').select('id').eq('id', storeId).eq('owner_id', user.id).maybeSingle();
+            if (!ownerStore) {
                 return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
             }
         }

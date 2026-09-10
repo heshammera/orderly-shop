@@ -24,13 +24,14 @@ export function ProductGrid({ data, storeId, storeCurrency, storeSlug, isEditabl
             // In a real generic engine, this fetching logic might be centralized or server-side
             // For now, client-side fetch is fine for interaction
             let query = supabase
-                .from('products')
+                .from('public_products')
                 .select('*')
                 .eq('store_id', storeId)
                 .eq('status', 'active');
 
             if (settings.categoryId && settings.categoryId !== 'all') {
-                query = query.eq('category_id', settings.categoryId);
+                const {data: links} = await supabase.from('product_categories').select('product_id').eq('category_id', settings.categoryId);
+                query = query.in('id', (links || []).map(x => x.product_id));
             }
 
             const { data: fetchedProducts } = await query

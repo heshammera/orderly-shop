@@ -37,13 +37,8 @@ export default function CategorySlider({ settings, blocks = [], sectionId = 'cat
     };
 
     // Provide some default dummy blocks if none exist
-    const displayBlocks = blocks.length > 0 ? blocks : [
-        { id: '1', type: 'category', settings: { title: 'ملابس رجالية', image_url: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?w=300&q=80' } },
-        { id: '2', type: 'category', settings: { title: 'ملابس نسائية', image_url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=300&q=80' } },
-        { id: '3', type: 'category', settings: { title: 'إلكترونيات', image_url: 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=300&q=80' } },
-        { id: '4', type: 'category', settings: { title: 'عطور', image_url: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=300&q=80' } },
-        { id: '5', type: 'category', settings: { title: 'اكسسوارات', image_url: 'https://images.unsplash.com/photo-1509319117193-57bab727e09d?w=300&q=80' } },
-    ];
+    const displayBlocks = blocks;
+    if (!displayBlocks.length) return null;
 
     return (
         <section className="py-24 bg-[#0a0a0a] border-y border-zinc-900 overflow-hidden">

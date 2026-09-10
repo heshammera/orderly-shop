@@ -31,7 +31,7 @@ export async function generateMetadata({
 
         // 1. Fetch Product
         const { data: product } = await supabase
-            .from('products')
+            .from('public_products')
             .select('name, images')
             .eq('id', productId)
             .maybeSingle();
@@ -104,7 +104,7 @@ export default async function LandingPage({
     try {
         // 1. Fetch Product
         const { data: pData, error: pError } = await supabase
-            .from('products')
+            .from('public_products')
             .select('id, name, price, sale_price, images, store_id, status')
             .eq('id', productId)
             .maybeSingle();
@@ -116,7 +116,7 @@ export default async function LandingPage({
 
         // 2. Fetch Store
         const { data: sData } = await supabase
-            .from('stores')
+            .from('public_stores')
             .select('id, name, slug, currency')
             .ilike('slug', storeSlug)
             .maybeSingle();

@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
         const supabase = createAdminClient();
 
         // Check if user already exists
-        const { data: existingUser } = await supabase.rpc('get_user_by_email', { email_input: email });
+
         // Instead of RPC which we haven't checked, let's just use admin.listUsers or rely on createUser to fail gracefully
 
         // Use Supabase Admin API to create the user bypassing the built-in email sending service 
