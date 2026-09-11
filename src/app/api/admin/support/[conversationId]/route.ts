@@ -1,3 +1,4 @@
+import { authorizedAdminDb } from '@/lib/admin-session-db';
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
@@ -10,7 +11,8 @@ export async function GET(
     { params }: { params: { conversationId: string } }
 ) {
     try {
-        const adminDb = createAdminClient();
+        const adminDb = await authorizedAdminDb();
+        if(!adminDb)return NextResponse.json({error:'جلسة الإدارة غير صالحة'},{status:401});
 
         const { data: messages, error } = await adminDb
             .from('support_messages')
@@ -32,7 +34,8 @@ export async function POST(
     { params }: { params: { conversationId: string } }
 ) {
     try {
-        const adminDb = createAdminClient();
+        const adminDb = await authorizedAdminDb();
+        if(!adminDb)return NextResponse.json({error:'جلسة الإدارة غير صالحة'},{status:401});
 
         const body = await request.json();
         const { content, message_type, image_url } = body;
@@ -81,7 +84,8 @@ export async function PATCH(
     { params }: { params: { conversationId: string } }
 ) {
     try {
-        const adminDb = createAdminClient();
+        const adminDb = await authorizedAdminDb();
+        if(!adminDb)return NextResponse.json({error:'جلسة الإدارة غير صالحة'},{status:401});
 
         // Mark user messages as read
         await adminDb

@@ -1,5 +1,6 @@
 "use client";
 
+import { contactErrors } from '@/lib/contact-validation';
 import { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,10 @@ export function SupportChatWidget() {
     const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
     const [sessionId, setSessionId] = useState<string>('');
+    const [isMerchant,setIsMerchant]=useState<boolean|null>(null);
+    const [guestPhone,setGuestPhone]=useState('');
+    const [fieldErrors,setFieldErrors]=useState<Record<string,string>>({});
+    const [sendError,setSendError]=useState('');
     const [guestName, setGuestName] = useState<string>('');
     const [messages, setMessages] = useState<Message[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -61,6 +66,7 @@ export function SupportChatWidget() {
         }
         setSessionId(storedId);
 
+        setGuestPhone(localStorage.getItem('support_guest_phone') || '');
         let storedName = localStorage.getItem('support_guest_name');
         if (storedName) {
             setGuestName(storedName);
@@ -85,6 +91,7 @@ export function SupportChatWidget() {
             });
             if (res.ok) {
                 const data = await res.json();
+                setIsMerchant(data.isMerchant === true);
                 const newMessages: Message[] = data.messages || [];
 
                 // Detect new admin messages for popup (only during background polling)
@@ -237,10 +244,16 @@ export function SupportChatWidget() {
         const trimmed = newMessage.trim();
         if (!trimmed && !selectedImage) return;
 
-        if (showNameInput && guestName.trim()) {
-            localStorage.setItem('support_guest_name', guestName.trim());
-            setShowNameInput(false);
+        if(isMerchant===null)return;
+        const contact=contactErrors(guestName,guestPhone,language);
+        if(!isMerchant){
+            setFieldErrors(contact.errors);
+            if(Object.keys(contact.errors).length)return;
+            setGuestPhone(contact.phone);
+            localStorage.setItem('support_guest_name',contact.name);
+            localStorage.setItem('support_guest_phone',contact.phone);
         }
+        setSendError('');
 
         try {
             setSending(true);
@@ -269,8 +282,7 @@ export function SupportChatWidget() {
                 const { data } = supabase.storage.from('support_chat').getPublicUrl(filePath);
                 imageUrlToSave = data.publicUrl;
 
-                setSelectedImage(null);
-                setImagePreview(null);
+
                 setIsUploadingImage(false);
             }
 
@@ -285,7 +297,7 @@ export function SupportChatWidget() {
                 created_at: new Date().toISOString()
             }]);
 
-            await fetch(`/api/chat?t=${Date.now()}`, {
+            const response = await fetch(`/api/chat?t=${Date.now()}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -295,14 +307,20 @@ export function SupportChatWidget() {
                 body: JSON.stringify({
                     content: trimmed || (language === 'ar' ? 'صورة مرفقة' : 'Image attachment'),
                     guestName: guestName.trim() || undefined,
+                    guestPhone,
+                    language,
                     image_url: imageUrlToSave || undefined,
                     message_type: imageUrlToSave ? 'image' : 'text'
                 })
             });
 
+            const result=await response.json();
+            if(!response.ok){if(result.fieldErrors)setFieldErrors(result.fieldErrors);throw new Error(result.error || 'تعذر إرسال الرسالة');}
+            setSelectedImage(null);setImagePreview(null);
             // Re-fetch to get actual DB record
             fetchChat(true);
-        } catch (error) {
+        } catch (error:any) {
+            setNewMessage(trimmed);setSendError(error.message);setMessages(prev=>prev.filter(m=>!m.id.startsWith('temp-')));
             console.error('Error sending message:', error);
         } finally {
             setSending(false);
@@ -310,6 +328,8 @@ export function SupportChatWidget() {
     };
 
     const handleSubmitEmail = async (messageId: string) => {
+        if(isMerchant===null)return;
+        if(!isMerchant){const contact=contactErrors(guestName,guestPhone,language);setFieldErrors(contact.errors);if(Object.keys(contact.errors).length)return;}
         const trimmedEmail = guestEmail.trim();
         if (!trimmedEmail) return;
 
@@ -329,7 +349,7 @@ export function SupportChatWidget() {
             // Save to localStorage so they don't have to enter it again across reloads easily
             localStorage.setItem('support_guest_email', trimmedEmail);
 
-            await fetch(`/api/chat?t=${Date.now()}`, {
+            const response = await fetch(`/api/chat?t=${Date.now()}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -339,10 +359,13 @@ export function SupportChatWidget() {
                 body: JSON.stringify({
                     content: `${language === 'ar' ? 'تم تقديم البريد الإلكتروني:' : 'Email Submitted:'} ${trimmedEmail}`,
                     guestName: guestName.trim() || undefined,
+                    guestPhone,
+                    language,
                     guestEmail: trimmedEmail
                 })
             });
 
+            const result=await response.json();if(!response.ok){setSendError(result.error || 'تعذر إرسال الرسالة');return;}
             setEmailSubmittedMap(prev => ({ ...prev, [messageId]: true }));
             setGuestEmail('');
             fetchChat(true);
@@ -370,7 +393,7 @@ export function SupportChatWidget() {
     }, [pathname]);
 
     // Determine if user is a merchant (logged in) by checking pathname
-    const isMerchant = pathname?.startsWith('/dashboard');
+
 
     if (!shouldShow) {
         return null;
@@ -487,22 +510,27 @@ export function SupportChatWidget() {
                 </div>
 
                 {/* Name Input if guest and first message */}
-                {showNameInput && messages.length === 0 && (
+                {isMerchant === false && (
                     <div className="p-3 bg-muted/30 border-t shrink-0">
                         <div className="flex items-center gap-2 mb-2 text-xs text-muted-foreground">
                             <Info className="w-3.5 h-3.5" />
-                            {language === 'ar' ? 'فضلاً أدخل اسمك لنتعرف عليك' : 'Please enter your name to assist you better'}
+                            {language === 'ar' ? 'الاسم ورقم الهاتف مطلوبان للتواصل معك' : 'Name and phone number are required to contact you'}
                         </div>
                         <Input
-                            placeholder={language === 'ar' ? 'الاسم الكريم...' : 'Your name...'}
+                            id="support-guest-name" aria-label={language==='ar'?'الاسم (إجباري)':'Name (required)'} aria-invalid={!!fieldErrors.name} aria-describedby={fieldErrors.name?'support-name-error':undefined}
+                            placeholder={language === 'ar' ? 'الاسم (إجباري)' : 'Name (required)'}
                             value={guestName}
                             onChange={(e) => setGuestName(e.target.value)}
                             className="h-9 text-sm"
-                            maxLength={50}
+                            maxLength={150}
                         />
+                        {fieldErrors.name&&<p id="support-name-error" className="text-xs text-red-600">{fieldErrors.name}</p>}
+                        <Input id="support-guest-phone" type="tel" autoComplete="tel" dir="ltr" aria-label={language==='ar'?'رقم الهاتف (إجباري)':'Phone (required)'} aria-invalid={!!fieldErrors.phone} aria-describedby={fieldErrors.phone?'support-phone-error':undefined} className="mt-2 h-9 text-sm" value={guestPhone} onChange={e=>setGuestPhone(e.target.value)} placeholder={language==='ar'?'رقم الهاتف (إجباري)':'Phone (required)'}/>
+                        {fieldErrors.phone&&<p id="support-phone-error" className="text-xs text-red-600">{fieldErrors.phone}</p>}
                     </div>
                 )}
 
+                {sendError&&<p role="alert" className="p-2 text-sm text-red-600">{sendError}</p>}
                 {/* Input Area */}
                 <div className="bg-background border-t shrink-0 flex flex-col pt-1">
                     {/* Image Preview Area */}
@@ -553,7 +581,7 @@ export function SupportChatWidget() {
                             disabled={sending || isUploadingImage}
                             className="flex-1"
                         />
-                        <Button type="submit" size="icon" disabled={sending || isUploadingImage || (!newMessage.trim() && !selectedImage) || (showNameInput && messages.length === 0 && !guestName.trim())}>
+                        <Button type="submit" size="icon" disabled={sending || isUploadingImage || (!newMessage.trim() && !selectedImage) || isMerchant === null}>
                             {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                         </Button>
                     </form>

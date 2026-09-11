@@ -21,6 +21,7 @@ interface Conversation {
     session_id: string | null;
     user_type: 'merchant' | 'guest';
     guest_name: string | null;
+    guest_phone?: string | null;
     status: 'open' | 'closed';
     unread_admin_count: number;
     updated_at: string;
@@ -388,7 +389,7 @@ export default function AdminSupportPage() {
                                     <p className="text-xs text-muted-foreground">
                                         {selectedConv.user_type === 'merchant'
                                             ? `${language === 'ar' ? 'متجر:' : 'Store:'} ${getLocalizedText((Array.isArray(selectedConv.stores) ? selectedConv.stores[0]?.slug : selectedConv.stores?.slug), language as 'ar' | 'en') || ''}`
-                                            : language === 'ar' ? 'زائر للمنصة' : 'Platform Guest'
+                                            : <span>{language === 'ar' ? 'زائر للمنصة' : 'Platform Guest'} — {selectedConv.guest_phone ? <a dir="ltr" href={`tel:${selectedConv.guest_phone}`}>{selectedConv.guest_phone}</a> : (language==='ar'?'الهاتف غير مسجل':'Phone not provided')}</span>
                                         }
                                     </p>
                                 </div>

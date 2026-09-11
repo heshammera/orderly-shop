@@ -1,3 +1,4 @@
+import { contactErrors } from '@/lib/contact-validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
@@ -10,6 +11,8 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
+        const contact=contactErrors(fullName,metadata?.phone,body.language);
+        if(Object.keys(contact.errors).length)return NextResponse.json({error:Object.values(contact.errors).join(' '),fieldErrors:contact.errors},{status:400});
         const supabase = createAdminClient();
 
         // Check if user already exists
@@ -23,8 +26,11 @@ export async function POST(request: NextRequest) {
             password,
             email_confirm: true, // TEMPORARILY auto-confirm — OTP verification disabled (was: false)
             user_metadata: {
-                full_name: fullName,
-                ...metadata,
+                store_name: metadata?.store_name,
+                store_slug: metadata?.store_slug,
+                referral_code: metadata?.referral_code,
+                full_name: contact.name,
+                phone: contact.phone,
             },
         });
 

@@ -1,3 +1,4 @@
+import { contactErrors } from '@/lib/contact-validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -7,10 +8,11 @@ export async function GET(request: NextRequest) {
         const supabase = createClient();
         const adminDb = createAdminClient();
 
-        const { data: userAuth } = await supabase.auth.getUser();
+        const bearer=request.headers.get('authorization')?.replace(/^Bearer /i,'');
+        const { data: userAuth } = bearer ? await adminDb.auth.getUser(bearer) : await supabase.auth.getUser();
         const sessionId = request.headers.get('x-session-id');
 
-        let isMerchant = false;
+        let isMerchant = !!userAuth?.user;
         let storeId = null;
 
         if (userAuth?.user) {
@@ -37,7 +39,7 @@ export async function GET(request: NextRequest) {
             const { data } = await adminDb
                 .from('support_conversations')
                 .select('*')
-                .eq('store_id', storeId)
+                .eq('merchant_user_id', userAuth.user!.id)
                 .eq('user_type', 'merchant')
                 .limit(1)
                 .single();
@@ -54,7 +56,7 @@ export async function GET(request: NextRequest) {
         }
 
         if (!conversation) {
-            return NextResponse.json({ messages: [], unreadCount: 0 });
+            return NextResponse.json({ messages: [], unreadCount: 0, isMerchant });
         }
 
         const { data: messages } = await adminDb
@@ -64,6 +66,7 @@ export async function GET(request: NextRequest) {
             .order('created_at', { ascending: true });
 
         return NextResponse.json({
+            isMerchant,
             conversationId: conversation.id,
             messages: messages || [],
             unreadCount: conversation.unread_user_count
@@ -80,17 +83,18 @@ export async function POST(request: NextRequest) {
         const supabase = createClient();
         const adminDb = createAdminClient();
 
-        const { data: userAuth } = await supabase.auth.getUser();
+        const bearer=request.headers.get('authorization')?.replace(/^Bearer /i,'');
+        const { data: userAuth } = bearer ? await adminDb.auth.getUser(bearer) : await supabase.auth.getUser();
         const sessionId = request.headers.get('x-session-id');
 
         const body = await request.json();
-        const { content, guestName, guestEmail, image_url, message_type } = body;
+        const { content, guestName, guestPhone, guestEmail, image_url, message_type } = body;
 
         if (!content && !image_url) return NextResponse.json({ error: 'Content required' }, { status: 400 });
 
-        let isMerchant = false;
+        let isMerchant = !!userAuth?.user;
         let storeId: string | null = null;
-        let userId: string | null = null;
+        let userId: string | null = userAuth?.user?.id || null;
 
         if (userAuth?.user) {
             const { data: store } = await adminDb
@@ -111,6 +115,8 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized or missing session ID' }, { status: 401 });
         }
 
+        const contact=contactErrors(guestName,guestPhone,body.language);
+        if(!isMerchant && Object.keys(contact.errors).length)return NextResponse.json({error:Object.values(contact.errors).join(' '),fieldErrors:contact.errors},{status:400});
         let conversation;
         let isNewConversation = false;
 
@@ -119,7 +125,7 @@ export async function POST(request: NextRequest) {
             const { data } = await adminDb
                 .from('support_conversations')
                 .select('*')
-                .eq('store_id', storeId)
+                .eq('merchant_user_id', userAuth.user!.id)
                 .eq('user_type', 'merchant')
                 .limit(1)
                 .single();
@@ -128,7 +134,7 @@ export async function POST(request: NextRequest) {
             if (!conversation) {
                 const { data: newConv } = await adminDb
                     .from('support_conversations')
-                    .insert({ store_id: storeId, user_type: 'merchant' })
+                    .insert({ store_id: storeId, merchant_user_id:userAuth.user!.id, user_type: 'merchant' })
                     .select()
                     .single();
                 conversation = newConv;
@@ -147,7 +153,7 @@ export async function POST(request: NextRequest) {
             if (!conversation) {
                 const { data: newConv } = await adminDb
                     .from('support_conversations')
-                    .insert({ session_id: sessionId, user_type: 'guest', guest_name: guestName || 'Guest' })
+                    .insert({ session_id: sessionId, user_type: 'guest', guest_name: contact.name, guest_phone: contact.phone })
                     .select()
                     .single();
                 conversation = newConv;
@@ -155,9 +161,10 @@ export async function POST(request: NextRequest) {
             }
 
             // Update guest name or email if they provide a new one
-            let updates: any = {};
+            if(!conversation)throw new Error('Unable to create conversation');
+            let updates: any = {guest_name:contact.name,guest_phone:contact.phone};
             if (guestName && conversation.guest_name !== guestName) {
-                updates.guest_name = guestName;
+                updates.guest_name = contact.name;
             }
             if (guestEmail && conversation.guest_email !== guestEmail) {
                 updates.guest_email = guestEmail;
@@ -226,10 +233,11 @@ export async function PATCH(request: NextRequest) {
         const supabase = createClient();
         const adminDb = createAdminClient();
 
-        const { data: userAuth } = await supabase.auth.getUser();
+        const bearer=request.headers.get('authorization')?.replace(/^Bearer /i,'');
+        const { data: userAuth } = bearer ? await adminDb.auth.getUser(bearer) : await supabase.auth.getUser();
         const sessionId = request.headers.get('x-session-id');
 
-        let isMerchant = false;
+        let isMerchant = !!userAuth?.user;
         let storeId = null;
 
         if (userAuth?.user) {
@@ -253,7 +261,7 @@ export async function PATCH(request: NextRequest) {
             const { data } = await adminDb
                 .from('support_conversations')
                 .select('id')
-                .eq('store_id', storeId)
+                .eq('merchant_user_id', userAuth.user!.id)
                 .eq('user_type', 'merchant')
                 .limit(1)
                 .single();

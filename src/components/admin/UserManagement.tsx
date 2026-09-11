@@ -54,14 +54,7 @@ export function UserManagement() {
     const { data: usersData, isLoading } = useQuery({
         queryKey: ['admin-users', page, searchTerm],
         queryFn: async () => {
-            const { data, error } = await supabase.rpc('get_all_users_paginated', {
-                p_page: page,
-                p_limit: 10,
-                p_search: searchTerm || null,
-                p_status: 'all'
-            });
-            if (error) throw error;
-            return data;
+            const response=await fetch(`/api/admin/users?page=${page}&search=${encodeURIComponent(searchTerm)}`,{cache:'no-store'});const data=await response.json();if(!response.ok)throw new Error(data.error);return data;
         },
     });
 
@@ -157,6 +150,7 @@ export function UserManagement() {
                         <TableRow>
                             <TableHead>{language === 'ar' ? 'المستخدم' : 'User'}</TableHead>
                             <TableHead>{language === 'ar' ? 'البريد الإلكتروني' : 'Email'}</TableHead>
+                            <TableHead>{language === 'ar' ? 'رقم الهاتف' : 'Phone'}</TableHead>
                             <TableHead>{language === 'ar' ? 'المتاجر' : 'Stores'}</TableHead>
                             <TableHead>{language === 'ar' ? 'تاريخ الانضمام' : 'Joined'}</TableHead>
                             <TableHead>{language === 'ar' ? 'الحالة' : 'Status'}</TableHead>
@@ -166,7 +160,7 @@ export function UserManagement() {
                     <TableBody>
                         {isLoading ? (
                             <TableRow>
-                                <TableCell colSpan={6} className="text-center py-8">{language === 'ar' ? 'جاري التحميل...' : 'Loading...'}</TableCell>
+                                <TableCell colSpan={7} className="text-center py-8">{language === 'ar' ? 'جاري التحميل...' : 'Loading...'}</TableCell>
                             </TableRow>
                         ) : users.map((user: any) => (
                             <TableRow key={user.user_id}>
@@ -174,7 +168,7 @@ export function UserManagement() {
                                     <div className="font-medium">{user.full_name || 'N/A'}</div>
                                     <div className="text-xs text-muted-foreground">{user.phone}</div>
                                 </TableCell>
-                                <TableCell>{user.email}</TableCell>
+                                <TableCell>{user.email}</TableCell><TableCell dir="ltr">{user.phone ? <a href={`tel:${user.phone}`} className="underline">{user.phone}</a> : (language==='ar'?'غير مسجل':'Not provided')}</TableCell>
                                 <TableCell>
                                     <Badge variant="outline" className="gap-1">
                                         <StoreIcon className="w-3 h-3" />

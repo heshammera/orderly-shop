@@ -1,3 +1,4 @@
+import { authorizedAdminDb } from '@/lib/admin-session-db';
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
@@ -6,7 +7,8 @@ export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
     try {
-        const adminDb = createAdminClient();
+        const adminDb = await authorizedAdminDb();
+        if(!adminDb)return NextResponse.json({error:'جلسة الإدارة غير صالحة'},{status:401});
 
         // Fetch conversations with store details if merchant
         const { data: conversations, error } = await adminDb

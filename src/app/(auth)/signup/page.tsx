@@ -10,6 +10,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/hooks/useAuth';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { Button } from '@/components/ui/button';
+import { normalizePhone } from '@/lib/checkout-validation';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
@@ -22,8 +23,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 const step1Schema = z.object({
     fullName: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().email("Invalid email address"),
-    phone: z.string().optional().refine((val) => !val || /^\+?[1-9]\d{6,14}$/.test(val.replace(/\s/g, '')), {
-        message: "Invalid phone number format (e.g. +966512345678)"
+    phone: z.string().transform(normalizePhone).refine(val => /^\+?[0-9]{8,15}$/.test(val), {
+        message: 'رقم الهاتف مطلوب ويجب أن يحتوي على 8 إلى 15 رقمًا. الأرقام العربية مقبولة.'
     }),
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string().min(6, "Password must be at least 6 characters"),
@@ -202,6 +203,7 @@ function SignupFormContent() {
                 data.fullName,
                 redirect ? `${window.location.origin}${redirect}` : undefined,
                 {
+                    phone: data.phone,
                     store_name: data.storeName,
                     store_slug: data.storeSlug,
                     referral_code: data.referralCode
@@ -321,7 +323,7 @@ function SignupFormContent() {
                                         render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>
-                                                    {language === 'ar' ? 'رقم الهاتف (اختياري - للتفعيل عبر واتساب)' : 'Phone (optional - for WhatsApp verification)'}
+                                                    {language === 'ar' ? 'رقم الهاتف (إجباري)' : 'Phone (required)'}
                                                 </FormLabel>
                                                 <FormControl>
                                                     <div className="relative">
@@ -330,13 +332,15 @@ function SignupFormContent() {
                                                             className="pl-9 rtl:pr-9 rtl:pl-3"
                                                             type="tel"
                                                             dir="ltr"
-                                                            placeholder="+966512345678"
+                                                            placeholder="+201012345678"
+                                                            required
+                                                            autoComplete="tel"
                                                             {...field}
                                                         />
                                                     </div>
                                                 </FormControl>
                                                 <FormDescription>
-                                                    {language === 'ar' ? 'أدخل رقمك مع رمز الدولة للتفعيل عبر واتساب' : 'Enter with country code for WhatsApp verification'}
+                                                    {language === 'ar' ? 'رقم التواصل الخاص بصاحب المتجر. الأرقام العربية مقبولة.' : 'Store owner contact number. Arabic digits are accepted.'}
                                                 </FormDescription>
                                                 <FormMessage />
                                             </FormItem>
