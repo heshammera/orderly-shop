@@ -20,6 +20,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 interface RechargeRequest {
     id: string;
     amount_local: number;
+    payment_currency?: string;
+    amount_usd: number;
     status: 'pending' | 'approved' | 'rejected';
     created_at: string;
     rejection_reason?: string;
@@ -126,7 +128,7 @@ export function RechargeRequestsList({ storeId, currency }: { storeId: string, c
                                             {format(new Date(request.created_at), 'yyyy/MM/dd HH:mm')}
                                         </TableCell>
                                         <TableCell className="font-medium">
-                                            {request.amount_local} {currency}
+                                            {request.amount_local} {request.payment_currency || 'غير مسجلة'}
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex flex-col gap-2">

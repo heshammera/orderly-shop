@@ -1,74 +1,20 @@
 import { useState, useEffect } from 'react';
-
-interface ExchangeRateData {
-    rate: number;
-    loading: boolean;
-    error: string | null;
-    lastUpdated: Date | null;
+export function useExchangeRate(targetCurrency:string) {
+ const [state,setState]=useState({currency:targetCurrency,rate:0,loading:true,error:null as string|null,lastUpdated:null as Date|null});
+ useEffect(()=>{
+  let active=true;
+  const load=async()=>{
+   setState({currency:targetCurrency,rate:0,loading:true,error:null,lastUpdated:null});
+   try {
+    const response=await fetch(`/api/currency/rate?currency=${encodeURIComponent(targetCurrency)}`,{cache:'no-store'});
+    const data=await response.json();
+    if(!response.ok||!Number.isFinite(data.rate)||data.rate<=0) throw new Error(data.error || 'سعر الصرف غير متاح حاليًا');
+    if(active)setState({currency:targetCurrency,rate:data.rate,loading:false,error:null,lastUpdated:new Date(data.updatedAt)});
+   }catch(error:any){if(active)setState({currency:targetCurrency,rate:0,loading:false,error:error.message,lastUpdated:null});}
+  };
+  load();const timer=setInterval(load,30*60*1000);
+  return()=>{active=false;clearInterval(timer);};
+ },[targetCurrency]);
+ return state.currency===targetCurrency?state:{rate:0,loading:true,error:null,lastUpdated:null};
 }
-
-/**
- * Hook to fetch and manage real-time exchange rates from USD to target currency
- * Uses exchangerate-api.io for live rates
- */
-export function useExchangeRate(targetCurrency: string): ExchangeRateData {
-    const [rate, setRate] = useState<number>(1);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
-    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-
-    useEffect(() => {
-        let isMounted = true;
-
-        const fetchExchangeRate = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-
-                // Using exchangerate-api.io free tier
-                const response = await fetch(
-                    `https://api.exchangerate-api.com/v4/latest/USD`
-                );
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch exchange rate');
-                }
-
-                const data = await response.json();
-
-                if (isMounted) {
-                    const exchangeRate = data.rates[targetCurrency] || 1;
-                    setRate(exchangeRate);
-                    setLastUpdated(new Date());
-                    setLoading(false);
-                }
-            } catch (err) {
-                if (isMounted) {
-                    setError(err instanceof Error ? err.message : 'Unknown error');
-                    setLoading(false);
-                    // Fallback to 1:1 rate on error
-                    setRate(1);
-                }
-            }
-        };
-
-        fetchExchangeRate();
-
-        // Refresh rate every 30 minutes
-        const interval = setInterval(fetchExchangeRate, 30 * 60 * 1000);
-
-        return () => {
-            isMounted = false;
-            clearInterval(interval);
-        };
-    }, [targetCurrency]);
-
-    return { rate, loading, error, lastUpdated };
-}
-
-/**
- * Convert USD amount to target currency
- */
-export function convertUsdToTarget(usdAmount: number, rate: number): number {
-    return usdAmount * rate;
-}
+export function convertUsdToTarget(amount:number,rate:number):number {return Number.isFinite(rate)&&rate>0?amount*rate:NaN;}

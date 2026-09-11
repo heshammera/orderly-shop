@@ -1,4 +1,6 @@
 "use client";
+import { useExchangeRate } from '@/hooks/useExchangeRate';
+import { RateAttribution } from '@/components/dashboard/RateAttribution';
 
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -21,8 +23,9 @@ export function CopyrightRemovalTab({ store }: { store: any }) {
     const [submitting, setSubmitting] = useState(false);
     const [file, setFile] = useState<File | null>(null);
     const [existingRequest, setExistingRequest] = useState<any>(null);
-    const [exchangeRate, setExchangeRate] = useState<number>(50);
+
     const [storeCurrency, setStoreCurrency] = useState<string>('EGP');
+    const {rate:exchangeRate,error:exchangeError,loading:exchangeLoading}=useExchangeRate(storeCurrency);
 
     useEffect(() => {
         fetchData();
@@ -62,20 +65,9 @@ export function CopyrightRemovalTab({ store }: { store: any }) {
             }
             // Fetch Exchange Rate dynamically for the store currency
             const currency = store?.currency || 'EGP';
-            setStoreCurrency(currency);
+            setStoreCurrency('EGP');
 
-            const rateKey = `exchange_rate_usd_${currency.toLowerCase()}`;
-            const { data: rateData } = await supabase.rpc('get_setting', { setting_key: rateKey });
-            
-            if (rateData && rateData.rate) {
-                setExchangeRate(rateData.rate);
-            } else {
-                // Fallback to EGP rate
-                const { data: fallbackData } = await supabase.rpc('get_setting', { setting_key: 'exchange_rate_usd_egp' });
-                if (fallbackData && fallbackData.rate) {
-                    setExchangeRate(fallbackData.rate);
-                }
-            }
+
         } catch (error) {
             console.error("Error fetching copyright removal data:", error);
         } finally {
@@ -93,6 +85,7 @@ export function CopyrightRemovalTab({ store }: { store: any }) {
     };
 
     const handleSubmit = async () => {
+        if (!exchangeRate || exchangeLoading) { toast({title:'سعر الصرف غير متاح؛ حاول لاحقًا',variant:'destructive'}); return; }
         if (!file) {
             toast({
                 title: language === 'ar' ? 'مطلوب إيصال الدفع' : 'Receipt Required',
@@ -164,7 +157,7 @@ export function CopyrightRemovalTab({ store }: { store: any }) {
     // ✅ STATE: Copyright already removed (approved)
     if (store.has_removed_copyright || existingRequest?.status === 'approved') {
         return (
-            <div className="space-y-4">
+            <div className="space-y-4"><RateAttribution/>{exchangeError && <p role="alert" className="text-sm text-red-600">{exchangeError}</p>}
                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-8 text-center space-y-4">
                     <div className="flex justify-center">
                         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
@@ -253,7 +246,7 @@ export function CopyrightRemovalTab({ store }: { store: any }) {
                             {language === 'ar' ? 'تكلفة الإزالة: ' : 'Removal Fee: '} ${price}
                         </Badge>
                         <div className="text-sm text-muted-foreground font-medium">
-                            ≈ {(parseFloat(price) * exchangeRate).toFixed(2)} {storeCurrency}
+                            ≈ {(exchangeRate > 0 ? (parseFloat(price) * exchangeRate).toFixed(2) : '—')} {storeCurrency}
                         </div>
                     </div>
                 </AlertDescription>
@@ -272,7 +265,7 @@ export function CopyrightRemovalTab({ store }: { store: any }) {
                                 {language === 'ar' ? 'قم بتحويل المبلغ التالي:' : 'Transfer the following amount:'}
                             </span>
                             <span className="text-2xl font-bold text-primary mr-8 ml-8">
-                                {(parseFloat(price) * exchangeRate).toFixed(2)} {storeCurrency}
+                                {(exchangeRate > 0 ? (parseFloat(price) * exchangeRate).toFixed(2) : '—')} {storeCurrency}
                             </span>
                         </span>
                     </p>

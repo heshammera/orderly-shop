@@ -1,5 +1,6 @@
 "use client";
 
+import { RateAttribution } from './RateAttribution';
 import { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useExchangeRate, convertUsdToTarget } from '@/hooks/useExchangeRate';
@@ -18,7 +19,7 @@ const PRESET_AMOUNTS_USD = [5, 10, 20, 40, 80, 100];
 
 export function RechargeAmountCards({ storeId, currency, onRecharge }: RechargeAmountCardsProps) {
     const { language } = useLanguage();
-    const { rate, loading: rateLoading } = useExchangeRate(currency);
+    const { rate, loading: rateLoading, error: rateError } = useExchangeRate(currency);
     const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
 
     const handleRechargeClick = (usdAmount: number) => {
@@ -36,6 +37,7 @@ export function RechargeAmountCards({ storeId, currency, onRecharge }: RechargeA
         }).format(amount);
     };
 
+    if (rateError || (!rateLoading && !rate)) return <p role="alert" className="text-sm text-red-600">{rateError || 'سعر الصرف غير متاح حاليًا'}</p>;
     if (rateLoading) {
         return (
             <div className="flex justify-center items-center py-12">
@@ -89,7 +91,7 @@ export function RechargeAmountCards({ storeId, currency, onRecharge }: RechargeA
                                 {/* Converted Amount */}
                                 <div className="space-y-1">
                                     <p className="text-xs text-muted-foreground">
-                                        {language === 'ar' ? 'ستحصل على' : 'You will receive'}
+                                        {language === 'ar' ? 'القيمة التقريبية بعملة متجرك' : 'Approximate value in your store currency'}
                                     </p>
                                     <p className="text-2xl font-bold text-foreground">
                                         {formatCurrency(convertedAmount, currency)}
@@ -116,9 +118,9 @@ export function RechargeAmountCards({ storeId, currency, onRecharge }: RechargeA
 
             <p className="text-xs text-muted-foreground text-center">
                 {language === 'ar'
-                    ? 'سعر الصرف يتم تحديثه تلقائياً كل 30 دقيقة'
-                    : 'Exchange rate updates automatically every 30 minutes'}
-            </p>
+                    ? 'رصيد المحفظة بالدولار. مبلغ الدفع النهائي يظهر عند اختيار محفظة الاستقبال.'
+                    : 'Wallet credit is in USD. Final payment amount appears after selecting the receiving wallet.'}
+            </p><RateAttribution/>
         </div>
     );
 }

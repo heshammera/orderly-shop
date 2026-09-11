@@ -1,4 +1,5 @@
 "use client";
+import { STORE_CURRENCIES } from '@/lib/currencies';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -17,6 +18,7 @@ export default function CreateStorePage() {
     const router = useRouter();
     const supabase = createClient();
 
+    const [currency, setCurrency] = useState('EGP');
     const [name, setName] = useState('');
     const [slug, setSlug] = useState('');
     const [loading, setLoading] = useState(false);
@@ -82,7 +84,8 @@ export default function CreateStorePage() {
             // 3. Create Store via RPC
             const { data: storeId, error: rpcError } = await supabase.rpc('create_store', {
                 p_name: name,
-                p_slug: slug
+                p_slug: slug,
+                p_currency: currency
             });
 
             if (rpcError) throw rpcError;
@@ -115,7 +118,7 @@ export default function CreateStorePage() {
                         const defaultHomeData = {
                             sections_order: ['header_1', 'hero_banner_1', 'category_slider_1', 'featured_grid_1', 'newsletter_1', 'footer_1'],
                             sections_data: {
-                                'header_1': { type: 'header', settings: { notice_text: '🔥 شحن مجاني للطلبات فوق 200 ريال!', search_placeholder: 'ابحث عن منتج...' }, blocks: [{ type: 'link', settings: { label: 'الرئيسية', url: '/' } }] },
+                                'header_1': { type: 'header', settings: { notice_text: 'مرحبًا بك في متجرنا', search_placeholder: 'ابحث عن منتج...' }, blocks: [{ type: 'link', settings: { label: 'الرئيسية', url: '/' } }] },
                                 'hero_banner_1': { type: 'hero_banner', settings: { heading: 'مرحباً بك في متجرك الجديد', subheading: 'قم بتخصيص هذا التصميم من لوحة التحكم', button_label: 'تسوق الآن', background_image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1600&q=80' }, blocks: [] },
                                 'category_slider_1': { type: 'category_slider', settings: { heading: 'تسوق حسب التصنيف', subheading: 'تصفح مجموعاتنا' }, blocks: [{ type: 'category', settings: { title: 'جديدنا', image_url: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?w=300&q=80', link: '' } }] },
                                 'featured_grid_1': { type: 'featured_grid', settings: { heading: 'المنتجات المميزة', subheading: 'اخترنا لك بعناية' }, blocks: [] },
@@ -181,6 +184,8 @@ export default function CreateStorePage() {
         <div className="flex items-center justify-center min-h-[70vh] p-4">
             <Card className="w-full max-w-md shadow-lg border-0">
                 <form onSubmit={handleSubmit}>
+<div className="space-y-2"><Label htmlFor="new-store-currency">{language === 'ar' ? 'عملة المتجر' : 'Store currency'}</Label><select id="new-store-currency" className="w-full border rounded-md p-3" value={currency} onChange={e=>setCurrency(e.target.value)}>{STORE_CURRENCIES.map(c=><option key={c.code} value={c.code}>{language==='ar'?c.ar:c.en} ({c.code})</option>)}</select><p className="text-xs text-muted-foreground">{language==='ar'?'تُستخدم لتسعير المنتجات والشحن. رصيد محفظة المنصة بالدولار.':'Used for product and shipping prices. Platform wallet credit stays in USD.'}</p></div>
+
                     <CardHeader className="text-center">
                         <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
                             <Store className="w-6 h-6 text-primary" />

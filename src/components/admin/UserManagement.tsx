@@ -290,7 +290,7 @@ export function UserManagement() {
                                         </div>
                                         <div className="text-end">
                                             <div className="font-medium text-sm">
-                                                {store.balance} <span className="text-xs text-muted-foreground">{store.currency}</span>
+                                                {store.balance} <span className="text-xs text-muted-foreground">USD</span>
                                             </div>
                                             <Badge variant={store.status === 'active' ? 'outline' : 'destructive'} className="text-xs mt-1">
                                                 {store.status}

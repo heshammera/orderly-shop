@@ -1,4 +1,6 @@
 'use client';
+import { useExchangeRate } from '@/hooks/useExchangeRate';
+import { RateAttribution } from '@/components/dashboard/RateAttribution';
 
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -86,8 +88,9 @@ export function BillingTab({ storeId }: BillingTabProps) {
     const [selectedAddOn, setSelectedAddOn] = useState<AddOn | null>(null);
     const [availableAddOns, setAvailableAddOns] = useState<AddOn[]>([]);
     const [ownedAddOns, setOwnedAddOns] = useState<string[]>([]); // Array of add_on_ids
-    const [exchangeRate, setExchangeRate] = useState<number>(50); // Default fallback
+
     const [storeCurrency, setStoreCurrency] = useState<string>('EGP');
+    const {rate:exchangeRate,error:exchangeError,loading:exchangeLoading}=useExchangeRate(storeCurrency);
     
     // Form State
     const [paymentMethod, setPaymentMethod] = useState('instapay');
@@ -144,22 +147,11 @@ export function BillingTab({ storeId }: BillingTabProps) {
                 .maybeSingle();
             
             const currency = storeData?.currency || 'EGP';
-            setStoreCurrency(currency);
+            setStoreCurrency('EGP');
 
             // Fetch dynamic exchange rate for this specific currency
             // Key format: exchange_rate_usd_sar, exchange_rate_usd_egp, etc.
-            const rateKey = `exchange_rate_usd_${currency.toLowerCase()}`;
-            const { data: rateData } = await supabase.rpc('get_setting', { setting_key: rateKey });
-            
-            if (rateData && rateData.rate) {
-                setExchangeRate(rateData.rate);
-            } else {
-                // Fallback to EGP rate if specific currency rate is missing
-                const { data: fallbackData } = await supabase.rpc('get_setting', { setting_key: 'exchange_rate_usd_egp' });
-                if (fallbackData && fallbackData.rate) {
-                    setExchangeRate(fallbackData.rate);
-                }
-            }
+
         } catch (error) {
             console.error('Error fetching billing data:', error);
         } finally {
@@ -205,6 +197,7 @@ export function BillingTab({ storeId }: BillingTabProps) {
     };
 
     const handleSubmitRequest = async () => {
+        if (!exchangeRate || exchangeLoading) { toast.error('سعر الصرف غير متاح؛ حاول لاحقًا'); return; }
         if (!(selectedPlan || selectedAddOn) || !receiptUrl) return;
 
         setIsSubmitting(true);
@@ -246,7 +239,7 @@ export function BillingTab({ storeId }: BillingTabProps) {
     }
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-8 animate-in fade-in duration-500"><RateAttribution/>{exchangeError && <p role="alert" className="text-sm text-red-600">{exchangeError}</p>}
             {/* Pending Request Alert */}
             {pendingRequest && (
                 <Card className="border-blue-200 bg-blue-50">
@@ -323,7 +316,7 @@ export function BillingTab({ storeId }: BillingTabProps) {
                                         </div>
                                         {plan.price_monthly > 0 && (
                                             <div className="text-[10px] text-muted-foreground font-medium">
-                                                ≈ {(plan.price_monthly * exchangeRate).toFixed(2)} {storeCurrency}
+                                                ≈ {(exchangeRate > 0 ? (plan.price_monthly * exchangeRate).toFixed(2) : '—')} {storeCurrency}
                                             </div>
                                         )}
                                     </div>
@@ -393,7 +386,7 @@ export function BillingTab({ storeId }: BillingTabProps) {
                                         <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1 bg-muted/50 p-1 px-2 rounded-md w-fit">
                                             <Clock className="w-3 h-3" />
                                             {language === 'ar' ? 'يعادل تقريباً:' : 'Approx. equivalent:'} 
-                                            <span className="font-bold text-primary">{(addon.price * exchangeRate).toFixed(2)} {storeCurrency}</span>
+                                            <span className="font-bold text-primary">{(exchangeRate > 0 ? (addon.price * exchangeRate).toFixed(2) : '—')} {storeCurrency}</span>
                                         </div>
                                     </div>
                                 </CardContent>
@@ -443,7 +436,7 @@ export function BillingTab({ storeId }: BillingTabProps) {
                         </div>
                         <div className="flex justify-between text-sm text-muted-foreground">
                             <span>{language === 'ar' ? 'المبلغ المعادل:' : 'Equivalent:'} ({storeCurrency})</span>
-                            <span>{((selectedPlan?.price_monthly || selectedAddOn?.price || 0) * exchangeRate).toFixed(2)} {storeCurrency}</span>
+                            <span>{(exchangeRate > 0 ? ((selectedPlan?.price_monthly || selectedAddOn?.price || 0) * exchangeRate).toFixed(2) : '—')} {storeCurrency}</span>
                         </div>
                         <Separator />
                         <div className="text-xs space-y-1">

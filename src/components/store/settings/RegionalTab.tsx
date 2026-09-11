@@ -56,7 +56,7 @@ export function RegionalTab({ store, onSave, hideHeader }: RegionalTabProps) {
     const { language } = useLanguage();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
-        currency: store.currency || 'SAR',
+        currency: store.currency || 'EGP',
         timezone: store.timezone || 'Asia/Riyadh',
     });
 
@@ -92,7 +92,7 @@ export function RegionalTab({ store, onSave, hideHeader }: RegionalTabProps) {
             )}
 
             <div className="grid gap-6 md:grid-cols-2">
-                {/* Currency */}
+                <p className="text-sm text-muted-foreground md:col-span-2">{language==='ar'?'اختر العملة قبل إضافة المنتجات. تغيير عملة متجر به منتجات أو طلبات أو شحن أو كوبونات يحتاج تحويلًا مدروسًا للأسعار، لذلك يمنع تغيير الرمز فقط. رصيد المحفظة يبقى بالدولار.':'Choose currency before adding products. Stores with products, orders, shipping or coupons need a planned price conversion; changing only the symbol is blocked. Wallet credit remains in USD.'}</p>{/* Currency */}
                 <div className="space-y-2">
                     <Label>{language === 'ar' ? 'العملة' : 'Currency'}</Label>
                     <Select

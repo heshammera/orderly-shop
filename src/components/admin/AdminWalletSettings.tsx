@@ -1,5 +1,6 @@
 "use client";
 
+import { STORE_CURRENCIES } from '@/lib/currencies';
 import { useEffect, useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +30,7 @@ interface PaymentWallet {
     name_ar: string;
     owner: string;
     active: boolean;
+    currency: string;
 }
 
 export function AdminWalletSettings() {
@@ -45,7 +47,7 @@ export function AdminWalletSettings() {
         name: '',
         name_ar: '',
         owner: '',
-        active: true
+        currency: 'EGP', active: true
     });
     const [savingPrice, setSavingPrice] = useState(false);
 
@@ -55,8 +57,7 @@ export function AdminWalletSettings() {
 
     const fetchWallets = async () => {
         try {
-            const { data, error } = await supabase.rpc('get_setting', { setting_key: 'payment_wallets' });
-            if (error) throw error;
+            const response=await fetch('/api/admin/wallet?settings=1');const data=await response.json();if(!response.ok)throw new Error(data.error);
             setWallets(data?.wallets || []);
         } catch (error) {
             console.error('Error fetching wallets:', error);
@@ -69,11 +70,7 @@ export function AdminWalletSettings() {
 
     const saveWallets = async (updatedWallets: PaymentWallet[]) => {
         try {
-            await supabase.rpc('set_setting', {
-                setting_key: 'payment_wallets',
-                setting_value: { wallets: updatedWallets },
-                setting_description: 'Payment wallet numbers for manual recharge'
-            });
+            const response=await fetch('/api/admin/wallet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'settings',wallets:updatedWallets})});const result=await response.json();if(!response.ok)throw new Error(result.error);
 
             toast({
                 title: language === 'ar' ? '✅ تم الحفظ' : '✅ Saved Successfully',
@@ -107,7 +104,7 @@ export function AdminWalletSettings() {
 
         saveWallets([...wallets, newWallet]);
         setDialogOpen(false);
-        setFormData({ number: '', name: '', name_ar: '', owner: '', active: true });
+        setFormData({ number: '', name: '', name_ar: '', owner: '', currency: 'EGP', active: true });
     };
 
     const handleEdit = (wallet: PaymentWallet) => {
@@ -117,7 +114,7 @@ export function AdminWalletSettings() {
             name: wallet.name,
             name_ar: wallet.name_ar,
             owner: wallet.owner || '',
-            active: wallet.active
+            currency: wallet.currency || 'EGP', active: wallet.active
         });
         setDialogOpen(true);
     };
@@ -132,7 +129,7 @@ export function AdminWalletSettings() {
         saveWallets(updatedWallets);
         setDialogOpen(false);
         setEditingWallet(null);
-        setFormData({ number: '', name: '', name_ar: '', owner: '', active: true });
+        setFormData({ number: '', name: '', name_ar: '', owner: '', currency: 'EGP', active: true });
     };
 
     const handleDelete = (id: string) => {
@@ -173,7 +170,7 @@ export function AdminWalletSettings() {
                         </div>
                         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                             <DialogTrigger asChild>
-                                <Button onClick={() => { setEditingWallet(null); setFormData({ number: '', name: '', name_ar: '', owner: '', active: true }); }}>
+                                <Button onClick={() => { setEditingWallet(null); setFormData({ number: '', name: '', name_ar: '', owner: '', currency: 'EGP', active: true }); }}>
                                     <Plus className="w-4 h-4 mr-2" />
                                     {language === 'ar' ? 'إضافة محفظة' : 'Add Wallet'}
                                 </Button>
@@ -231,7 +228,7 @@ export function AdminWalletSettings() {
                                         />
                                     </div>
                                 </div>
-                                <DialogFooter>
+                                <div className="space-y-2"><Label>عملة محفظة الاستقبال</Label><select className="w-full border rounded-md p-2" value={formData.currency} onChange={e=>setFormData({...formData,currency:e.target.value})}>{STORE_CURRENCIES.map(c=><option key={c.code} value={c.code}>{c.ar} ({c.code})</option>)}</select></div><DialogFooter>
                                     <Button onClick={editingWallet ? handleUpdate : handleAdd}>
                                         {editingWallet
                                             ? (language === 'ar' ? 'تحديث' : 'Update')

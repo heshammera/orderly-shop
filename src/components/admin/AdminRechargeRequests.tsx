@@ -27,6 +27,7 @@ interface RechargeRequest {
     store_id: string;
     amount_usd: number;
     amount_local: number;
+    payment_currency?: string;
     exchange_rate: number;
     sender_phone: string;
     proof_image: string;
@@ -106,19 +107,7 @@ export function AdminRechargeRequests() {
     const fetchRequests = async () => {
         try {
             setLoading(true);
-            let query = supabase
-                .from('wallet_recharge_requests')
-                .select('*, store:stores(name, currency)')
-                .order('created_at', { ascending: false });
-
-            if (filter !== 'all') {
-                query = query.eq('status', filter);
-            }
-
-            const { data, error } = await query;
-            if (error) throw error;
-
-            setRequests(data || []);
+            const response=await fetch(`/api/admin/wallet?status=${filter}`,{cache:'no-store'});const result=await response.json();if(!response.ok)throw new Error(result.error);setRequests(result.requests || []);
         } catch (error) {
             console.error('Error fetching requests:', error);
         } finally {
@@ -129,17 +118,13 @@ export function AdminRechargeRequests() {
     const handleApprove = async (request: RechargeRequest) => {
         try {
             setProcessing(true);
-            const { error } = await supabase.rpc('approve_recharge_request', {
-                request_id: request.id
-            });
-
-            if (error) throw error;
+            const response=await fetch('/api/admin/wallet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'approve',id:request.id})});const result=await response.json();if(!response.ok)throw new Error(result.error);
 
             toast({
                 title: language === 'ar' ? '✅ تم القبول' : '✅ Approved',
                 description: language === 'ar'
-                    ? `تم إضافة ${request.amount_local} ${request.store?.currency} لمتجر ${getStoreName(request.store)}`
-                    : `Added ${request.amount_local} ${request.store?.currency} to ${getStoreName(request.store)}`,
+                    ? `تم إضافة ${request.amount_usd} USD لمتجر ${getStoreName(request.store)}`
+                    : `Added ${request.amount_usd} USD to ${getStoreName(request.store)}`,
                 className: "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-900"
             });
 
@@ -159,12 +144,7 @@ export function AdminRechargeRequests() {
     const handleReject = async (request: RechargeRequest) => {
         try {
             setProcessing(true);
-            const { error } = await supabase.rpc('reject_recharge_request', {
-                request_id: request.id,
-                reason: rejectionReason || 'No reason provided'
-            });
-
-            if (error) throw error;
+            const response=await fetch('/api/admin/wallet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'reject',id:request.id,reason:rejectionReason})});const result=await response.json();if(!response.ok)throw new Error(result.error);
 
             toast({
                 title: language === 'ar' ? '✅ تم الرفض' : '✅ Rejected',
@@ -266,7 +246,7 @@ export function AdminRechargeRequests() {
                                         <TableCell className="font-medium">{getStoreName(request.store)}</TableCell>
                                         <TableCell className="font-semibold">${request.amount_usd}</TableCell>
                                         <TableCell>
-                                            {request.amount_local.toFixed(2)} {request.store?.currency}
+                                            {request.amount_local.toFixed(2)} {request.payment_currency || 'غير مسجلة'}
                                         </TableCell>
                                         <TableCell className="font-mono" dir="ltr">{request.sender_phone}</TableCell>
                                         <TableCell className="text-sm text-muted-foreground">{formatDate(request.created_at)}</TableCell>
@@ -315,12 +295,12 @@ export function AdminRechargeRequests() {
                                     </div>
                                     <div>
                                         <p className="text-xs text-muted-foreground">{language === 'ar' ? 'المبلغ المحلي' : 'Local Amount'}</p>
-                                        <p className="text-xl font-bold">{selectedRequest.amount_local.toFixed(2)} {selectedRequest.store?.currency}</p>
+                                        <p className="text-xl font-bold">{selectedRequest.amount_local.toFixed(2)} {selectedRequest.payment_currency || 'غير مسجلة'}</p>
                                     </div>
                                     <div className="col-span-2 pt-2 border-t">
                                         <p className="text-xs text-muted-foreground mb-1">{language === 'ar' ? 'سعر الصرف' : 'Exchange Rate'}</p>
                                         <Badge variant="outline" className="font-mono">
-                                            1 USD = {selectedRequest.exchange_rate.toFixed(4)} {selectedRequest.store?.currency}
+                                            1 USD = {selectedRequest.exchange_rate.toFixed(4)} {selectedRequest.payment_currency || 'غير مسجلة'}
                                         </Badge>
                                     </div>
                                 </AlertDescription>

@@ -1,4 +1,6 @@
 "use client";
+import { useExchangeRate } from '@/hooks/useExchangeRate';
+import { RateAttribution } from '@/components/dashboard/RateAttribution';
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
@@ -34,8 +36,9 @@ export default function SelectPlanPage() {
     const [transactionId, setTransactionId] = useState('');
     const [openPaymentModal, setOpenPaymentModal] = useState(false);
 
-    const [exchangeRate, setExchangeRate] = useState(50);
+
     const [storeCurrency, setStoreCurrency] = useState('EGP');
+    const {rate:exchangeRate,error:exchangeError,loading:exchangeLoading}=useExchangeRate(storeCurrency);
 
     const [conflictData, setConflictData] = useState<any | null>(null);
     const [showConflictModal, setShowConflictModal] = useState(false);
@@ -107,29 +110,11 @@ export default function SelectPlanPage() {
                 // Fetch Store Currency
                 const { data: storeData } = await supabase.from('stores').select('currency').eq('id', store.id).maybeSingle();
                 const currency = storeData?.currency || 'EGP';
-                setStoreCurrency(currency);
+                setStoreCurrency('EGP');
 
                 // Fetch Exchange Rate dynamically for the store currency
-                const rateKey = `exchange_rate_usd_${currency.toLowerCase()}`;
-                const { data: rateData } = await supabase.rpc('get_setting', { setting_key: rateKey });
-                
-                if (rateData && rateData.rate) {
-                    setExchangeRate(rateData.rate);
-                } else {
-                    // Fallback to EGP
-                    const { data: fallbackData } = await supabase.rpc('get_setting', { setting_key: 'exchange_rate_usd_egp' });
-                    if (fallbackData && fallbackData.rate) {
-                        setExchangeRate(fallbackData.rate);
-                    }
-                }
-
-                // Fetch Wallet Settings
                 const { data: settingsData } = await supabase.rpc('get_setting', { setting_key: 'payment_wallets' });
-                if (settingsData && settingsData.wallets) {
-                    const active = settingsData.wallets.filter((w: any) => w.active);
-                    if (active.length > 0) setActiveWallets(active);
-                }
-
+                if (settingsData?.wallets) setActiveWallets(settingsData.wallets.filter((w:any)=>w.active && w.currency==='EGP'));
             } catch (error) {
                 console.error('Error fetching data:', error);
             } finally {
@@ -222,6 +207,7 @@ export default function SelectPlanPage() {
     };
 
     const handleSubmitPayment = async () => {
+        if (!exchangeRate || exchangeLoading) { toast({title:'سعر الصرف غير متاح؛ حاول لاحقًا',variant:'destructive'}); return; }
         if (!storeId || !selectedPlan || !receiptFile) return;
 
         setSubmitting(true);
@@ -326,7 +312,7 @@ export default function SelectPlanPage() {
                                         </div>
                                         {plan.price > 0 && (
                                             <div className="text-sm text-primary font-medium mt-1">
-                                                ≈ {(plan.price * exchangeRate).toFixed(2)} {storeCurrency}
+                                                ≈ {(exchangeRate > 0 ? (plan.price * exchangeRate).toFixed(2) : '—')} {storeCurrency}
                                             </div>
                                         )}
                                     </div>
@@ -390,15 +376,15 @@ export default function SelectPlanPage() {
                         <DialogTitle>{language === 'ar' ? 'تأكيد الاشتراك والدفع' : 'Confirm Subscription & Payment'}</DialogTitle>
                         <DialogDescription>
                             {language === 'ar'
-                                ? `أنت على وشك الاشتراك في باقة ${selectedPlan?.name_ar}. المبلغ المطلوب هو ${selectedPlan?.price}$ (ما يعادل ${(selectedPlan?.price * exchangeRate).toFixed(2)} ${storeCurrency}).`
-                                : `You are subscribing to ${selectedPlan?.name_en}. Amount due is $${selectedPlan?.price} (Equivalent to ${(selectedPlan?.price * exchangeRate).toFixed(2)} ${storeCurrency}).`}
+                                ? `أنت على وشك الاشتراك في باقة ${selectedPlan?.name_ar}. المبلغ المطلوب هو ${selectedPlan?.price}$ (ما يعادل ${(exchangeRate > 0 ? (selectedPlan?.price * exchangeRate).toFixed(2) : '—')} ${storeCurrency}).`
+                                : `You are subscribing to ${selectedPlan?.name_en}. Amount due is $${selectedPlan?.price} (Equivalent to ${(exchangeRate > 0 ? (selectedPlan?.price * exchangeRate).toFixed(2) : '—')} ${storeCurrency}).`}
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="space-y-4 py-4">
+                    <div className="space-y-4 py-4"><RateAttribution/>{exchangeError && <p role="alert" className="text-sm text-red-600">{exchangeError}</p>}
                         <div className="p-4 bg-muted rounded-lg text-sm space-y-2">
                             <p className="font-semibold">{language === 'ar' ? `المبلغ المطلوب بالـ ${storeCurrency}:` : `Amount Due in ${storeCurrency}:`}</p>
-                            <p className="text-2xl font-bold text-primary">{(selectedPlan?.price * exchangeRate).toFixed(2)} {storeCurrency}</p>
+                            <p className="text-2xl font-bold text-primary">{(exchangeRate > 0 ? (selectedPlan?.price * exchangeRate).toFixed(2) : '—')} {storeCurrency}</p>
                             <Separator className="my-2" />
                             <p className="font-semibold">{language === 'ar' ? 'بيانات المحفظة الإلكترونية:' : 'Electronic Wallet Details:'}</p>
                             {activeWallets.length > 0 ? (

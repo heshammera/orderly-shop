@@ -1,3 +1,4 @@
+import { getUsdRate } from '@/lib/exchange-rates-server';
 import { validateCheckout, CheckoutErrors } from '@/lib/checkout-validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -14,10 +15,11 @@ export async function submitOrder(request: NextRequest, quick = false) {
   }
   if (!Array.isArray(cart) || !cart.length || cart.length > 100) return NextResponse.json({error:'السلة غير صالحة'}, {status:400});
   const db=createAdminClient();
-  const {data:store,error:storeError}=await db.from('stores').select('settings').eq('id',body.store_id).maybeSingle();
+  const {data:store,error:storeError}=await db.from('stores').select('settings,currency').eq('id',body.store_id).maybeSingle();
   if(storeError || !store) return NextResponse.json({error:'تعذر العثور على المتجر. حدّث الصفحة وحاول مرة أخرى.'},{status:400});
   const checked=validateCheckout(body.formData,store.settings?.shipping,body.selectedGovernorate,body.language);
   if(Object.keys(checked.errors).length) return NextResponse.json({error:body.language==='en'?'Please correct the highlighted fields.':'صحّح الحقول الموضحة لإتمام الطلب.',fieldErrors:checked.errors},{status:400});
+  try { await getUsdRate(store.currency); } catch { /* The commission stays pending if currency data is unavailable. */ }
   const payload = {store_id:body.store_id,request_key:body.request_key,
    cart:cart.map((x:any)=>({productId:x.productId,quantity:x.quantity,variants:(x.variants||[]).map((v:any)=>({optionId:v.optionId}))})),
    formData:checked.data, selectedGovernorate:body.selectedGovernorate || null,couponCode:body.couponCode || null,

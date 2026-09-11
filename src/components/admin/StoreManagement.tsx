@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2, Search, Ban, CheckCircle, Edit, CreditCard, DollarSign, MoreHorizontal, ShieldAlert, Lock, Trash2, AlertTriangle, Eye, ExternalLink, ArrowRightLeft, Sparkles } from 'lucide-react';
+import { RateAttribution } from '@/components/dashboard/RateAttribution';
 import { useExchangeRate, convertUsdToTarget } from '@/hooks/useExchangeRate';
 import {
     Dialog,
@@ -205,23 +206,14 @@ export function StoreManagement() {
 
     // Exchange rate: USD -> store currency
     const storeCurrency = rechargeStore?.currency || 'USD';
-    const { rate: exchangeRate, loading: rateLoading } = useExchangeRate(storeCurrency);
+    const { rate: exchangeRate, loading: rateLoading, error: rateError } = useExchangeRate(storeCurrency);
     const usdAmount = parseFloat(rechargeAmount) || 0;
     const convertedAmount = convertUsdToTarget(usdAmount, exchangeRate);
 
     const manualRechargeMutation = useMutation({
         mutationFn: async (data: { id: string, amountUsd: number, amountLocal: number, type: 'add' | 'deduct' }) => {
-            // Convert the USD amount to store currency and apply sign
-            const rawAmount = data.type === 'deduct' ? -Math.abs(data.amountLocal) : Math.abs(data.amountLocal);
-
-            const { error: rpcError } = await supabase.rpc('admin_recharge_wallet', {
-                p_store_id: data.id,
-                p_amount: rawAmount,
-                p_type: data.type === 'deduct' ? 'withdrawal' : 'deposit',
-                p_description: `Manual ${data.type === 'add' ? 'Deposit' : 'Deduction'} by Admin ($${Math.abs(data.amountUsd).toFixed(2)} USD = ${Math.abs(data.amountLocal).toFixed(2)} ${rechargeStore?.currency || ''})`
-            });
-
-            if (rpcError) throw rpcError;
+            const response=await fetch('/api/admin/wallet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'manual',store_id:data.id,amount_usd:data.amountUsd,type:data.type})});
+            const result=await response.json();if(!response.ok)throw new Error(result.error);
         },
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ['admin-stores'] });
@@ -230,7 +222,7 @@ export function StoreManagement() {
             setRechargeType('add');
             toast({
                 title: variables.type === 'add' ? (language === 'ar' ? 'تم إضافة الرصيد' : 'Funds Added') : (language === 'ar' ? 'تم خصم الرصيد' : 'Funds Deducted'),
-                description: `$${variables.amountUsd.toFixed(2)} USD → ${variables.amountLocal.toFixed(2)} ${rechargeStore?.currency || ''}`,
+                description: `$${variables.amountUsd.toFixed(2)} USD → ${Number.isFinite(variables.amountLocal)?variables.amountLocal.toFixed(2):'—'} ${rechargeStore?.currency || ''}`,
                 className: variables.type === 'add' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
             });
         },
@@ -360,7 +352,7 @@ export function StoreManagement() {
                                             ) : (
                                                 <>
                                                     <span className={(store.balance || 0) <= 0 ? 'text-red-500 font-bold' : 'text-green-600 font-bold'}>
-                                                        {(store.balance || 0).toFixed(2)} {store.currency || 'USD'}
+                                                        {(store.balance || 0).toFixed(2)} USD
                                                     </span>
                                                 </>
                                             )}
@@ -565,7 +557,7 @@ export function StoreManagement() {
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>{language === 'ar' ? 'شحن يدوي' : 'Manual Recharge'}</DialogTitle>
-                        <DialogDescription>{language === 'ar' ? 'أدخل المبلغ بالدولار وسيتم تحويله تلقائياً لعملة المتجر.' : 'Enter the amount in USD. It will be automatically converted to the store currency.'}</DialogDescription>
+                        <DialogDescription>{language === 'ar' ? 'أدخل المبلغ بالدولار. الرصيد المحاسبي بالدولار، والمقابل المحلي للعرض فقط.' : 'Enter the USD amount. Wallet accounting stays in USD; local conversion is informational.'}</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
@@ -597,6 +589,7 @@ export function StoreManagement() {
                             </div>
                         </div>
 
+                        <RateAttribution/>{rateError&&<p className="text-sm text-red-600">{rateError}</p>}
                         {/* Live Conversion Preview */}
                         {usdAmount > 0 && (
                             <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
@@ -608,7 +601,7 @@ export function StoreManagement() {
                                     {rateLoading ? (
                                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
                                     ) : (
-                                        <span className="font-mono font-semibold">1 USD = {exchangeRate.toFixed(4)} {storeCurrency}</span>
+                                        <span className="font-mono font-semibold">1 USD = {exchangeRate>0?exchangeRate.toFixed(4):'—'} {storeCurrency}</span>
                                     )}
                                 </div>
                                 <div className="border-t pt-3 flex items-center justify-between">
@@ -616,13 +609,13 @@ export function StoreManagement() {
                                         {language === 'ar' ? 'المبلغ بعملة المتجر' : 'Store currency amount'}
                                     </span>
                                     <span className={`text-lg font-bold ${rechargeType === 'deduct' ? 'text-red-600' : 'text-green-600'}`}>
-                                        {rechargeType === 'deduct' ? '-' : '+'}{convertedAmount.toFixed(2)} {storeCurrency}
+                                        {rechargeType === 'deduct' ? '-' : '+'}{(Number.isFinite(convertedAmount)?convertedAmount.toFixed(2):'—')} {storeCurrency}
                                     </span>
                                 </div>
                                 <p className="text-xs text-muted-foreground">
                                     {rechargeType === 'add'
-                                        ? (language === 'ar' ? `سيتم إضافة ${convertedAmount.toFixed(2)} ${storeCurrency} إلى رصيد المتجر.` : `${convertedAmount.toFixed(2)} ${storeCurrency} will be ADDED to the store balance.`)
-                                        : (language === 'ar' ? `سيتم خصم ${convertedAmount.toFixed(2)} ${storeCurrency} من رصيد المتجر.` : `${convertedAmount.toFixed(2)} ${storeCurrency} will be DEDUCTED from the store balance.`)}
+                                        ? (language === 'ar' ? `سيتم إضافة ${usdAmount.toFixed(2)} USD إلى رصيد المتجر.` : `${usdAmount.toFixed(2)} USD will be ADDED to the store balance.`)
+                                        : (language === 'ar' ? `سيتم خصم ${usdAmount.toFixed(2)} USD من رصيد المتجر.` : `${usdAmount.toFixed(2)} USD will be DEDUCTED from the store balance.`)}
                                 </p>
                             </div>
                         )}

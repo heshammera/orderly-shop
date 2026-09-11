@@ -142,7 +142,7 @@ export function TransactionHistory({ storeId, currency }: TransactionHistoryProp
                                         </TableCell>
                                         <TableCell className={`text-right font-bold ${getTypeColor(transaction.type)}`}>
                                             <div dir="ltr">
-                                                {transaction.type === 'credit' ? '+' : '-'}{transaction.amount.toFixed(2)} {currency}
+                                                {transaction.amount.toFixed(2)} USD
                                             </div>
                                         </TableCell>
                                     </TableRow>

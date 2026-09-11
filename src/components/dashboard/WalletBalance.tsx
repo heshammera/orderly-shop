@@ -16,7 +16,7 @@ interface WalletBalanceProps {
 export function WalletBalance({ storeId, currency }: WalletBalanceProps) {
     const supabase = createClient();
     const { language } = useLanguage();
-    const [balance, setBalance] = useState(0); // Balance in local currency (as stored in DB)
+    const [balance, setBalance] = useState(0); // Balance in USD
     const [hasUnlimitedBalance, setHasUnlimitedBalance] = useState(false);
     const [pendingBalance, setPendingBalance] = useState(0);
     const [totalEarnings, setTotalEarnings] = useState(0);
@@ -29,7 +29,7 @@ export function WalletBalance({ storeId, currency }: WalletBalanceProps) {
     const fetchWalletData = async () => {
         setLoading(true);
         try {
-            // 1. Get main balance from stores table (source of truth) - stored in LOCAL currency
+            // 1. Get main balance from stores table (source of truth) - stored in USD
             const { data: storeData } = await supabase
                 .from('stores')
                 .select('balance, currency, has_unlimited_balance')
@@ -39,17 +39,17 @@ export function WalletBalance({ storeId, currency }: WalletBalanceProps) {
             // 2. Get pending recharges
             const { data: pendingRecharges } = await supabase
                 .from('wallet_recharge_requests')
-                .select('amount_local')
+                .select('amount_usd')
                 .eq('store_id', storeId)
                 .eq('status', 'pending');
 
-            const pendingRechargeAmount = pendingRecharges?.reduce((sum, req) => sum + (req.amount_local || 0), 0) || 0;
+            const pendingRechargeAmount = pendingRecharges?.reduce((sum, req) => sum + (req.amount_usd || 0), 0) || 0;
 
             // 3. Get other wallet stats (earnings, etc) - optional if store_wallets view exists
             const {data: earnings} = await supabase.from('orders').select('total').eq('store_id',storeId).eq('status','delivered');
             const walletStats = {pending_balance:0,total_earnings:(earnings||[]).reduce((sum,x)=>sum+Number(x.total||0),0)};
 
-            // Store balance is already in local currency in the DB
+            // Store balance is denominated in USD
             if (storeData) {
                 setBalance(storeData.balance || 0);
                 setHasUnlimitedBalance(storeData.has_unlimited_balance || false);
@@ -60,7 +60,7 @@ export function WalletBalance({ storeId, currency }: WalletBalanceProps) {
             // Note: Pending recharges are already in local currency in the DB (amount_local)
             // Pending orders should also be in local currency? 
             // Assuming pending_balance from store_wallets view is in local currency.
-            setPendingBalance(pendingOrders + pendingRechargeAmount);
+            setPendingBalance(pendingRechargeAmount);
 
             setTotalEarnings(walletStats?.total_earnings || 0);
 
@@ -127,7 +127,7 @@ export function WalletBalance({ storeId, currency }: WalletBalanceProps) {
                     </CardHeader>
                     <CardContent>
                         <div className="text-3xl font-bold text-gray-900 dark:text-gray-50">
-                            {balance.toFixed(2)} <span className="text-sm font-normal text-muted-foreground">{currency}</span>
+                            {balance.toFixed(2)} <span className="text-sm font-normal text-muted-foreground">USD</span>
                         </div>
                         {isLowBalance && (
                             <p className="text-xs text-red-600 dark:text-red-400 mt-1 font-medium flex items-center gap-1">
@@ -158,7 +158,7 @@ export function WalletBalance({ storeId, currency }: WalletBalanceProps) {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">{pendingBalance.toFixed(2)} <span className="text-sm font-normal text-muted-foreground">{currency}</span></div>
+                    <div className="text-2xl font-bold">{pendingBalance.toFixed(2)} <span className="text-sm font-normal text-muted-foreground">USD</span></div>
                     <p className="text-xs text-muted-foreground mt-1">
                         {language === 'ar' ? 'من الطلبات قيد التنفيذ' : 'From processing orders'}
                     </p>
