@@ -80,18 +80,14 @@ function LoginFormContent() {
                 });
             } else {
 
-                // --- EMAIL VERIFICATION CHECK --- TEMPORARILY DISABLED
-                // if (authData.user && !authData.user.email_confirmed_at) {
-                //     await supabase.auth.signOut();
-                //     toast({
-                //         title: t.auth.login.error,
-                //         description: 'Please verify your email address before logging in.',
-                //         variant: 'destructive',
-                //     });
-                //     router.push(`/email-verify?email=${encodeURIComponent(data.email)}`);
-                //     return;
-                // }
-                // -------------------------------
+                const verificationResponse = await fetch('/api/auth/verification-status', {
+                    headers: { Authorization: `Bearer ${authData.session?.access_token || ''}` }, cache: 'no-store'
+                });
+                const verification = await verificationResponse.json();
+                if (!verificationResponse.ok || !verification.verified) {
+                    router.push('/email-verify');
+                    return;
+                }
 
                 // --- SUBDOMAIN ACCESS VALIDATION ---
                 // If logging in from a subdomain, verify the user belongs to this store

@@ -1,148 +1,28 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/admin';
-
-export async function POST(request: NextRequest) {
-    try {
-        const body = await request.json();
-        const { userId, method, destination, userName } = body;
-
-        // Validate inputs
-        if (!userId || !method || !destination) {
-            return NextResponse.json(
-                { error: 'Missing required fields: userId, method, destination' },
-                { status: 400 }
-            );
-        }
-
-        if (!['whatsapp', 'email'].includes(method)) {
-            return NextResponse.json(
-                { error: 'Method must be "whatsapp" or "email"' },
-                { status: 400 }
-            );
-        }
-
-        // Validate phone format for whatsapp
-        if (method === 'whatsapp') {
-            const phoneRegex = /^\+?[1-9]\d{6,14}$/;
-            if (!phoneRegex.test(destination.replace(/\s/g, ''))) {
-                return NextResponse.json(
-                    { error: 'Invalid phone number format' },
-                    { status: 400 }
-                );
-            }
-        }
-
-        const supabase = createAdminClient();
-
-        // Generate OTP via RPC
-        const { data: otpResult, error: otpError } = await supabase
-            .rpc('generate_otp', {
-                p_user_id: userId,
-                p_method: method,
-                p_destination: destination,
-            });
-
-        if (otpError) {
-            console.error('[send-otp] RPC error:', otpError);
-            return NextResponse.json(
-                { error: 'Failed to generate verification code' },
-                { status: 500 }
-            );
-        }
-
-        if (!otpResult?.success) {
-            return NextResponse.json(
-                { error: otpResult?.error || 'Failed to generate code', message: otpResult?.message },
-                { status: 429 }
-            );
-        }
-
-        // TEMPORARILY DISABLED — skip actual delivery, OTP still generated in DB
-        console.log('[send-otp] BYPASS MODE: OTP generated but delivery skipped. Code:', otpResult.code);
-        /*
-        try {
-            if (method === 'whatsapp') {
-                // Send directly to WAHA for WhatsApp (bypass n8n completely)
-                const wahaUrl = process.env.WAHA_API_URL;
-                const wahaKey = process.env.WAHA_API_KEY;
-
-                if (!wahaUrl || !wahaKey) {
-                    console.error('[send-otp] WAHA credentials not configured');
-                    return NextResponse.json({ error: 'WhatsApp service not configured' }, { status: 500 });
-                }
-
-                // Format: Remove non-digits and append @c.us
-                const formattedDestination = destination.replace(/\D/g, '') + '@c.us';
-
-                // Message in Arabic/English
-                const messageText = `*Orderly | أوردلي*\n\nكود التفعيل الخاص بك هو:\n*${otpResult.code}*\n\nYour verification code is:\n*${otpResult.code}*\n\nينتهي الكود خلال 5 دقائق / Expires in 5 minutes.`;
-
-                const wahaResponse = await fetch(`${wahaUrl}/api/sendText`, {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-Api-Key': wahaKey
-                    },
-                    body: JSON.stringify({
-                        session: 'default',
-                        chatId: formattedDestination,
-                        text: messageText
-                    })
-                });
-
-                if (!wahaResponse.ok) {
-                    console.error('[send-otp] WAHA direct send failed:', wahaResponse.status, await wahaResponse.text());
-                }
-
-            } else {
-                // Send webhook to n8n for Email 
-                const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL;
-                const n8nSecret = process.env.N8N_WEBHOOK_SECRET;
-
-                if (!n8nWebhookUrl) {
-                    console.error('[send-otp] N8N_WEBHOOK_URL is not configured');
-                    return NextResponse.json({ error: 'Notification service not configured' }, { status: 500 });
-                }
-
-                const webhookPayload = {
-                    code: otpResult.code,
-                    method,
-                    destination,
-                    userName: userName || 'User',
-                    expiresIn: 5, // minutes
-                };
-
-                const webhookResponse = await fetch(n8nWebhookUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...(n8nSecret ? { 'X-Webhook-Secret': n8nSecret } : {}),
-                    },
-                    body: JSON.stringify(webhookPayload),
-                });
-
-                if (!webhookResponse.ok) {
-                    console.error('[send-otp] n8n webhook failed:', webhookResponse.status, await webhookResponse.text());
-                }
-            }
-        } catch (deliveryError) {
-            console.error('[send-otp] delivery error:', deliveryError);
-            // Non-blocking — code is still in DB, user can request resend
-        }
-        */
-
-        return NextResponse.json({
-            success: true,
-            message: 'Verification code sent',
-            expiresIn: otpResult.expires_in,
-        });
-
-    } catch (error) {
-        console.error('[send-otp] Unexpected error:', error);
-        return NextResponse.json(
-            { error: 'Internal server error' },
-            { status: 500 }
-        );
-    }
+import { NextRequest,NextResponse } from 'next/server';
+import { verificationIdentity,verificationHash } from '@/lib/merchant-verification-server';
+import { normalizePhone } from '@/lib/checkout-validation';
+import { randomInt,randomUUID } from 'crypto';
+export async function POST(req:NextRequest){
+ try{
+  const identity=await verificationIdentity(req);if(!identity)return NextResponse.json({error:'سجل الدخول أولًا'},{status:401});
+  const {db,user}=identity;const {method}=await req.json();
+  if(!['email','whatsapp'].includes(method))return NextResponse.json({error:'اختر البريد أو واتساب'},{status:400});
+  if(method==='whatsapp'&&(process.env.WHATSAPP_VERIFICATION_ENABLED!=='true'||!process.env.N8N_WHATSAPP_WEBHOOK_URL))return NextResponse.json({error:'واتساب غير متاح حاليًا. يمكنك تفعيل الحساب بالبريد الإلكتروني.'},{status:503});
+  if(method==='email'&&process.env.AUTH_DELIVERY_ENABLED!=='true')return NextResponse.json({error:'خدمة البريد غير متاحة مؤقتًا'},{status:503});
+  const {data:profile}=await db.from('profiles').select('phone').eq('user_id',user.id).maybeSingle();
+  const destination=method==='email'?user.email?.toLowerCase():normalizePhone(profile?.phone);
+  if(!destination || (method==='whatsapp'&&!/^\+[1-9][0-9]{7,14}$/.test(destination)))return NextResponse.json({error:'يلزم تسجيل رقم الهاتف مع رمز الدولة، مثل +201012345678'},{status:400});
+  const id=randomUUID(),code=String(randomInt(100000,1000000));
+  const {data:issued,error}=await db.rpc('issue_merchant_challenge',{p_user:user.id,p_id:id,p_method:method,p_destination:destination,p_hash:verificationHash(user.id,id,code)});
+  if(error)return NextResponse.json({error:'تعذر إنشاء رمز التفعيل'},{status:503});
+  if(!issued?.success)return NextResponse.json({error:issued?.error||'تعذر إنشاء الرمز'},{status:429});
+  try{
+   const payload=method==='email'?{kind:'merchant_verification',to:destination,subject:'رمز تفعيل حساب التاجر — أوردرلي',text:`رمز تفعيل حسابك هو: ${code}\nصالح لمدة 10 دقائق. لا تشارك الرمز مع أي شخص. إذا لم تطلبه، تجاهل هذه الرسالة.`}:{kind:'merchant_verification',to:destination,code,expiresIn:10};
+   const response=await fetch((method==='email'?process.env.N8N_AUTH_WEBHOOK_URL:process.env.N8N_WHATSAPP_WEBHOOK_URL)!,{method:'POST',headers:{'Content-Type':'application/json','X-Orderly-Token':process.env.N8N_AUTH_WEBHOOK_TOKEN!},body:JSON.stringify(payload),signal:AbortSignal.timeout(20000)});
+   const result=await response.json();
+   if(!response.ok||result.error||result.success===false||(method==='email'&&!result.accepted?.some((x:string)=>x.toLowerCase()===destination)))throw Error('Delivery failed');
+   const {error:saved}=await db.from('merchant_verification_challenges').update({delivery_state:'sent'}).eq('id',id);if(saved)throw saved;
+  }catch{await db.from('merchant_verification_challenges').update({delivery_state:'failed'}).eq('id',id);return NextResponse.json({error:'تعذر إرسال الرمز؛ انتظر دقيقة وحاول مجددًا.'},{status:503});}
+  return NextResponse.json({success:true,challengeId:id,expiresIn:600,retryAfter:60});
+ }catch{return NextResponse.json({error:'تعذر إرسال رمز التفعيل'},{status:503});}
 }

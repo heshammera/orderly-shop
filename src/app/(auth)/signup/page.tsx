@@ -229,10 +229,10 @@ function SignupFormContent() {
                 if (signInError) {
                     console.error('[Signup] Auto-login failed:', signInError);
                     // If auto-login fails, redirect to login page as fallback
-                    router.push(`/login?verified=true&email=${encodeURIComponent(data.email)}`);
+                    router.push(`/login?email=${encodeURIComponent(data.email)}`);
                 } else {
                     // Redirect to plan selection
-                    router.push('/select-plan');
+                    router.push('/email-verify');
                 }
             }
         } finally {

@@ -138,6 +138,27 @@ export async function middleware(request: NextRequest) {
     // Update Supabase session and get user
     const { response, user } = await updateSession(request);
 
+    const verificationPage = pathname === '/email-verify';
+    const merchantPage = /^\/(dashboard|editor)(\/|$)/.test(pathname) || /^\/s\/[^/]+\/(dashboard|editor)(\/|$)/.test(pathname) || ['/select-plan','/subscription-success'].includes(pathname);
+    const merchantApi = /^\/api\/(dashboard|wallet|integrations|merchant|mobile|ai)(\/|$)/.test(pathname);
+    if (process.env.MERCHANT_VERIFICATION_REQUIRED === 'true' && !verificationPage && (merchantPage || merchantApi)) {
+        const bearer = request.headers.get('authorization');
+        if (user || bearer) {
+            const verifyClient = createServerClient(supabaseUrl, supabaseAnonKey, {
+                cookies: { getAll(){return request.cookies.getAll()}, setAll(){} },
+                global: { fetch: (input, init) => fetch(input, {...init, cache:'no-store'}), ...(bearer ? {headers:{Authorization:bearer}} : {}) }
+            });
+            const {data:verification,error:verificationError}=await verifyClient.rpc('merchant_verification_status');
+            if(verificationError || !verification?.verified){
+                if(merchantApi)return NextResponse.json({error:'فعّل بريدك الإلكتروني أو واتساب أولًا',code:'MERCHANT_VERIFICATION_REQUIRED'},{status:403});
+                const target=request.nextUrl.clone();target.pathname='/email-verify';target.search='';
+                const redirect=NextResponse.redirect(target);
+                response.cookies.getAll().forEach(cookie=>redirect.cookies.set(cookie));
+                return redirect;
+            }
+        }
+    }
+
     // 5. PROTECTED ROUTES & STORE STATUS CHECK
     if (pathname.startsWith('/dashboard') || pathname === '/select-plan' || pathname === '/subscription-success') {
         if (user) {

@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
         const { data, error } = await supabase.auth.admin.createUser({
             email,
             password,
-            email_confirm: true, // TEMPORARILY auto-confirm — OTP verification disabled (was: false)
+            email_confirm: true, // Permit sign-in; merchant access requires separately verified email OR phone.
             user_metadata: {
                 store_name: metadata?.store_name,
                 store_slug: metadata?.store_slug,

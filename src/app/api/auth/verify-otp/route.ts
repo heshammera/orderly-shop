@@ -1,88 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/admin';
-
-export async function POST(request: NextRequest) {
-    try {
-        const body = await request.json();
-        const { userId, code } = body;
-
-        // Validate inputs
-        if (!userId || !code) {
-            return NextResponse.json(
-                { error: 'Missing required fields: userId, code' },
-                { status: 400 }
-            );
-        }
-
-        // Validate code format (6 digits)
-        if (!/^\d{6}$/.test(code)) {
-            return NextResponse.json(
-                { error: 'Code must be 6 digits' },
-                { status: 400 }
-            );
-        }
-
-        const supabase = createAdminClient();
-
-        // Verify OTP via RPC
-        const { data: verifyResult, error: verifyError } = await supabase
-            .rpc('verify_otp', {
-                p_user_id: userId,
-                p_code: code,
-            });
-
-        if (verifyError) {
-            console.error('[verify-otp] RPC error:', verifyError);
-            return NextResponse.json(
-                { error: 'Failed to verify code' },
-                { status: 500 }
-            );
-        }
-
-        if (!verifyResult?.success) {
-            return NextResponse.json({
-                success: false,
-                error: verifyResult?.error || 'invalid_code',
-                message: verifyResult?.message,
-                attemptsRemaining: verifyResult?.attempts_remaining,
-            }, { status: 400 });
-        }
-
-        // OTP verified! Now confirm the user's email via Admin API
-        try {
-            const { error: updateError } = await supabase.auth.admin.updateUserById(
-                userId,
-                {
-                    email_confirm: true,
-                    // Also set phone if it was provided during verification
-                }
-            );
-
-            if (updateError) {
-                console.error('[verify-otp] Failed to confirm user email:', updateError);
-                return NextResponse.json(
-                    { error: 'Failed to activate account' },
-                    { status: 500 }
-                );
-            }
-        } catch (adminError) {
-            console.error('[verify-otp] Admin API error:', adminError);
-            return NextResponse.json(
-                { error: 'Failed to activate account' },
-                { status: 500 }
-            );
-        }
-
-        return NextResponse.json({
-            success: true,
-            message: 'Account activated successfully',
-        });
-
-    } catch (error) {
-        console.error('[verify-otp] Unexpected error:', error);
-        return NextResponse.json(
-            { error: 'Internal server error' },
-            { status: 500 }
-        );
-    }
+import { NextRequest,NextResponse } from 'next/server';
+import { verificationIdentity,verificationHash } from '@/lib/merchant-verification-server';
+import { normalizePhone } from '@/lib/checkout-validation';
+export async function POST(req:NextRequest){
+ try{
+  const identity=await verificationIdentity(req);if(!identity)return NextResponse.json({error:'سجل الدخول أولًا'},{status:401});
+  const body=await req.json(),code=normalizePhone(body.code);
+  if(!/^[0-9]{6}$/.test(code)||!String(body.challengeId||'').match(/^[0-9a-f-]{36}$/i))return NextResponse.json({error:'أدخل رمز التفعيل المكون من 6 أرقام'},{status:400});
+  const {data,error}=await identity.db.rpc('consume_merchant_challenge',{p_user:identity.user.id,p_id:body.challengeId,p_hash:verificationHash(identity.user.id,body.challengeId,code)});
+  if(error)return NextResponse.json({error:'تعذر التحقق من الرمز'},{status:503});
+  return NextResponse.json(data?.success?data:{error:data?.error||'الرمز غير صالح',attemptsRemaining:data?.attemptsRemaining},{status:data?.success?200:400});
+ }catch{return NextResponse.json({error:'تعذر التحقق من الرمز'},{status:400});}
 }

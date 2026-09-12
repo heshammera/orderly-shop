@@ -153,14 +153,14 @@ export function UserManagement() {
                             <TableHead>{language === 'ar' ? 'رقم الهاتف' : 'Phone'}</TableHead>
                             <TableHead>{language === 'ar' ? 'المتاجر' : 'Stores'}</TableHead>
                             <TableHead>{language === 'ar' ? 'تاريخ الانضمام' : 'Joined'}</TableHead>
-                            <TableHead>{language === 'ar' ? 'الحالة' : 'Status'}</TableHead>
+                            <TableHead>{language === 'ar' ? 'التفعيل' : 'Verification'}</TableHead><TableHead>{language === 'ar' ? 'الحالة' : 'Status'}</TableHead>
                             <TableHead className="text-end">{language === 'ar' ? 'إجراءات' : 'Actions'}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {isLoading ? (
                             <TableRow>
-                                <TableCell colSpan={7} className="text-center py-8">{language === 'ar' ? 'جاري التحميل...' : 'Loading...'}</TableCell>
+                                <TableCell colSpan={8} className="text-center py-8">{language === 'ar' ? 'جاري التحميل...' : 'Loading...'}</TableCell>
                             </TableRow>
                         ) : users.map((user: any) => (
                             <TableRow key={user.user_id}>
@@ -176,6 +176,7 @@ export function UserManagement() {
                                     </Badge>
                                 </TableCell>
                                 <TableCell>{format(new Date(user.created_at), 'yyyy/MM/dd')}</TableCell>
+                                <TableCell><Badge variant={user.is_verified?'default':'outline'}>{user.is_verified?(user.email_verified?'مفعّل بالبريد':'مفعّل بواتساب'):'غير مفعّل'}</Badge></TableCell>
                                 <TableCell>
                                     {user.is_banned ? (
                                         <Badge variant="destructive">{language === 'ar' ? 'محظور' : 'Banned'}</Badge>
