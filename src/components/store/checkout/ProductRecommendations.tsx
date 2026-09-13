@@ -69,8 +69,8 @@ export function ProductRecommendations() {
         fetchRecommendations();
     }, [store?.id, cart]);
 
-    const handleAdd = (product: any) => {
-        addToCart({
+    const handleAdd = async (product: any) => {
+        const added = await addToCart({
             productId: product.id,
             productName: product.name,
             productImage: getImageUrl(product.images),
@@ -81,6 +81,7 @@ export function ProductRecommendations() {
             variants: [],
             addedAt: new Date().toISOString()
         });
+        if (!added) return;
         toast({
             title: language === 'ar' ? 'تمت الإضافة للسلة' : 'Added to cart',
         });

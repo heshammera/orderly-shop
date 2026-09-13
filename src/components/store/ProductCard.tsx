@@ -38,10 +38,10 @@ export function ProductCard({ product, storeId }: ProductCardProps) {
     // Simple Add To Cart. If there are variants required, we better open QuickView.
     // Since we don't know the variants here, we just open QuickView for now on AddToCart click
     // to guarantee all required options are selected properly.
-    const handleQuickAdd = (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsQuickViewOpen(true);
+    const handleQuickAdd = async (e: React.MouseEvent) => {
+        e.preventDefault();e.stopPropagation();setIsAddingToCart(true);
+        try { await addToCart({productId:product.id,productName:product.name,productImage:image,basePrice:Number(product.price),unitPrice:Number(product.sale_price)>0?Number(product.sale_price):Number(product.price),quantity:1,variants:[],addedAt:new Date().toISOString()}); }
+        finally { setIsAddingToCart(false); }
     };
 
     const handleQuickViewClick = (e: React.MouseEvent) => {

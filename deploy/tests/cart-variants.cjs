@@ -1,0 +1,24 @@
+const fs=require('fs'),ts=require('/app/node_modules/typescript'),assert=require('node:assert/strict');
+const source=fs.readFileSync('/app/src/lib/variant-selection.ts','utf8');
+const output=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText;
+const moduleObject={exports:{}};new Function('module','exports',output)(moduleObject,moduleObject.exports);
+const {needsVariantSelection:needs,defaultVariantOption:pick,availableVariantOption:available}=moduleObject.exports;
+const groups=[{id:'size',required:true,variant_options:[{id:'small'},{id:'large'}]},{id:'color',required:true,variant_options:[{id:'red'}]}];
+assert.equal(needs(groups,[]),true);
+assert.equal(needs(groups,[{variantId:'size',optionId:'small'}],true),true);
+assert.equal(needs(groups,[{variantId:'size',optionId:'red'},{variantId:'color',optionId:'red'}],true),true);
+assert.equal(needs(groups,[{variantId:'size',optionId:'small'},{variantId:'color',optionId:'red'}]),false);
+assert.equal(needs([],[]),false);
+const optional=[{id:'gift',required:false,variant_options:[{id:'wrap'}]}];
+assert.equal(needs(optional,[]),true);assert.equal(needs(optional,[],true),false);
+assert.equal(pick([{id:'a'},{id:'b'}]),undefined);
+assert.equal(pick([{id:'a',is_default:true,in_stock:false},{id:'b'}]).id,'b');
+assert.equal(pick([{id:'a',is_default:true,manage_stock:true,stock:0},{id:'b'},{id:'c'}]),undefined);
+assert.equal(pick([{id:'a',is_default:true,in_stock:false}],true).id,'a');
+assert.equal(available({manage_stock:true,stock:0}),false);
+assert.equal(available({manage_stock:false,stock:0}),true);
+console.log('PASS: 13 variant selection, required options, explicit confirmation and stock/default cases');
+
+assert.equal(moduleObject.exports.variantUnitPrice(100,[{price:125},{price_modifier:10}]),135);
+assert.equal(moduleObject.exports.variantUnitPrice(80,[{price:100},{price:90}]),110);
+console.log('PASS: multi-variant prices match authoritative checkout rules');

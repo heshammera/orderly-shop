@@ -92,7 +92,8 @@ export function HypeTemplate({ content, product, language, storeSlug, productId,
     const handleBuyNow = async () => {
         if (isPreview) return;
         
-        await addToCart({
+        if ((product as any).skip_cart) { document.getElementById('landing-inline-order')?.scrollIntoView({behavior:'smooth',block:'start'}); return; }
+        const added = await addToCart({
             productId,
             productName: product.name,
             productImage: heroImage,
@@ -103,6 +104,7 @@ export function HypeTemplate({ content, product, language, storeSlug, productId,
             addedAt: new Date().toISOString()
         }, { skipOpen: true });
 
+        if (!added) return;
         router.push(`/checkout`);
     };
 

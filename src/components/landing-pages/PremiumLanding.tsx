@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ArrowUpLeft,
   ArrowUpRight,
@@ -99,6 +99,13 @@ export function PremiumLanding({
       setBusy(false);
     }
   };
+  const inlineCheckout = !!p.skip_cart;
+  useEffect(() => { if(inlineCheckout && !isPreview) void buy(); },[productId,storeSlug,inlineCheckout,isPreview]);
+  const OrderTitle = inlineCheckout ? 'h3' : DialogTitle;
+  const OrderDescription = inlineCheckout ? 'p' : DialogDescription;
+  const renderOptions = (children:React.ReactNode) => inlineCheckout
+    ? (purchase && <section id="landing-inline-order" className="max-w-xl mx-auto border rounded-2xl p-6 space-y-4 my-8 bg-background">{children}</section>)
+    : <Dialog open={!!purchase && !orderOpen} onOpenChange={open=>{if(!open)setPurchase(null);}}><DialogContent dir={ar?'rtl':'ltr'}>{children}</DialogContent></Dialog>;
   let unit = Number(
     purchase?.product.sale_price || purchase?.product.price || price,
   );
@@ -125,7 +132,7 @@ export function PremiumLanding({
   const action = (small = false) => (
     <button
       type="button"
-      onClick={buy}
+      onClick={() => inlineCheckout ? document.getElementById("landing-inline-order")?.scrollIntoView({behavior:"smooth",block:"start"}) : buy()}
       disabled={busy}
       style={{
         background: accent,
@@ -438,19 +445,13 @@ export function PremiumLanding({
           {action(true)}
         </div>
       )}
-      <Dialog
-        open={!!purchase && !orderOpen}
-        onOpenChange={(open) => {
-          if (!open) setPurchase(null);
-        }}
-      >
-        <DialogContent dir={ar ? "rtl" : "ltr"}>
-          <DialogTitle>{ar ? "خيارات طلبك" : "Your order"}</DialogTitle>
-          <DialogDescription>
+      {renderOptions(<>
+          <OrderTitle>{ar ? "خيارات طلبك" : "Your order"}</OrderTitle>
+          <OrderDescription>
             {ar
               ? "حدد الكمية والخيارات قبل إدخال بيانات الشحن."
               : "Choose your options before entering delivery details."}
-          </DialogDescription>
+          </OrderDescription>
           {purchase?.variants.map((v: any) => (
             <label key={v.id} className="block space-y-2 text-sm">
               <span>
@@ -499,6 +500,7 @@ export function PremiumLanding({
               </button>
             </div>
           </div>
+          {!inlineCheckout && (
           <button
             type="button"
             disabled={!ready}
@@ -507,14 +509,15 @@ export function PremiumLanding({
           >
             {ar ? "متابعة لبيانات الشحن" : "Continue to delivery"}
           </button>
-        </DialogContent>
-      </Dialog>
+          )}
+      </>)}
       {purchase && (
-        <QuickOrderForm
-          isOpen={orderOpen}
+        <div className={inlineCheckout ? "max-w-xl mx-auto" : ""}><QuickOrderForm
+          inline={inlineCheckout}
+          isOpen={inlineCheckout || orderOpen}
           onClose={() => {
             setOrderOpen(false);
-            setPurchase(null);
+            if(!inlineCheckout)setPurchase(null);
           }}
           product={purchase.product}
           store={purchase.store}
@@ -524,7 +527,7 @@ export function PremiumLanding({
           selections={Object.fromEntries(
             Array.from({ length: quantity }, (_, i) => [i, choices]),
           )}
-        />
+        /></div>
       )}
     </div>
   );

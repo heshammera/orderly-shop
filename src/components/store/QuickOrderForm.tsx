@@ -15,6 +15,7 @@ import { governorates } from '@/lib/governorates';
 import { trackPurchase } from '@/lib/pixelTracker';
 
 interface QuickOrderFormProps {
+    inline?: boolean;
     isOpen: boolean;
     onClose: () => void;
     product: any;
@@ -25,7 +26,7 @@ interface QuickOrderFormProps {
     store: any;
 }
 
-export function QuickOrderForm({ isOpen, onClose, product, quantity, subtotal, variants, selections, store }: QuickOrderFormProps) {
+export function QuickOrderForm({ isOpen, onClose, product, quantity, subtotal, variants, selections, store, inline = false }: QuickOrderFormProps) {
     const { language } = useLanguage();
     const { toast } = useToast();
 
@@ -74,11 +75,19 @@ export function QuickOrderForm({ isOpen, onClose, product, quantity, subtotal, v
     }, [formData, selectedGovernorate, language, validationStarted]);
 
     const total = subtotal + shippingCost;
+    useEffect(() => {
+        if ((!inline && !isOpen) || success || loading || (!formData.name && !formData.phone) || !store.slug) return;
+        const timer=setTimeout(()=>{fetch(`/api/store/${store.slug}/abandoned-cart`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:'product',customer_name:formData.name,customer_phone:formData.phone,cart_items:[{productId:product.id,quantity,variants:Object.entries(selections[0]||{}).map(([variantId,optionId])=>({variantId,optionId}))}]}),keepalive:true}).catch(()=>{});},1500);
+        return()=>clearTimeout(timer);
+    },[inline,isOpen,success,loading,formData.name,formData.phone,quantity,selections,store.slug,product.id]);
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!store?.id) return;
 
+        const missing = Array.from({length:quantity},(_,i)=>variants.filter(v=>v.required&&!selections[i]?.[v.id]).map(v=>`${v.name?.[language]||v.name?.ar||v.name}: ${i+1}`)).flat();
+        if(missing.length){toast({title:language==='ar'?'اختر خيارات المنتج أولًا':'Choose product options first',description:missing.join('، '),variant:'destructive'});return;}
         const checked = validateCheckout(formData, shippingSettings, selectedGovernorate, language);
         setValidationStarted(true);
         setFieldErrors(checked.errors);
@@ -179,20 +188,24 @@ export function QuickOrderForm({ isOpen, onClose, product, quantity, subtotal, v
         onClose();
     };
 
+    const Frame = ({children, completed=false}: {children:React.ReactNode;completed?:boolean}) => inline
+        ? <section id="inline-product-order" className="rounded-2xl border bg-card p-5 shadow-sm space-y-4">{children}</section>
+        : <Dialog open={isOpen} onOpenChange={completed?resetAndClose:onClose}><DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">{children}</DialogContent></Dialog>;
+    const Title = inline ? 'h3' : DialogTitle;
+    const Description = inline ? 'p' : DialogDescription;
+
     if (success) {
-        return (
-            <Dialog open={isOpen} onOpenChange={resetAndClose}>
-                <DialogContent className="sm:max-w-md text-center">
+        return Frame({completed:true,children:<>
                     <div className="flex flex-col items-center justify-center py-6">
                         <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
                             <CheckCircle2 className="w-8 h-8" />
                         </div>
-                        <DialogTitle className="text-2xl font-bold mb-2">
+                        <Title className="text-2xl font-bold mb-2">
                             {language === 'ar' ? 'شكراً لطلبك!' : 'Thank You!'}
-                        </DialogTitle>
-                        <DialogDescription className="text-lg">
+                        </Title>
+                        <Description className="text-lg">
                             {language === 'ar' ? `تم استلام طلبك رقم #${orderId}` : `Order #${orderId} Received`}
-                        </DialogDescription>
+                        </Description>
                         <p className="text-muted-foreground mt-2">
                             {language === 'ar' ? 'سيتم التواصل معك قريباً لتأكيد الطلب.' : 'We will contact you soon to confirm.'}
                         </p>
@@ -202,19 +215,15 @@ export function QuickOrderForm({ isOpen, onClose, product, quantity, subtotal, v
                             {language === 'ar' ? 'متابعة التسوق' : 'Continue Shopping'}
                         </Button>
                     </DialogFooter>
-                </DialogContent>
-            </Dialog>
-        );
+            </>});
     }
 
-    return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+    return Frame({children:<>
                 <DialogHeader>
-                    <DialogTitle>{language === 'ar' ? 'طلب سريع' : 'Quick Order'}</DialogTitle>
-                    <DialogDescription>
+                    <Title>{language === 'ar' ? 'طلب سريع' : 'Quick Order'}</Title>
+                    <Description>
                         {product.name[language] || product.name.ar} x {quantity}
-                    </DialogDescription>
+                    </Description>
                 </DialogHeader>
 
                 <form data-checkout-validation="detailed" noValidate onSubmit={handleSubmit} className="space-y-4 py-4 [&_[aria-invalid=true]]:border-red-500">
@@ -330,7 +339,5 @@ export function QuickOrderForm({ isOpen, onClose, product, quantity, subtotal, v
                         {language === 'ar' ? 'تأكيد الطلب السريع' : 'Confirm Quick Order'}
                     </Button>
                 </form>
-            </DialogContent>
-        </Dialog>
-    );
+        </>});
 }

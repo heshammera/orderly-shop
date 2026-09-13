@@ -26,7 +26,7 @@ const getPage = cache(async (storeSlug: string, productId: string) => {
   const [product, landing] = await Promise.all([
     db
       .from("public_products")
-      .select("id,name,price,sale_price,images,store_id")
+      .select("id,name,price,sale_price,images,store_id,skip_cart")
       .eq("id", productId)
       .eq("store_id", store.id)
       .maybeSingle(),
@@ -91,6 +91,7 @@ export default async function LandingPage({
       template={data.landing.template as LandingTemplate}
       content={content}
       product={{
+        skip_cart: !!data.product.skip_cart,
         name,
         price: Number(data.product.price || 0),
         sale_price: data.product.sale_price

@@ -1,5 +1,6 @@
 "use client";
 
+import { defaultVariantOption, availableVariantOption } from '@/lib/variant-selection';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -78,6 +79,7 @@ interface StoreData {
 }
 
 interface ProductDetailProps {
+    onAddedToCart?: () => void;
     product: Product;
     variants: Variant[];
     upsellOffers: UpsellOffer[];
@@ -187,7 +189,7 @@ function FakeVisitors({ min, max, language, text }: { min: number; max: number; 
     );
 }
 
-export function ProductDetail({ product, variants, upsellOffers, store, themeSettings }: ProductDetailProps) {
+export function ProductDetail({ product, variants, upsellOffers, store, themeSettings, onAddedToCart }: ProductDetailProps) {
     const { language } = useLanguage();
     const { toast } = useToast();
     const { addToCart } = useCart();
@@ -235,7 +237,7 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
                     // Initialize defaults for new items
                     const defaults: Record<string, string> = {};
                     variants.forEach(v => {
-                        const defaultOption = v.options.find(o => o.is_default) || v.options[0];
+                        const defaultOption = defaultVariantOption(v.options, product.ignore_stock);
                         if (defaultOption) {
                             defaults[v.id] = defaultOption.id;
                         }
@@ -267,17 +269,9 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
                 const variant = variants.find(v => v.id === variantId);
                 const option = variant?.options.find(o => o.id === optionId);
 
-                if (option?.price !== undefined && option.price !== null) {
-                    // If option price is exactly the same as product original price, and we have a sale price,
-                    // it means it was likely a default value and should be the sale price.
-                    if (product.sale_price && product.sale_price > 0 && option.price === product.price) {
-                        itemPrice = product.sale_price;
-                    } else {
-                        itemPrice = option.price;
-                    }
-                } else if (option?.price_modifier) {
-                    itemPrice += option.price_modifier;
-                }
+                const basePrice = Number(product.sale_price)>0 ? Number(product.sale_price) : Number(product.price);
+                if (option?.price != null) itemPrice += Number(option.price) - basePrice;
+                else itemPrice += Number(option?.price_modifier || 0);
             });
             total += itemPrice;
         }
@@ -327,8 +321,8 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
             toast({
                 title: language === 'ar' ? 'خيارات مفقودة' : 'Missing Options',
                 description: language === 'ar'
-                    ? `يرجى اختيار ${missingVariants[0].name[language] || missingVariants[0].name.ar}`
-                    : `Please select ${missingVariants[0].name[language] || missingVariants[0].name.en}`,
+                    ? `يرجى اختيار ${missingVariants.map(v => v.name[language] || v.name.ar).join('، ')}`
+                    : `Please select ${missingVariants.map(v => v.name[language] || v.name.en).join(', ')}`,
                 variant: "destructive"
             });
             return;
@@ -345,11 +339,12 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
             const missingVariants = variants.filter(v => v.required && !itemSelections[v.id]);
 
             if (missingVariants.length > 0) {
+                document.getElementById(`variant-${product.id}-${i}-${missingVariants[0].id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 toast({
                     title: language === 'ar' ? 'خيارات مفقودة' : 'Missing Options',
                     description: language === 'ar'
-                        ? `يرجى اختيار ${missingVariants[0].name[language] || missingVariants[0].name.ar} للقطعة رقم ${i + 1}`
-                        : `Please select ${missingVariants[0].name[language] || missingVariants[0].name.en} for item ${i + 1}`,
+                        ? `يرجى اختيار ${missingVariants.map(v => v.name[language] || v.name.ar).join('، ')} للقطعة رقم ${i + 1}`
+                        : `Please select ${missingVariants.map(v => v.name[language] || v.name.en).join(', ')} for item ${i + 1}`,
                     variant: "destructive"
                 });
                 return;
@@ -400,8 +395,11 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
             }
 
             for (const item of Object.values(addedItems)) {
-                await addToCart(item);
+                const added = await addToCart(item, { optionsConfirmed: true });
+                if (!added) return;
             }
+
+            onAddedToCart?.();
 
             // Pixel: AddToCart
             const pName = product.name[language] || product.name.ar;
@@ -447,9 +445,16 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
         { type: 'description', id: 'block_description' }
     ];
 
-    const blocks = themeSettings?.blocks && themeSettings.blocks.length > 0
+    const configuredBlocks = themeSettings?.blocks && themeSettings.blocks.length > 0
         ? themeSettings.blocks
         : defaultBlocks;
+    const blocks = [...configuredBlocks];
+    if(product.skip_cart && !blocks.some((block:any)=>block.type==='buy_buttons')) blocks.push({type:'buy_buttons',id:'inline_checkout'});
+    if (variants.length && !blocks.some((block: any) => block.type === 'variants')) {
+        const beforeBuy = blocks.findIndex((block: any) => block.type === 'buy_buttons');
+        blocks.splice(beforeBuy < 0 ? 0 : beforeBuy, 0, { type: 'variants', id: 'required_product_options' });
+    }
+
 
     return (
         <div className="w-full max-w-7xl mx-auto px-4 py-6 pb-32 md:py-8 md:pb-8 overflow-hidden">
@@ -769,10 +774,10 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
                                                         const selectedLabel = selectedOption ? (selectedOption.label[language] || selectedOption.label.ar) : '';
 
                                                         return (
-                                                            <div key={variant.id} className="space-y-3">
+                                                            <div key={variant.id} id={`variant-${product.id}-${itemIndex}-${variant.id}`} className="space-y-3 scroll-mt-6">
                                                                 <div className="flex items-center justify-between">
                                                                     <label className="text-sm font-medium text-foreground">
-                                                                        {variant.name[language] || variant.name.ar}
+                                                                        {variant.name[language] || variant.name.ar}{variant.required && <span className="ms-2 text-xs text-muted-foreground">{language === 'ar' ? '(مطلوب)' : '(Required)'}</span>}
                                                                         {selectedLabel && (
                                                                             <span className="text-muted-foreground ms-2 font-normal">
                                                                                 : {selectedLabel}
@@ -781,6 +786,8 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
                                                                     </label>
                                                                 </div>
 
+                                                                {!variant.options.some(option => availableVariantOption(option, product.ignore_stock)) && <p className="text-sm text-red-600">{language === 'ar' ? 'خيارات هذا المتغير غير متاحة حاليًا.' : 'These options are currently unavailable.'}</p>}
+                                                                {variant.required && !selectedOptionId && <p className="text-sm text-amber-700">{language === 'ar' ? `اختر ${variant.name.ar || variant.name.en} لإكمال الإضافة` : `Choose ${variant.name.en || variant.name.ar} to continue`}</p>}
                                                                 <div className="flex flex-wrap gap-2">
                                                                     {variant.options.map((option) => {
                                                                         const isSelected = selections[itemIndex]?.[variant.id] === option.id;
@@ -789,18 +796,18 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
                                                                             return (
                                                                                 <button
                                                                                     key={option.id}
-                                                                                    onClick={() => (product.ignore_stock || option.in_stock !== false) && handleOptionSelect(itemIndex, variant.id, option.id)}
-                                                                                    disabled={!product.ignore_stock && option.in_stock === false}
+                                                                                    onClick={() => (product.ignore_stock || (option.in_stock !== false && !(option.manage_stock && option.stock != null && option.stock <= 0))) && handleOptionSelect(itemIndex, variant.id, option.id)}
+                                                                                    disabled={!product.ignore_stock && (option.in_stock === false || (option.manage_stock && option.stock != null && option.stock <= 0))}
                                                                                     className={cn(
                                                                                         "w-12 h-12 rounded-full border-2 transition-all relative flex items-center justify-center disabled:cursor-not-allowed",
                                                                                         isSelected ? "border-primary ring-2 ring-primary/20 scale-110" : "border-transparent ring-1 ring-border hover:scale-105",
-                                                                                        (!product.ignore_stock && option.in_stock === false) && "opacity-40 grayscale"
+                                                                                        (!product.ignore_stock && (option.in_stock === false || (option.manage_stock && option.stock != null && option.stock <= 0))) && "opacity-40 grayscale"
                                                                                     )}
                                                                                     style={{ backgroundColor: option.value }}
                                                                                     title={option.label[language] || option.label.ar}
                                                                                 >
                                                                                     {isSelected && <Check className="w-5 h-5 text-white drop-shadow-md" />}
-                                                                                    {(!product.ignore_stock && option.in_stock === false) && (
+                                                                                    {(!product.ignore_stock && (option.in_stock === false || (option.manage_stock && option.stock != null && option.stock <= 0))) && (
                                                                                         <div className="absolute inset-0 flex items-center justify-center">
                                                                                             <div className="w-full h-[2px] bg-red-500/80 rotate-45 transform" />
                                                                                         </div>
@@ -813,12 +820,12 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
                                                                             return (
                                                                                 <button
                                                                                     key={option.id}
-                                                                                    onClick={() => (product.ignore_stock || option.in_stock !== false) && handleOptionSelect(itemIndex, variant.id, option.id)}
-                                                                                    disabled={!product.ignore_stock && option.in_stock === false}
+                                                                                    onClick={() => (product.ignore_stock || (option.in_stock !== false && !(option.manage_stock && option.stock != null && option.stock <= 0))) && handleOptionSelect(itemIndex, variant.id, option.id)}
+                                                                                    disabled={!product.ignore_stock && (option.in_stock === false || (option.manage_stock && option.stock != null && option.stock <= 0))}
                                                                                     className={cn(
                                                                                         "w-16 h-16 rounded-md border-2 overflow-hidden relative transition-all disabled:cursor-not-allowed",
                                                                                         isSelected ? "border-primary ring-2 ring-primary/20" : "border-transparent ring-1 ring-border opacity-80 hover:opacity-100",
-                                                                                        (!product.ignore_stock && option.in_stock === false) && "opacity-40 grayscale"
+                                                                                        (!product.ignore_stock && (option.in_stock === false || (option.manage_stock && option.stock != null && option.stock <= 0))) && "opacity-40 grayscale"
                                                                                     )}
                                                                                     title={option.label[language] || option.label.ar}
                                                                                 >
@@ -834,7 +841,7 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
                                                                                             <Check className="w-6 h-6 text-white" />
                                                                                         </div>
                                                                                     )}
-                                                                                    {(!product.ignore_stock && option.in_stock === false) && (
+                                                                                    {(!product.ignore_stock && (option.in_stock === false || (option.manage_stock && option.stock != null && option.stock <= 0))) && (
                                                                                         <div className="absolute inset-0 flex items-center justify-center bg-white/30 backdrop-blur-[1px]">
                                                                                             <span className="text-[10px] font-bold text-destructive bg-white/90 px-1 py-0.5 rounded shadow-sm border border-destructive/20 whitespace-nowrap">
                                                                                                 {language === 'ar' ? 'نفد' : 'Out'}
@@ -848,8 +855,8 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
                                                                         return (
                                                                             <button
                                                                                 key={option.id}
-                                                                                onClick={() => (product.ignore_stock || option.in_stock !== false) && handleOptionSelect(itemIndex, variant.id, option.id)}
-                                                                                disabled={!product.ignore_stock && option.in_stock === false}
+                                                                                onClick={() => (product.ignore_stock || (option.in_stock !== false && !(option.manage_stock && option.stock != null && option.stock <= 0))) && handleOptionSelect(itemIndex, variant.id, option.id)}
+                                                                                disabled={!product.ignore_stock && (option.in_stock === false || (option.manage_stock && option.stock != null && option.stock <= 0))}
                                                                                 className={cn(
                                                                                     "px-4 py-2 rounded-md border text-sm transition-all min-w-[3rem] disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-muted/50 disabled:line-through",
                                                                                     isSelected
@@ -858,7 +865,7 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
                                                                                 )}
                                                                             >
                                                                                 {option.label[language] || option.label.ar}
-                                                                                {(!product.ignore_stock && option.in_stock === false) && (
+                                                                                {(!product.ignore_stock && (option.in_stock === false || (option.manage_stock && option.stock != null && option.stock <= 0))) && (
                                                                                     <span className="ms-1 text-xs opacity-70">
                                                                                         ({language === 'ar' ? 'نفد' : 'Out'})
                                                                                     </span>
@@ -877,6 +884,7 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
                                 );
 
                             case 'buy_buttons':
+                                if (product.skip_cart) return <QuickOrderForm key={block.id} inline isOpen onClose={() => {}} product={product} quantity={quantity} subtotal={totalPrice} variants={variants} selections={selections} store={store} />;
                                 return (
                                     <div key={block.id} className="space-y-4 pt-4 border-t mt-4">
                                         <div className="flex flex-col gap-3">
@@ -885,14 +893,14 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
                                                     size="lg"
                                                     className="flex-1 h-16 md:h-14 rounded-xl md:rounded-md text-lg md:text-base font-bold md:font-semibold shadow-md md:shadow-none"
                                                     onClick={handleAddToCart}
-                                                    disabled={addingToCart || (!product.ignore_stock && product.stock_quantity === 0)}
+                                                    disabled={addingToCart || (!product.ignore_stock && product.track_inventory && product.stock_quantity <= 0)}
                                                 >
                                                     {addingToCart ? (
                                                         <Loader2 className="w-5 h-5 md:w-4 md:h-4 animate-spin" />
                                                     ) : (
                                                         <ShoppingCart className="w-5 h-5 md:w-4 md:h-4 me-2" />
                                                     )}
-                                                    {(!product.ignore_stock && product.stock_quantity === 0)
+                                                    {(!product.ignore_stock && product.track_inventory && product.stock_quantity <= 0)
                                                         ? (language === 'ar' ? 'نفذت الكمية' : 'Out of Stock')
                                                         : (block.settings?.add_to_cart_text || addToCartText)
                                                     }
@@ -908,7 +916,7 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
                                                         product.skip_cart ? "h-16 md:h-14 text-lg md:text-base bg-emerald-600 hover:bg-emerald-700 text-white" : "h-14 md:h-11 border-primary text-primary hover:bg-primary/10 bg-background"
                                                     )}
                                                     onClick={handleQuickOrder}
-                                                    disabled={!product.ignore_stock && product.stock_quantity === 0}
+                                                    disabled={!product.ignore_stock && product.track_inventory && product.stock_quantity <= 0}
                                                 >
                                                     <Zap className={cn("me-2", product.skip_cart ? "w-6 h-6" : "w-5 h-5 md:w-4 md:h-4")} />
                                                     {language === 'ar' ? 'اطلب الآن (شراء مباشر)' : 'Order Now (Buy Now)'}
@@ -956,7 +964,7 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
                     })}
 
                     {/* Quick Order Dialog */}
-                    <QuickOrderForm
+                    {!product.skip_cart && <QuickOrderForm
                         isOpen={quickOrderOpen}
                         onClose={() => setQuickOrderOpen(false)}
                         product={product}
@@ -965,7 +973,7 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
                         variants={variants}
                         selections={selections}
                         store={store}
-                    />
+                    />}
                 </div>
             </div>
 

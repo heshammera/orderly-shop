@@ -57,7 +57,8 @@ export function FlashTemplate({
     
     const handleBuyNow = async () => {
         if (isPreview) return;
-        await addToCart({
+        if ((product as any).skip_cart) { document.getElementById('landing-inline-order')?.scrollIntoView({behavior:'smooth',block:'start'}); return; }
+        const added = await addToCart({
             productId,
             productName: product.name,
             productImage: content.hero_image || product.images[0],
@@ -67,6 +68,7 @@ export function FlashTemplate({
             variants: [],
             addedAt: new Date().toISOString()
         }, { skipOpen: true });
+        if (!added) return;
         router.push(`/checkout`);
     };
 

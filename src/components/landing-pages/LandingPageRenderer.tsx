@@ -1,5 +1,6 @@
 "use client";
 
+import { InlineProductCheckout } from "@/components/store/InlineProductCheckout";
 import { PremiumLanding } from "./PremiumLanding";
 import { HypeTemplate } from "./templates/HypeTemplate";
 import { ElegantTemplate } from "./templates/ElegantTemplate";
@@ -40,6 +41,7 @@ interface LandingContent {
 }
 
 interface ProductData {
+  skip_cart?: boolean;
   name: { ar: string; en: string };
   price: number;
   sale_price?: number;
@@ -104,21 +106,21 @@ export function LandingPageRenderer({
   try {
     switch (template) {
       case "hype":
-        return <HypeTemplate {...props} />;
+        return <><HypeTemplate {...props} />{product?.skip_cart && !isPreview && <InlineProductCheckout productId={productId} storeSlug={storeSlug} language={language} />}</>;
       case "elegant":
-        return <ElegantTemplate {...props} />;
+        return <><ElegantTemplate {...props} />{product?.skip_cart && !isPreview && <InlineProductCheckout productId={productId} storeSlug={storeSlug} language={language} />}</>;
       case "trust":
-        return <TrustTemplate {...props} />;
+        return <><TrustTemplate {...props} />{product?.skip_cart && !isPreview && <InlineProductCheckout productId={productId} storeSlug={storeSlug} language={language} />}</>;
       case "noir":
-        return <NoirTemplate {...props} />;
+        return <><NoirTemplate {...props} />{product?.skip_cart && !isPreview && <InlineProductCheckout productId={productId} storeSlug={storeSlug} language={language} />}</>;
       case "cyber":
-        return <CyberTemplate {...props} />;
+        return <><CyberTemplate {...props} />{product?.skip_cart && !isPreview && <InlineProductCheckout productId={productId} storeSlug={storeSlug} language={language} />}</>;
       case "flash":
-        return <FlashTemplate {...props} />;
+        return <><FlashTemplate {...props} />{product?.skip_cart && !isPreview && <InlineProductCheckout productId={productId} storeSlug={storeSlug} language={language} />}</>;
       case "modern":
-        return <ModernTemplate {...props} />;
+        return <><ModernTemplate {...props} />{product?.skip_cart && !isPreview && <InlineProductCheckout productId={productId} storeSlug={storeSlug} language={language} />}</>;
       default:
-        return <TrustTemplate {...props} />;
+        return <><TrustTemplate {...props} />{product?.skip_cart && !isPreview && <InlineProductCheckout productId={productId} storeSlug={storeSlug} language={language} />}</>;
     }
   } catch (error) {
     console.error("LandingPageRenderer Error:", error);

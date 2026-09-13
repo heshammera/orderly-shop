@@ -29,6 +29,7 @@ export function QuickViewModal({
         let isMounted = true;
         const fetchData = async () => {
             setLoading(true);
+            setData(null);
             try {
                 // Determine if storeId is ID or Slug
                 let storeQuery = supabase.from('public_stores').select('*');
@@ -49,6 +50,7 @@ export function QuickViewModal({
                         .from('public_products')
                         .select('*')
                         .eq('id', productId)
+                        .eq('store_id', store.id)
                         .single(),
                     supabase
                         .from('product_variants')
@@ -65,6 +67,7 @@ export function QuickViewModal({
 
                 if (!isMounted) return;
 
+                if (productRes.error || variantsRes.error || upsellRes.error) throw new Error('Product options could not be loaded');
                 const productData = productRes.data;
                 if (!productData) return;
 
@@ -115,9 +118,9 @@ export function QuickViewModal({
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto p-0 gap-0 border-none bg-background sm:rounded-2xl">
-                <DialogTitle className="sr-only">Quick View</DialogTitle>
-                <DialogDescription className="sr-only">Product quick view details</DialogDescription>
+            <DialogContent onClick={event => event.stopPropagation()} className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto p-0 gap-0 border-none bg-background sm:rounded-2xl">
+                <DialogTitle className="px-6 pt-6 text-lg font-semibold">{language === 'ar' ? 'اختر خيارات المنتج' : 'Choose product options'}</DialogTitle>
+                <DialogDescription className="px-6">{language === 'ar' ? 'حدد الخيارات والكمية، وراجع السعر قبل الإضافة للسلة.' : 'Choose your options and quantity, then review the price before adding.'}</DialogDescription>
                 {loading ? (
                     <div className="flex items-center justify-center h-64">
                         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -125,6 +128,8 @@ export function QuickViewModal({
                 ) : data ? (
                     <div className="bg-background w-full overflow-hidden">
                         <ProductDetail
+                            key={data.product.id}
+                            onAddedToCart={() => onOpenChange(false)}
                             product={data.product}
                             variants={data.variants}
                             upsellOffers={data.upsellOffers}

@@ -1,6 +1,10 @@
 "use client";
 
+import { needsVariantSelection } from '@/lib/variant-selection';
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { CartVariantPicker } from '@/components/store/CartVariantPicker';
+import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { createClient } from '@/lib/supabase/client';
 
 interface CartItem {
@@ -23,7 +27,7 @@ interface CartContextType {
     isCartOpen: boolean;
     openCart: () => void;
     closeCart: () => void;
-    addToCart: (item: CartItem, options?: { skipOpen?: boolean }) => Promise<void>;
+    addToCart: (item: CartItem, options?: { skipOpen?: boolean; optionsConfirmed?: boolean }) => Promise<boolean>;
     removeFromCart: (productId: string, variants: any[]) => Promise<void>;
     updateQuantity: (productId: string, variants: any[], quantity: number) => Promise<void>;
     clearCart: () => Promise<void>;
@@ -34,6 +38,8 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children, storeId }: { children: React.ReactNode; storeId: string }) {
     const supabase = createClient();
+    const { language } = useLanguage();
+    const [variantProductId, setVariantProductId] = useState<string | null>(null);
     const [cart, setCart] = useState<CartItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [sessionId, setSessionId] = useState<string | null>(null);
@@ -179,7 +185,22 @@ export function CartProvider({ children, storeId }: { children: React.ReactNode;
         return data.id;
     };
 
-    const addToCart = async (newItem: CartItem, options?: { skipOpen?: boolean }) => {
+    const addToCart = async (newItem: CartItem, options?: { skipOpen?: boolean; optionsConfirmed?: boolean }) => {
+        // Every entry point (cards, recommendations and landing pages) must collect
+        // required choices before creating a cart row. Checkout still validates prices/stock.
+        const { data: groups, error: optionsError } = await supabase
+            .from('product_variants').select('id, required, variant_options(id)')
+            .eq('product_id', newItem.productId);
+        if (optionsError || !groups) {
+            toast.error(language === 'ar' ? 'تعذر تحميل خيارات المنتج. حاول مرة أخرى.' : 'Could not load product options. Please retry.');
+            return false;
+        }
+        if (needsVariantSelection(groups, newItem.variants, options?.optionsConfirmed)) {
+            setIsCartOpen(false);
+            setVariantProductId(newItem.productId);
+            return false;
+        }
+
         setCart(prev => {
             const existingIdx = prev.findIndex(item =>
                 item.productId === newItem.productId &&
@@ -224,6 +245,7 @@ export function CartProvider({ children, storeId }: { children: React.ReactNode;
         } catch (err) {
             console.error('Failed to sync cart item', err);
         }
+        return true;
     };
 
     const removeFromCart = async (productId: string, variants: any[]) => {
@@ -274,6 +296,10 @@ export function CartProvider({ children, storeId }: { children: React.ReactNode;
             refreshCart
         }}>
             {children}
+            {variantProductId && <CartVariantPicker key={variantProductId}
+                productId={variantProductId} storeId={storeId}
+                onClose={() => setVariantProductId(null)} onAdd={addToCart}
+            />}
         </CartContext.Provider>
     );
 }

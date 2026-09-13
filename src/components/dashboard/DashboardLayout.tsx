@@ -172,7 +172,7 @@ export function DashboardLayout({
         },
         {
             icon: ShoppingBag,
-            label: language === 'ar' ? 'السلات المتروكة' : 'Abandoned Carts',
+            label: language === 'ar' ? 'الطلبات غير المكتملة' : 'Incomplete checkouts',
             href: `/dashboard/${storeId}/carts`,
             show: isEditor,
         },

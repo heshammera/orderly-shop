@@ -35,7 +35,7 @@ export function CartRecoveryHandler({ storeSlug }: CartRecoveryHandlerProps) {
                 await clearCart();
 
                 for (const item of data.cart.items) {
-                    await addToCart({
+                    const added = await addToCart({
                         productId: item.productId,
                         productName: item.productName,
                         productImage: item.productImage || null,
@@ -45,6 +45,7 @@ export function CartRecoveryHandler({ storeSlug }: CartRecoveryHandlerProps) {
                         variants: item.variants || [],
                         addedAt: new Date().toISOString(),
                     });
+                    if (!added) return;
                 }
 
                 // Open the cart drawer

@@ -24,7 +24,7 @@ export function CheckoutForm({ data }: { data: ComponentSchema }) {
     const { cart: items } = useCart();
     const cartTotal = items?.reduce((acc, item) => acc + (item.unitPrice * item.quantity), 0) || 0;
     const {
-        fieldErrors, formData, setFormData,
+        loading: checkoutSubmitting, fieldErrors, formData, setFormData,
         selectedGovernorate, setSelectedGovernorate,
         store, formatPrice, shippingCost
     } = useCheckout();
@@ -42,7 +42,7 @@ export function CheckoutForm({ data }: { data: ComponentSchema }) {
     // Abandoned Cart Auto-Save
     useEffect(() => {
         // Only trigger if we have basic contact info
-        if (!formData.name && !formData.phone) return;
+        if (checkoutSubmitting || (!formData.name && !formData.phone)) return;
         if (!items || items.length === 0) return;
 
         const timeoutId = setTimeout(async () => {
@@ -68,10 +68,10 @@ export function CheckoutForm({ data }: { data: ComponentSchema }) {
             } catch (error) {
                 console.error('Failed to save abandoned cart', error);
             }
-        }, 2000); // 2 seconds debounce
+        }, 1500); // 2 seconds debounce
 
         return () => clearTimeout(timeoutId);
-    }, [formData.name, formData.phone, items, cartTotal, shippingCost, store.slug]);
+    }, [checkoutSubmitting, formData.name, formData.phone, items, cartTotal, shippingCost, store.slug]);
 
     const shippingSettings = store.settings?.shipping || { type: 'fixed', fixed_price: 0 };
     const title = typeof content.title === 'string' ? content.title : (content.title?.[language] || 'Customer Information');
