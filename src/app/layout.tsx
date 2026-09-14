@@ -5,6 +5,7 @@ import { Providers } from "@/components/providers";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { SupportChatWidget } from "@/components/chat/SupportChatWidget";
+import { MarketingTracker } from '@/components/landing/MarketingTracker';
 import { PlatformTracker } from "@/components/tracking/PlatformTracker";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 
@@ -15,8 +16,9 @@ const tajawal = Tajawal({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://orderlyshops.com"),
   title: "أوردرلي - Orderly",
-  description: "أوردرلي: المتطورة لإنشاء المتاجر الإلكترونية بسهولة وبسرعة فائقة",
+  description: "أوردرلي لإنشاء المتاجر الإلكترونية وإدارة المنتجات والطلبات",
   manifest: "/manifest.json",
   appleWebApp: {
     statusBarStyle: "default",
@@ -24,8 +26,8 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "أوردرلي - Orderly | منصة التجارة الإلكترونية العصرية",
-    description: "أنشئ متجرك الإلكتروني في دقائق بدون حاجة لكتابة كود برمجي. بوابات دفع، شبكات شحن وتصاميم عصرية.",
-    url: "https://orderly.com", // Replace appropriately
+    description: "أنشئ متجرك الإلكتروني في دقائق بدون حاجة لكتابة كود برمجي. خيارات منتجات وسلة وطلب مباشر وإدارة واضحة.",
+    url: "https://orderlyshops.com", // Replace appropriately
     siteName: "Orderly",
     locale: "ar",
     type: "website",
@@ -39,8 +41,7 @@ export const viewport: Viewport = {
   themeColor: "#FFFFFF",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  userScalable: true,
 };
 
 export default function RootLayout({
@@ -57,6 +58,7 @@ export default function RootLayout({
           <Sonner />
           <SupportChatWidget />
           <PlatformTracker />
+          <MarketingTracker />
           <InstallPrompt />
         </Providers>
       </body>

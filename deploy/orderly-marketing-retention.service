@@ -1,0 +1,7 @@
+[Unit]
+Description=Remove Orderly marketing events older than 90 days
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/docker exec supabase-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "DELETE FROM public.marketing_events WHERE created_at < now() - interval '90 days';"

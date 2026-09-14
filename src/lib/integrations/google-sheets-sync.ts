@@ -111,7 +111,7 @@ export async function syncOrderToGoogleSheets(orderId: string, storeId: string):
                 const mode = sheetConfig.mode || 'all';
                 const targetProductIds = sheetConfig.product_ids || [];
 
-                let itemsToExport = [];
+                let itemsToExport: Array<{quantity?: number | null; [key: string]: unknown}> = [];
                 if (mode === 'all') {
                     itemsToExport = order.order_items;
                 } else if (mode === 'specific' || mode === 'include') {

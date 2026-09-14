@@ -171,7 +171,8 @@ export default async function ProductsPage({ params }: { params: { storeSlug: st
     // Check AI Features
     const subscriptions = Array.isArray(store.subscriptions) ? store.subscriptions : [store.subscriptions];
     const activeSubscription = subscriptions.find((s: any) => s && (s.status === 'active' || s.status === 'trialing'));
-    const planFeatures = activeSubscription?.plans?.features || {};
+    const subscriptionPlan = Array.isArray(activeSubscription?.plans) ? activeSubscription.plans[0] : activeSubscription?.plans;
+    const planFeatures = subscriptionPlan?.features || {};
     const canUseAI = planFeatures.ai_features === true || planFeatures.ai_features === 'true';
     const hasApiKey = !!store?.settings?.ai?.gemini_api_key;
     const hasAIEnabled = canUseAI && hasApiKey;

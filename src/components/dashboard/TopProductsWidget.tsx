@@ -51,7 +51,7 @@ export function TopProductsWidget({ storeId, currency, dateRange = '30d' }: TopP
             let orderItems: any[] = [];
             if (orderIds.length > 0) {
                 const chunkSize = 50;
-                const chunks = [];
+                const chunks: string[][] = [];
                 for (let i = 0; i < orderIds.length; i += chunkSize) {
                     chunks.push(orderIds.slice(i, i + chunkSize));
                 }

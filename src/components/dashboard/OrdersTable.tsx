@@ -706,7 +706,6 @@ export function OrdersTable({ storeId }: OrdersTableProps) {
                 if (error) throw error;
             }
 
-            if (error) throw error;
             toast.success(language === 'ar' ? 'تم حذف الطلبات' : 'Orders deleted');
             setSelectedOrders([]);
             fetchOrders();

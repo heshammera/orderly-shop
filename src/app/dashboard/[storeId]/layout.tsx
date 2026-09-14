@@ -1,3 +1,4 @@
+import {PlanIntent} from '@/components/landing/PlanIntent';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { notFound, redirect } from 'next/navigation';
 import { createServerClient } from '@supabase/ssr';
@@ -136,6 +137,7 @@ export default async function Layout({
             isSubdomain={!!isSubdomain}
             tutorialsEnabled={tutorialsEnabled}
         >
+            <PlanIntent storeId={params.storeId}/>
             {children}
         </DashboardLayout>
     );

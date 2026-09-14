@@ -1,4 +1,5 @@
 "use client";
+import { PlanIntent } from '@/components/landing/PlanIntent';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
@@ -588,6 +589,8 @@ function SignupFormContent() {
 export default function Signup() {
     return (
         <AuthLayout>
+<PlanIntent signup/>
+
             <Suspense fallback={<div>Loading...</div>}>
                 <SignupFormContent />
             </Suspense>

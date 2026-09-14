@@ -41,7 +41,7 @@ export function SupportChatWidget() {
     const [newMessage, setNewMessage] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const [showNameInput, setShowNameInput] = useState(false);
-    const [showTooltip, setShowTooltip] = useState(true);
+    const [showTooltip, setShowTooltip] = useState(false);
     const [latestAdminMsg, setLatestAdminMsg] = useState<string | null>(null);
     const [showNewMsgPopup, setShowNewMsgPopup] = useState(false);
     const isOpenRef = useRef(false);
@@ -56,6 +56,12 @@ export function SupportChatWidget() {
     const [guestEmail, setGuestEmail] = useState('');
     const [submittingEmail, setSubmittingEmail] = useState(false);
     const [emailSubmittedMap, setEmailSubmittedMap] = useState<Record<string, boolean>>({});
+
+    useEffect(() => {
+        const openSupport = () => { setIsOpen(true); setShowTooltip(false); };
+        window.addEventListener('orderly:open-support', openSupport);
+        return () => window.removeEventListener('orderly:open-support', openSupport);
+    }, []);
 
     // Initialize session ID
     useEffect(() => {
@@ -402,7 +408,7 @@ export function SupportChatWidget() {
     return (
         <div className="fixed bottom-6 right-6 z-50" dir={dir}>
             {/* Chat Window */}
-            <div
+            <div hidden={!isOpen} style={{display:isOpen?undefined:'none'}}
                 className={cn(
                     "absolute bottom-20 right-0 w-80 sm:w-96 bg-background border rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 origin-bottom-right",
                     isOpen ? "scale-100 opacity-100 h-[500px] max-h-[80vh]" : "scale-50 opacity-0 h-0 pointer-events-none"
@@ -419,13 +425,13 @@ export function SupportChatWidget() {
                             {language === 'ar' ? 'نحن هنا لمساعدتك!' : 'We are here to help you!'}
                         </p>
                     </div>
-                    <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20 rounded-full" onClick={() => setIsOpen(false)}>
+                    <Button aria-label={language === 'ar' ? 'إغلاق الدعم' : 'Close support'} variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20 rounded-full" onClick={() => setIsOpen(false)}>
                         <X className="w-5 h-5" />
                     </Button>
                 </div>
 
                 {/* Messages Area */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/10">
+                <div tabIndex={0} aria-label={language === 'ar' ? 'رسائل الدعم' : 'Support messages'} className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/10">
                     {loading ? (
                         <div className="h-full flex items-center justify-center">
                             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -575,13 +581,14 @@ export function SupportChatWidget() {
                             <ImagePlus className="w-4 h-4 text-muted-foreground" />
                         </Button>
                         <Input
+                            aria-label={language === 'ar' ? 'نص الرسالة' : 'Message'}
                             placeholder={language === 'ar' ? 'اكتب رسالتك...' : 'Type a message...'}
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
                             disabled={sending || isUploadingImage}
                             className="flex-1"
                         />
-                        <Button type="submit" size="icon" disabled={sending || isUploadingImage || (!newMessage.trim() && !selectedImage) || isMerchant === null}>
+                        <Button aria-label={language === 'ar' ? 'إرسال الرسالة' : 'Send message'} type="submit" size="icon" disabled={sending || isUploadingImage || (!newMessage.trim() && !selectedImage) || isMerchant === null}>
                             {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                         </Button>
                     </form>
@@ -643,6 +650,7 @@ export function SupportChatWidget() {
                         setShowTooltip(false);
                         setShowNewMsgPopup(false);
                     }}
+                    aria-label={language === 'ar' ? (isOpen ? 'إغلاق الدعم' : 'افتح الدعم') : (isOpen ? 'Close support' : 'Open support')}
                     size="icon"
                     className="w-14 h-14 rounded-full shadow-lg relative bg-primary hover:bg-primary/90 text-primary-foreground transition-transform hover:scale-105"
                 >

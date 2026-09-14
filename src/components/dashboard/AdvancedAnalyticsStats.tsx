@@ -85,7 +85,7 @@ export function AdvancedAnalyticsStats({ storeId, currency, dateRange = '30d' }:
             if (orderIds.length > 0) {
                 // Chunk the IDs to avoid URL length limits (approx 50 per chunk)
                 const chunkSize = 50;
-                const chunks = [];
+                const chunks: string[][] = [];
                 for (let i = 0; i < orderIds.length; i += chunkSize) {
                     chunks.push(orderIds.slice(i, i + chunkSize));
                 }

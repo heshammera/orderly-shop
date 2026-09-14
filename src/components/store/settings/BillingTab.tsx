@@ -2,7 +2,8 @@
 import { useExchangeRate } from '@/hooks/useExchangeRate';
 import { RateAttribution } from '@/components/dashboard/RateAttribution';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import {readPlanIntent,clearPlanIntent} from '@/lib/plan-intent';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -158,6 +159,16 @@ export function BillingTab({ storeId }: BillingTabProps) {
             setLoading(false);
         }
     };
+
+    const intentHandled = useRef(false);
+    useEffect(() => {
+        if (loading || !plans.length || intentHandled.current) return;
+        const requested = new URLSearchParams(window.location.search).get('plan');
+        if (!requested || requested !== readPlanIntent()) return;
+        const match = plans.find(plan => plan.id === requested);
+        intentHandled.current = true;
+        if (match) { setSelectedPlan(match); setSelectedAddOn(null); setShowUpgradeDialog(true); }
+    }, [loading, plans]);
 
     const handleUpgradeClick = (plan: Plan) => {
         setSelectedPlan(plan);

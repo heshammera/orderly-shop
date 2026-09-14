@@ -1,0 +1,4 @@
+import {ImageResponse} from 'next/og';
+export const alt='Orderly — Your store, products and orders in one place';
+export const size={width:1200,height:630};export const contentType='image/png';
+export default function Image(){return new ImageResponse(<div style={{display:'flex',width:'100%',height:'100%',background:'#f5f7ed',padding:65,fontFamily:'sans-serif',color:'#183e35',flexDirection:'column',justifyContent:'space-between'}}><div style={{display:'flex',fontSize:40,fontWeight:800}}>Orderly <span style={{marginLeft:25,fontSize:20,color:'#527167'}}>orderlyshops.com</span></div><div style={{display:'flex',fontSize:76,fontWeight:800,lineHeight:1.1,flexDirection:'column'}}><span>Your store.</span><span>Your products.</span><span style={{color:'#137d70'}}>Your orders, in order.</span></div><div style={{display:'flex',fontSize:24}}>Explore the demo. Build your store.</div></div>,size)}

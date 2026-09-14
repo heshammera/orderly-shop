@@ -1,5 +1,6 @@
 "use client";
 
+import {usePathname} from 'next/navigation';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Language, translations } from '@/lib/i18n';
 
@@ -13,14 +14,18 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>('ar');
+  const pathname=usePathname();
+  const [language, setLanguage] = useState<Language>(()=>pathname==='/en'?'en':'ar');
 
   useEffect(() => {
+    const mainHost=['orderlyshops.com','www.orderlyshops.com','localhost','127.0.0.1'].includes(location.hostname);
+    if(mainHost&&pathname==='/en'){setLanguage('en');return;}
+    if(mainHost&&pathname==='/'){setLanguage('ar');return;}
     const savedLang = localStorage.getItem('language') as Language;
     if (savedLang && (savedLang === 'ar' || savedLang === 'en')) {
       setLanguage(savedLang);
     }
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
     localStorage.setItem('language', language);

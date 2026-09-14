@@ -1,19 +1,16 @@
-import { Header } from '@/components/landing/Header';
-import { HeroSection } from '@/components/landing/HeroSection';
-import { SocialProofSection } from '@/components/landing/SocialProofSection';
-import { FeaturesGrid } from '@/components/landing/FeaturesGrid';
-import { PlatformDemo } from '@/components/landing/PlatformDemo';
-import { HowItWorksSection } from '@/components/landing/HowItWorksSection';
-import { AdvancedCapabilities } from '@/components/landing/AdvancedCapabilities';
-import { PricingSection } from '@/components/landing/PricingSection';
-import { FAQSection } from '@/components/landing/FAQSection';
-import { FinalCTA } from '@/components/landing/FinalCTA';
-import { Footer } from '@/components/landing/Footer';
-import { ScrollToTop } from '@/components/landing/ScrollToTop';
+import type { Metadata } from 'next';
+import { MarketingHeader } from '@/components/landing/MarketingHeader';
+import { MarketingHome } from '@/components/landing/MarketingHome';
+import { MarketingFooter } from '@/components/landing/MarketingFooter';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { TutorialsSection } from '@/components/landing/TutorialsSection';
-
+export const metadata: Metadata = {
+ title: 'أوردرلي | إنشاء متجر إلكتروني وإدارة الطلبات',
+ description: 'أنشئ متجرك الإلكتروني، اعرض منتجاتك بخياراتها وتابع الطلبات من لوحة عربية واضحة. جرّب المتجر التجريبي وراجع الباقات والتكاليف قبل البدء.',
+ alternates: {canonical:'https://orderlyshops.com/',languages:{ar:'https://orderlyshops.com/',en:'https://orderlyshops.com/en','x-default':'https://orderlyshops.com/'}},
+ openGraph: {title:'Orderly | متجرك وطلباتك في مكان واحد', description:'جرّب المتجر التوضيحي، تعرف على الخيارات والسلة والطلب المباشر، واختر الباقة المناسبة.',url:'https://orderlyshops.com/',images:[{url:'https://orderlyshops.com/opengraph-image',width:1200,height:630}],type:'website'},
+ twitter:{card:'summary_large_image',images:['https://orderlyshops.com/opengraph-image']}
+};
 export default async function Home() {
   const cookieStore = cookies();
   const supabase = createServerClient(
@@ -40,22 +37,10 @@ export default async function Home() {
     console.error("Failed to fetch tutorials setting", e);
   }
 
-  return (
-    <div className="min-h-screen font-sans bg-slate-50">
-      <Header tutorialsEnabled={tutorialsEnabled} />
-      <main>
-        <HeroSection />
-        <SocialProofSection />
-        <FeaturesGrid />
-        <PlatformDemo />
-        <HowItWorksSection />
-        <AdvancedCapabilities />
-        <PricingSection />
-        {tutorialsEnabled && <TutorialsSection />}
-        <FinalCTA />
-      </main>
-      <Footer />
-      <ScrollToTop />
-    </div>
-  );
+  return <div className="min-h-screen bg-[#fcfcf8]">
+    <MarketingHeader tutorialsEnabled={tutorialsEnabled}/>
+    <MarketingHome/>
+    <MarketingFooter/>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify({'@context':'https://schema.org','@type':'Organization',name:'شركة أوردرلي للتسويق وإدارة الأعمال',alternateName:'Orderly',url:'https://orderlyshops.com',logo:'https://orderlyshops.com/logo.png'})}}/>
+  </div>;
 }

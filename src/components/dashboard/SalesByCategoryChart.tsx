@@ -56,7 +56,7 @@ export function SalesByCategoryChart({ storeId, dateRange = '30d', currency }: S
             let orderItems: any[] = [];
             if (orderIds.length > 0) {
                 const chunkSize = 50;
-                const chunks = [];
+                const chunks: string[][] = [];
                 for (let i = 0; i < orderIds.length; i += chunkSize) {
                     chunks.push(orderIds.slice(i, i + chunkSize));
                 }
@@ -89,7 +89,7 @@ export function SalesByCategoryChart({ storeId, dateRange = '30d', currency }: S
             let prodCats: any[] = [];
             if (productIds.length > 0) {
                 const chunkSize = 50;
-                const chunks = [];
+                const chunks: string[][] = [];
                 for (let i = 0; i < productIds.length; i += chunkSize) {
                     chunks.push(productIds.slice(i, i + chunkSize));
                 }

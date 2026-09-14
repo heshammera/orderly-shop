@@ -41,6 +41,7 @@ export function AdminSidebar() {
     };
 
     const navItems = [
+        {icon: LayoutDashboard, label: language === 'ar' ? 'أداء الرئيسية' : 'Marketing performance', href: '/admin/marketing'},
         {
             icon: LayoutDashboard,
             label: language === 'ar' ? 'الرئيسية' : 'Dashboard',
