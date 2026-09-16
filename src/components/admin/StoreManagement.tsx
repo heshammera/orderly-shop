@@ -362,7 +362,7 @@ export function StoreManagement() {
                                         <Badge variant="secondary">
                                             {(store.commission_type || 'percentage') === 'percentage'
                                                 ? `${safeRender(store.commission_value || 0)}%`
-                                                : `$${safeRender(store.commission_value || 0)}`}
+                                                : `${safeRender(store.commission_value || 0)} ${language === 'ar' ? 'ج.م' : 'EGP'}`}
                                         </Badge>
                                     </TableCell>
                                     <TableCell>
@@ -467,12 +467,13 @@ export function StoreManagement() {
                                 <SelectTrigger><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="percentage">{language === 'ar' ? 'نسبة مئوية (%)' : 'Percentage (%)'}</SelectItem>
-                                    <SelectItem value="fixed">{language === 'ar' ? 'مبلغ ثابت ($)' : 'Fixed Amount ($)'}</SelectItem>
+                                    <SelectItem value="fixed">{language === 'ar' ? 'مبلغ ثابت (جنيه مصري)' : 'Fixed Amount (EGP)'}</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                         <div className="space-y-2">
                             <Label>{language === 'ar' ? 'قيمة العمولة' : 'Commission Value'}</Label>
+                            {commissionData.type === 'fixed' && <p className="text-sm text-muted-foreground">{language === 'ar' ? 'القيمة بالجنيه المصري، ويُخصم مقابلها بالدولار من المحفظة وفق سعر الصرف وقت التسوية، مع التقريب لأقرب سنت.' : 'Enter EGP. Its USD equivalent is deducted using the settlement exchange rate, rounded to the nearest cent.'}</p>}
                             <Input
                                 type="number"
                                 value={commissionData.value}

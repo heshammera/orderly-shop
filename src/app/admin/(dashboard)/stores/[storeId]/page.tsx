@@ -236,7 +236,7 @@ export default function AdminStoreDetailsPage({ params }: { params: { storeId: s
                             <span className="font-medium">
                                 {store.commission_type === 'percentage'
                                     ? `${store.commission_value || 0}%`
-                                    : formatCurrency(store.commission_value || 0)}
+                                    : `${Number(store.commission_value || 0).toLocaleString('ar-EG')} ج.م`}
                             </span>
                         </div>
                         <div>
