@@ -67,6 +67,7 @@ export function PlatformTracker() {
 
     // Track page changes
     useEffect(() => {
+        if (pathname==='/studio-preview'||pathname?.startsWith('/theme-preview/'))return;
         if (pathname && pathname !== lastPathRef.current) {
             lastPathRef.current = pathname;
             const timer = setTimeout(() => logVisit(pathname), VISIT_DEBOUNCE);
@@ -76,6 +77,7 @@ export function PlatformTracker() {
 
     // Heartbeat interval
     useEffect(() => {
+        if (pathname==='/studio-preview'||pathname?.startsWith('/theme-preview/'))return;
         // Send initial heartbeat after a short delay
         const initialTimer = setTimeout(sendHeartbeat, 3000);
 
@@ -98,7 +100,7 @@ export function PlatformTracker() {
             if (heartbeatRef.current) clearInterval(heartbeatRef.current);
             window.removeEventListener('beforeunload', handleUnload);
         };
-    }, [sendHeartbeat]);
+    }, [sendHeartbeat,pathname]);
 
     return null;
 }

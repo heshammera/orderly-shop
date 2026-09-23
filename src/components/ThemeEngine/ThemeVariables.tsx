@@ -11,6 +11,8 @@ export default function ThemeVariables({ tokens, isRTL = true }: ThemeVariablesP
     useEffect(() => {
         const root = document.documentElement;
 
+        const previousDirection=root.getAttribute('dir');
+        const previous=Object.fromEntries(Object.keys(tokens).map(key=>[key,root.style.getPropertyValue(`--${key}`)]));
         // Apply RTL Direction
         root.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
 
@@ -24,6 +26,10 @@ export default function ThemeVariables({ tokens, isRTL = true }: ThemeVariablesP
             root.style.setProperty(`--${key}`, value);
         });
 
+        return ()=>{
+            if(previousDirection===null)root.removeAttribute('dir');else root.setAttribute('dir',previousDirection);
+            Object.entries(previous).forEach(([key,value])=>{if(value)root.style.setProperty(`--${key}`,value);else root.style.removeProperty(`--${key}`)});
+        };
     }, [tokens, isRTL]);
 
     return null; // This component exclusively manages the DOM <html/> side-effects.

@@ -11,9 +11,10 @@ interface CheckoutPageProps {
     pageSchema: PageSchema | null;
     themeSettings?: any;
     themeBlocks?: any[];
+    preview?: boolean;
 }
 
-export function CheckoutPage({ store, pageSchema, themeSettings, themeBlocks }: CheckoutPageProps) {
+export function CheckoutPage({ store, pageSchema, themeSettings, themeBlocks, preview=false }: CheckoutPageProps) {
     // Default Schema if not customized
     const schema = pageSchema || {
         globalSettings: {
@@ -92,7 +93,7 @@ export function CheckoutPage({ store, pageSchema, themeSettings, themeBlocks }: 
     );
 
     return (
-        <CheckoutProvider store={store}>
+        <CheckoutProvider store={store} isEditable={preview}>
             <div className="min-h-screen bg-[#f8fafc]">
                 {/* Fixed Header */}
                 {headerSection && (
@@ -106,7 +107,7 @@ export function CheckoutPage({ store, pageSchema, themeSettings, themeBlocks }: 
                 )}
 
                 <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-                    <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8 items-start">
+                    <div className={themeSettings?.layout==='stacked'?'mx-auto flex max-w-3xl flex-col gap-8':'flex flex-col lg:grid lg:grid-cols-12 gap-8 items-start'}>
                         {/* Left Side: Forms */}
                         <div className="w-full lg:col-span-7 xl:col-span-8 space-y-8">
                             <RenderEngine

@@ -79,6 +79,7 @@ interface StoreData {
 }
 
 interface ProductDetailProps {
+    preview?: boolean;
     onAddedToCart?: () => void;
     product: Product;
     variants: Variant[];
@@ -189,7 +190,7 @@ function FakeVisitors({ min, max, language, text }: { min: number; max: number; 
     );
 }
 
-export function ProductDetail({ product, variants, upsellOffers, store, themeSettings, onAddedToCart }: ProductDetailProps) {
+export function ProductDetail({ product, variants, upsellOffers, store, themeSettings, onAddedToCart, preview=false }: ProductDetailProps) {
     const { language } = useLanguage();
     const { toast } = useToast();
     const { addToCart } = useCart();
@@ -211,6 +212,7 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
 
     // Pixel: ViewContent on mount
     useEffect(() => {
+        if(preview)return;
         const productName = product.name[language] || product.name.ar;
         trackViewContent({
             content_id: product.id,
@@ -458,16 +460,16 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
 
     return (
         <div className="w-full max-w-7xl mx-auto px-4 py-6 pb-32 md:py-8 md:pb-8 overflow-hidden">
-            <div className="grid md:grid-cols-2 gap-6 md:gap-8 lg:gap-12 w-full min-w-0">
+            <div className={cn("grid gap-6 md:gap-8 lg:gap-12 w-full min-w-0",themeSettings?.product_layout==='stacked'?'grid-cols-1 max-w-3xl mx-auto':'md:grid-cols-2')}>
                 {/* Image Gallery */}
-                <div className="space-y-4 w-full min-w-0">
-                    <div className="aspect-square bg-muted rounded-lg overflow-hidden relative">
+                <div className={cn("space-y-4 w-full min-w-0",themeSettings?.product_layout==='gallery_left'&&'md:order-2')}>
+                    <div className="bg-muted rounded-lg overflow-hidden relative" style={{aspectRatio:themeSettings?.image_ratio==='portrait'?'4/5':'1'}}>
                         {product.images.length > 0 ? (
                             <>
                                 <img
                                     src={variantImage || product.images[currentImageIndex]}
                                     alt={productName}
-                                    className="w-full h-full object-cover transition-opacity duration-300"
+                                    className="w-full h-full transition-opacity duration-300" style={{objectFit:themeSettings?.image_fit==='contain'?'contain':'cover'}}
                                 />
                                 {product.images.length > 1 && !variantImage && (
                                     <>

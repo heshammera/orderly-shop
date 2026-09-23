@@ -1,4 +1,5 @@
 import React from 'react';
+import {StudioSection} from '@/components/theme-studio/StudioSection';
 import { themeRegistries } from '@/themes';
 
 interface PageData {
@@ -58,7 +59,12 @@ export default function SectionRenderer({ pageData, storeContext, themeName = 'd
             {sections_order.map((sectionId) => {
                 const sectionContent = sections_data[sectionId];
 
-                if (!sectionContent) return null;
+                if (!sectionContent || sectionContent.hidden) return null;
+                if(sectionContent.settings?.studio_v2 && !['main_product','main_checkout','main_products'].includes(sectionContent.type)) {
+                    return <section key={sectionId} id={sectionId} className="w-full relative" data-studio-section={sectionId}>
+                        <StudioSection type={sectionContent.type} settings={sectionContent.settings} blocks={sectionContent.blocks} storeContext={storeContext}/>
+                    </section>;
+                }
 
                 const SectionComponent = currentRegistry[sectionContent.type as keyof typeof currentRegistry];
 
@@ -81,7 +87,7 @@ export default function SectionRenderer({ pageData, storeContext, themeName = 'd
                 }
 
                 return (
-                    <section key={sectionId} id={sectionId} className="w-full relative">
+                    <section key={sectionId} id={sectionId} className="w-full relative" {...(storeContext?.isEditorPreview && sectionContent.type.startsWith('main_')?{inert:''} as any:{})}>
                         <SectionComponent
                             settings={resolvedSettings}
                             blocks={resolvedBlocks}

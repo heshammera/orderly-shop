@@ -25,6 +25,8 @@ export default function ThemePreviewManager({
     const [pageData, setPageData] = useState(initialPageData);
     const [tokens, setTokens] = useState(initialTokens);
 
+    useEffect(()=>{setPageData(initialPageData)},[initialPageData]);
+    useEffect(()=>{setTokens(initialTokens)},[initialTokens]);
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
             if (event.origin !== window.location.origin || event.source !== window.parent) return;
@@ -65,7 +67,7 @@ export default function ThemePreviewManager({
     return (
         <>
             <ThemeVariables tokens={tokens} isRTL={isRTL} />
-            <SectionRenderer pageData={pageData} storeContext={storeContext} themeName={themeName} />
+            <SectionRenderer pageData={pageData} storeContext={{...storeContext,themeTokens:tokens}} themeName={themeName} />
         </>
     );
 }

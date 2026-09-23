@@ -13,6 +13,7 @@ export default function MainCheckout({ storeContext, settings, blocks }: { store
 
     return (
         <CheckoutPage
+            preview={!!storeContext.isEditorPreview}
             store={storeContext.store}
             pageSchema={storeContext.legacyCheckoutSchema}
             themeSettings={settings}

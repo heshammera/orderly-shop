@@ -16,6 +16,7 @@ export default function MainProducts({ settings, blocks, storeContext }: MainPro
 
     return (
         <StoreProducts
+            themeSettings={settings}
             store={store}
             initialCategories={initialCategories}
             initialProducts={initialProducts}

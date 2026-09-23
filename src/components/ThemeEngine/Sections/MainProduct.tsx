@@ -13,6 +13,7 @@ export default function MainProduct({ storeContext, settings, blocks }: { storeC
 
     return (
         <ProductDetail
+            preview={!!storeContext.isEditorPreview}
             product={storeContext.product}
             variants={storeContext.variants}
             upsellOffers={storeContext.upsellOffers}

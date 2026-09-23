@@ -24,6 +24,7 @@ interface StoreData {
     settings: any;
     slug: string;
     has_removed_copyright?: boolean;
+    studioDesign?:boolean;
     baseUrl?: string;
 }
 
@@ -179,8 +180,9 @@ export function StoreClientLayout({ children, store, integrations = {}, headerCa
                         {children}
                     </div>
 
+                    {store.studioDesign&&!store.has_removed_copyright&&<div className="border-t bg-background py-5 text-center text-xs text-muted-foreground">{language==='ar'?'صُنع مع':'Powered by'} <a href="https://orderlyshops.com" className="font-semibold underline underline-offset-4">{language==='ar'?'أوردرلي':'Orderly'}</a></div>}
                     {/* Copyright Banner */}
-                    {!store.has_removed_copyright && (
+                    {!store.has_removed_copyright && !store.studioDesign && (
                         <div className="w-full py-10 mt-auto bg-gradient-to-r from-[#0f172a] via-[#3b0764] to-[#0f172a] flex justify-center items-center border-t-4 border-[#c084fc] relative overflow-hidden shadow-[0_-10px_40px_rgba(88,28,135,0.3)]">
                             {/* Animated background glow */}
                             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-500/20 via-transparent to-transparent opacity-50 blur-xl"></div>

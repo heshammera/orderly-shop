@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ import { AITranslator } from '@/components/dashboard/AITranslator';
 import { Sparkles, Languages, Search } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ImageUpload } from '@/components/dashboard/ImageUpload';
+import {loadVariantEditor,saveVariantEditor,validateVariantEditor} from '@/lib/variant-editor';
 import { VariantEditor } from '@/components/dashboard/VariantEditor';
 import { UpsellManager, UpsellFormData } from '@/components/dashboard/UpsellManager';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -38,7 +39,11 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
     const supabase = createClient();
     const { language } = useLanguage();
     const [loading, setLoading] = useState(false);
+    const createdProductId=useRef<string|null>(null);
     const [variants, setVariants] = useState<any[]>([]);
+    const [variantRevision,setVariantRevision]=useState<number|null>(initialData?.id?null:0);
+    const loadVariants=async()=>{if(!initialData?.id)return;setVariantRevision(null);try{const snapshot=await loadVariantEditor(supabase,initialData.id);setVariants(snapshot.variants);setVariantRevision(snapshot.revision)}catch(e:any){toast.error(e.message||'تعذر تحميل خيارات المنتج')}};
+    useEffect(()=>{loadVariants()},[initialData?.id]);
     const [upsellOffers, setUpsellOffers] = useState<UpsellFormData[]>([]);
     const [storeCurrency, setStoreCurrency] = useState('SAR');
     const [storeSlug, setStoreSlug] = useState<string>('');
@@ -177,6 +182,8 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
         setLoading(true);
 
         try {
+            if(variantRevision===null)throw new Error('انتظر تحميل خيارات المنتج قبل الحفظ أو أعد المحاولة.');
+            validateVariantEditor(variants);
             const payload = {
                 store_id: storeId,
                 name: JSON.stringify({ ar: formData.name_ar, en: formData.name_en }),
@@ -198,13 +205,13 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                 sale_price: formData.sale_price ? parseFloat(formData.sale_price) : null,
             };
 
-            let savedProductId = initialData?.id;
+            let savedProductId = initialData?.id || createdProductId.current;
 
-            if (initialData) {
+            if (savedProductId) {
                 const { error: updateError } = await supabase
                     .from('products')
                     .update(payload)
-                    .eq('id', initialData.id);
+                    .eq('id', savedProductId);
                 if (updateError) throw updateError;
             } else {
                 const { data, error: insertError } = await supabase
@@ -214,60 +221,14 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                     .single();
                 if (insertError) throw insertError;
                 savedProductId = data.id;
+                createdProductId.current=data.id;
             }
 
-            // Save Variants
+            // Preserve option IDs and save all groups atomically.
             if (savedProductId && (variants.length > 0 || initialData)) {
-                // Delete existing variants (cascade deletes options)
-                await supabase.from('product_variants').delete().eq('product_id', savedProductId);
-
-                // Insert new variants
-                for (let i = 0; i < variants.length; i++) {
-                    const v = variants[i];
-                    if (!v.name.ar && !v.name.en) continue;
-
-                    const { data: insertedVariant, error: vError } = await supabase
-                        .from('product_variants')
-                        .insert({
-                            product_id: savedProductId,
-                            name: v.name,
-                            display_type: v.display_type,
-                            option_type: v.option_type,
-                            required: v.required,
-                            sort_order: i
-                        })
-                        .select()
-                        .single();
-
-                    if (vError) throw vError;
-
-                    // Insert options
-                    if (v.options && v.options.length > 0) {
-                        const optionPayloads = v.options.map((o: any, j: number) => {
-                            const basePrice = (formData.sale_price && parseFloat(formData.sale_price) > 0)
-                                ? parseFloat(formData.sale_price)
-                                : parseFloat(formData.price);
-
-                            return {
-                                variant_id: insertedVariant.id,
-                                label: o.label,
-                                value: o.value || (o.label.ar || o.label.en),
-                                price: o.price !== undefined ? parseFloat(o.price.toString()) : basePrice,
-                                stock: parseInt(o.stock?.toString() || '0'),
-                                manage_stock: o.manage_stock !== false,
-                                is_default: o.is_default,
-                                sort_order: j,
-                                in_stock: o.in_stock !== false
-                            };
-                        });
-
-                        const { error: oError } = await supabase
-                            .from('variant_options')
-                            .insert(optionPayloads);
-
-                        if (oError) throw oError;
-                    }
-                }
+                await saveVariantEditor(supabase,savedProductId,variants,variantRevision);
+                const snapshot=await loadVariantEditor(supabase,savedProductId);
+                setVariants(snapshot.variants);setVariantRevision(snapshot.revision);
             }
 
             // Persist each selected category once; surface failed deletions.
@@ -722,6 +683,8 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                             value={variants}
                             onChange={setVariants}
                             standalone={false}
+                            loading={variantRevision===null}
+                            onReload={loadVariants}
                             storeId={storeId}
                             basePrice={(formData.sale_price && parseFloat(formData.sale_price) > 0) ? formData.sale_price : formData.price}
                             baseStock={formData.stock_quantity}

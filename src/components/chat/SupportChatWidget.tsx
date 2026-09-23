@@ -391,7 +391,7 @@ export function SupportChatWidget() {
         const isMainDomain = mainDomains.includes(hostname) || hostname.endsWith('.vercel.app');
 
         // Show chat only on main domain when not viewing /s/, and hide on /admin
-        if (isMainDomain && !pathname?.startsWith('/s/') && !pathname?.startsWith('/admin')) {
+        if (isMainDomain && !pathname?.startsWith('/s/') && !pathname?.startsWith('/admin') && pathname!=='/studio-preview' && !pathname?.startsWith('/theme-preview/')) {
             setShouldShow(true);
         } else {
             setShouldShow(false);

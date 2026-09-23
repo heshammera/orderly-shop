@@ -102,7 +102,7 @@ export function CheckoutProvider({ store, children, isEditable = false }: Checko
 
     // Load saved form data from local storage
     useEffect(() => {
-        if (typeof window !== 'undefined') {
+        if (!isEditable && typeof window !== 'undefined') {
             const savedData = localStorage.getItem(`checkout_data_${store?.id}`);
             if (savedData) {
                 try {
@@ -116,7 +116,7 @@ export function CheckoutProvider({ store, children, isEditable = false }: Checko
 
     // Save form data to local storage when it changes
     useEffect(() => {
-        if (typeof window !== 'undefined' && store?.id) {
+        if (!isEditable && typeof window !== 'undefined' && store?.id) {
             localStorage.setItem(`checkout_data_${store.id}`, JSON.stringify({
                 formData,
                 selectedGovernorate

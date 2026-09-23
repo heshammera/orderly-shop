@@ -1,5 +1,6 @@
 import { appendRow, getSheetValues } from '@/lib/google-sheets';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { formatOrderTimeForSheet } from './order-time';
 
 const HEADER_ROW = [
     'Order Number',
@@ -43,6 +44,7 @@ export async function syncOrderToGoogleSheets(orderId: string, storeId: string):
                 customer:customers(*)
             `)
             .eq('id', orderId)
+            .eq('store_id', storeId)
             .single();
 
         if (orderError || !order) {
@@ -53,7 +55,7 @@ export async function syncOrderToGoogleSheets(orderId: string, storeId: string):
         // 2. Fetch Store Settings (for Service Account + Wallet Balance)
         const { data: store, error: storeError } = await supabase
             .from('stores')
-            .select('settings, balance, has_unlimited_balance')
+            .select('settings, balance, has_unlimited_balance, timezone')
             .eq('id', storeId)
             .single();
 
@@ -95,6 +97,7 @@ export async function syncOrderToGoogleSheets(orderId: string, storeId: string):
         }
 
         const results: SyncResult[] = [];
+        const orderLocalTime = formatOrderTimeForSheet(order.created_at, store.timezone);
 
         // 4. Process Each Integration
         for (const integration of integrations) {
@@ -203,7 +206,7 @@ export async function syncOrderToGoogleSheets(orderId: string, storeId: string):
                         // New Format (16 columns)
                         finalRow = [
                             order.order_number,
-                            new Date(order.created_at).toLocaleString('en-US'),
+                            orderLocalTime,
                             order.status,
                             order.customer_snapshot?.name || order.customer?.name || 'Guest',
                             order.customer_snapshot?.phone || order.customer?.phone || '',
@@ -223,7 +226,7 @@ export async function syncOrderToGoogleSheets(orderId: string, storeId: string):
                         // Legacy Format (15 columns) - to avoid breaking existing sheets
                         finalRow = [
                             order.order_number,
-                            new Date(order.created_at).toLocaleString('en-US'),
+                            orderLocalTime,
                             order.status,
                             order.customer_snapshot?.name || order.customer?.name || 'Guest',
                             order.customer_snapshot?.phone || order.customer?.phone || '',

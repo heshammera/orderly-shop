@@ -95,6 +95,7 @@ export default async function Layout({
             slug, 
             status, 
             has_removed_copyright,
+            store_themes(is_active,global_tokens),
             subscriptions:store_subscriptions (
                 status,
                 plans (
@@ -129,9 +130,11 @@ export default async function Layout({
     })) || [];
 
     // Parse JSON fields safely
+    const {store_themes: savedThemes, ...publicStore} = store;
     const parsedStore = {
-        ...store,
+        ...publicStore,
         settings: publicSettings(store.settings),
+        studioDesign: savedThemes?.some((t:any)=>t.is_active && t.global_tokens?.studio_version==='2')||false,
         name: typeof store.name === 'string' ? JSON.parse(store.name) : store.name,
         description: typeof store.description === 'string' ? JSON.parse(store.description) : store.description,
         baseUrl: baseUrl,

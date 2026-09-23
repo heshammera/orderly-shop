@@ -36,6 +36,14 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+// Theme catalog and editor previews do not create real carts.
+export function useOptionalCart() { return useContext(CartContext); }
+
+export function CartPreviewProvider({children}:{children:React.ReactNode}) {
+    const noop=async()=>{};
+    return <CartContext.Provider value={{cart:[],cartCount:0,loading:false,isCartOpen:false,openCart:()=>{},closeCart:()=>{},addToCart:async()=>false,removeFromCart:noop,updateQuantity:noop,clearCart:noop,refreshCart:noop}}>{children}</CartContext.Provider>;
+}
+
 export function CartProvider({ children, storeId }: { children: React.ReactNode; storeId: string }) {
     const supabase = createClient();
     const { language } = useLanguage();

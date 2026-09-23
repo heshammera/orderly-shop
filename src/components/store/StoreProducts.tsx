@@ -43,9 +43,10 @@ interface StoreProductsProps {
     store: StoreData;
     initialCategories: Category[];
     initialProducts: Product[];
+    themeSettings?:any;
 }
 
-export function StoreProducts({ store, initialCategories, initialProducts }: StoreProductsProps) {
+export function StoreProducts({ store, initialCategories, initialProducts, themeSettings }: StoreProductsProps) {
     const { language } = useLanguage();
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -233,7 +234,7 @@ export function StoreProducts({ store, initialCategories, initialProducts }: Sto
                             </Button>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                        <div className={`grid grid-cols-2 gap-4 md:gap-6 ${Number(themeSettings?.columns)===4?'lg:grid-cols-4':Number(themeSettings?.columns)===2?'lg:grid-cols-2':'lg:grid-cols-3'}`}>
                             {products.map((product) => (
                                 <div key={product.id} className="relative group">
                                     <div onClick={() => router.push(`/${product.sku || product.id}`)} className="block h-full cursor-pointer">

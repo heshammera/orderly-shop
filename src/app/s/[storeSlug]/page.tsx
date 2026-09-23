@@ -1,3 +1,4 @@
+import {createStudioDocument,normalizeStudioDocument} from '@/lib/theme-studio';
 import { createClient } from '@supabase/supabase-js';
 import { notFound } from 'next/navigation';
 import ThemePreviewManager from '@/components/ThemeEngine/ThemePreviewManager';
@@ -144,7 +145,7 @@ export default async function StorePage({ params }: { params: Promise<{ storeSlu
     }
 
     // Fetch all data in parallel to reduce total request time
-    const [headerCategoriesRes, storeProductsRes, activeThemeRes] = await Promise.all([
+    const [headerCategoriesRes, storeProductsRes, activeThemeRes, categoriesRes] = await Promise.all([
         // Fetch categories with show_in_header = true
         supabaseAdmin
             .from('categories')
@@ -156,7 +157,7 @@ export default async function StorePage({ params }: { params: Promise<{ storeSlu
         // Fetch store products
         supabaseAdmin
             .from('public_products')
-            .select('id, name, price, sale_price, images, category_id:product_categories(category_id)')
+            .select('id, name, price, sale_price, images, skip_cart, category_id:product_categories(category_id)')
             .eq('store_id', store.id)
             .eq('status', 'active')
             .limit(50),
@@ -176,6 +177,7 @@ export default async function StorePage({ params }: { params: Promise<{ storeSlu
             .eq('store_id', store.id)
             .eq('is_active', true)
             .maybeSingle(),
+        supabaseAdmin.from('categories').select('id,name,image_url').eq('store_id',store.id).eq('status','active').order('sort_order'),
     ]);
 
     const parsedHeaderCategories = headerCategoriesRes.data?.map(c => ({
@@ -195,6 +197,7 @@ export default async function StorePage({ params }: { params: Promise<{ storeSlu
         store: parsedStore,
         headerCategories: parsedHeaderCategories,
         products: storeProductsRes.data || [],
+        categories: categoriesRes.data || [],
     };
 
     if (activeThemeRes.error) {
@@ -207,26 +210,9 @@ export default async function StorePage({ params }: { params: Promise<{ storeSlu
     // Safely type-cast the deeply nested relation to get folder_name
     const themeName = (activeTheme?.theme_versions as any)?.themes?.folder_name || 'default';
 
-    // Default Fallback
-    const DEFAULT_PAGE_DATA = {
-        sections_order: ['header_1', 'hero_banner_1', 'category_slider_1', 'featured_grid_1', 'newsletter_1', 'footer_1'],
-        sections_data: {
-            'header_1': { type: 'header', settings: { notice_text: '🔥 شحن مجاني للطلبات فوق 200 ريال!', search_placeholder: 'ابحث عن منتج...' }, blocks: [{ type: 'link', settings: { label: 'الرئيسية', url: '/' } }, { type: 'link', settings: { label: 'كل المنتجات', url: '/products' } }] },
-            'hero_banner_1': { type: 'hero_banner', settings: { heading: 'اكتشف أحدث العروض الحصرية', subheading: 'تسوق الآن واحصل على خصم 20%', button_label: 'تسوق الآن' }, blocks: [] },
-            'category_slider_1': { type: 'category_slider', settings: { heading: 'تسوق حسب التصنيف', subheading: 'تصفح مجموعاتنا' }, blocks: [] },
-            'featured_grid_1': { type: 'featured_grid', settings: { heading: 'استمتع بأحدث التشكيلات', subheading: 'اخترنا لك بعناية' }, blocks: [] },
-            'footer_1': { type: 'footer', settings: { about_heading: 'عن متجرنا', about_text: 'نقدم أفضل المنتجات.', copyright: 'جميع الحقوق محفوظة' }, blocks: [] },
-            'newsletter_1': { type: 'newsletter', settings: { heading: 'اشترك في نشرتنا البريدية', button_label: 'اشتراك' }, blocks: [] }
-        }
-    };
-
-    const DEFAULT_GLOBAL_TOKENS = {
-        'primary': '262.1 83.3% 57.8%',
-        'primary-foreground': '210 40% 98%',
-        'background': '0 0% 100%',
-        'foreground': '222.2 84% 4.9%',
-        'radius': '1rem'
-    };
+    const defaults=normalizeStudioDocument(createStudioDocument(themeName));
+    const DEFAULT_PAGE_DATA=defaults.pages.home;
+    const DEFAULT_GLOBAL_TOKENS=defaults.tokens;
 
     const initialPageData = homeOverride?.sections_order ? {
         sections_order: homeOverride.sections_order,

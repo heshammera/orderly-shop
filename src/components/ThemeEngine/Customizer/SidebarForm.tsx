@@ -28,7 +28,7 @@ interface SchemaSetting {
     type: string;
     id: string;
     label: string;
-    default?: string;
+    default?: string | boolean | number;
     options?: { value: string; label: string }[];
 }
 
