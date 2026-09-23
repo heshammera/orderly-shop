@@ -1,5 +1,6 @@
 "use client";
 
+import {productImages,localizedValue} from '@/lib/theme-studio';
 import { needsVariantSelection } from '@/lib/variant-selection';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { CartVariantPicker } from '@/components/store/CartVariantPicker';
@@ -131,23 +132,31 @@ export function CartProvider({ children, storeId }: { children: React.ReactNode;
                 const dbCartId = carts[0].id;
                 setCartId(dbCartId);
 
-                const { data: items } = await supabase
+                const { data: items, error: itemsError } = await supabase
                     .from('cart_items')
-                    .select('*, product:products(*)')
+                    .select('*')
                     .eq('cart_id', dbCartId);
 
+                if (itemsError) throw itemsError;
                 if (items) {
-                    const mappedItems: CartItem[] = items.map((item: any) => ({
+                    const productIds = [...new Set(items.map((item:any)=>item.product_id))];
+                    const result = productIds.length ? await supabase.from('public_products').select('id,name,images,price').eq('store_id',storeId).in('id',productIds) : {data:[],error:null};
+                    if (result.error) throw result.error;
+                    const visibleProducts = new Map((result.data||[]).map((product:any)=>[product.id,product]));
+                    // Use the public catalog; merchant-only product rows may be invisible to guests.
+                    const mappedItems: CartItem[] = items.filter((item:any)=>visibleProducts.has(item.product_id)).map((item: any) => {
+                        const product:any=visibleProducts.get(item.product_id);
+                        return ({
                         id: item.id,
                         productId: item.product_id,
-                        productName: typeof item.product.name === 'string' ? JSON.parse(item.product.name) : item.product.name,
-                        productImage: item.product.images?.[0] || null,
-                        basePrice: item.product.price,
+                        productName: {ar:localizedValue(product.name,'ar'),en:localizedValue(product.name,'en')},
+                        productImage: productImages(product.images)[0] || null,
+                        basePrice: product.price,
                         unitPrice: item.unit_price_at_addition,
                         quantity: item.quantity,
                         variants: item.variants,
                         addedAt: item.created_at,
-                    }));
+                    })});
 
                     if (items.length > 0) {
                         setCart(mappedItems);
