@@ -13,8 +13,8 @@ export async function GET(request: Request) {
         const minPrice = searchParams.get('minPrice') ? parseFloat(searchParams.get('minPrice')!) : null;
         const maxPrice = searchParams.get('maxPrice') ? parseFloat(searchParams.get('maxPrice')!) : null;
         const sortBy = searchParams.get('sort') || 'newest';
-        const limit = parseInt(searchParams.get('limit') || '20');
-        const offset = parseInt(searchParams.get('offset') || '0');
+        const limit = Math.min(100,Math.max(1,parseInt(searchParams.get('limit') || '20')||20));
+        const offset = Math.max(0,parseInt(searchParams.get('offset') || '0')||0);
 
         if (!storeId) {
             return NextResponse.json({ error: 'Store ID is required' }, { status: 400 });
@@ -45,9 +45,16 @@ export async function GET(request: Request) {
             p_offset: offset
         });
 
+        const hydrate=async(rows:any[])=>{
+            if(!rows.length)return [];
+            const {data,error}=await supabase.from('public_catalog_products').select('*').eq('store_id',storeId).in('id',rows.map(row=>row.id));
+            if(error)throw error;
+            const products=new Map((data||[]).map(product=>[product.id,product]));
+            return rows.filter(row=>products.has(row.id)).map(row=>({...row,...products.get(row.id)}));
+        };
         if (!rpcError && rpcData) {
             return NextResponse.json({
-                products: rpcData,
+                products: await hydrate(rpcData),
                 total: rpcData.length > 0 ? Number(rpcData[0].total_count) : 0,
                 source: 'rpc'
             });
@@ -57,13 +64,16 @@ export async function GET(request: Request) {
         console.warn('RPC failed, falling back to JS client:', rpcError?.message);
 
         let dbQuery = supabase
-            .from('products')
-            .select(categoryId ? '*, product_categories!inner(category_id)' : '*')
+            .from('public_catalog_products')
+            .select('*')
             .eq('store_id', storeId)
             .eq('status', 'active');
 
         if (categoryId) {
-            dbQuery = dbQuery.eq('product_categories.category_id', categoryId);
+            const {data:links,error:linkError}=await supabase.from('product_categories').select('product_id').eq('category_id',categoryId);
+            if(linkError)throw linkError;
+            if(!links?.length)return NextResponse.json({products:[],total:0,source:'fallback'});
+            dbQuery = dbQuery.in('id',links.map(link=>link.product_id));
         }
 
         // Remove the PostgREST OR filter since data is stringified JSONB

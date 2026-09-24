@@ -1,149 +1,19 @@
 "use client";
-
-import { useEffect, useState } from 'react';
+import {useEffect,useState} from 'react';
 import Link from 'next/link';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, ShoppingCart } from 'lucide-react';
-import { useCart } from '@/contexts/CartContext';
-
-interface StoreData {
-    id: string;
-    slug: string;
-    currency: string;
-    baseUrl?: string;
-}
-
-interface SimilarProductsProps {
-    store: StoreData;
-    productId: string;
-    categoryId?: string;
-}
-
-export function SimilarProducts({ store, productId, categoryId }: SimilarProductsProps) {
-    const { language } = useLanguage();
-    const { addToCart } = useCart();
-    const [products, setProducts] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchSimilar = async () => {
-            try {
-                // Fetch products in the same category, excluding the current product
-                let url = `/api/store/search?storeId=${store.id}&limit=4`;
-                if (categoryId) {
-                    url += `&category=${categoryId}`;
-                }
-
-                const res = await fetch(url);
-                if (res.ok) {
-                    const data = await res.json();
-                    setProducts(data.products.filter((p: any) => p.id !== productId).slice(0, 4));
-                }
-            } catch (error) {
-                console.error("Failed to fetch similar products:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        if (store.id) {
-            fetchSimilar();
-        }
-    }, [store.id, productId, categoryId]);
-
-    if (loading) {
-        return (
-            <div className="flex justify-center py-12">
-                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-            </div>
-        );
-    }
-
-    if (products.length === 0) return null;
-
-    const formatPrice = (price: number) => {
-        return new Intl.NumberFormat(language === 'ar' ? 'ar-SA' : 'en-SA', {
-            style: 'currency',
-            currency: store.currency,
-        }).format(price);
-    };
-
-    return (
-        <section className="mt-16 border-t pt-12">
-            <h2 className="text-2xl font-bold mb-8">
-                {language === 'ar' ? 'قد يعجبك أيضاً' : 'You May Also Like'}
-            </h2>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                {products.map((product) => (
-                    <div key={product.id} className="group">
-                        <Link href={`${product.sku || product.id}`} className="block h-full cursor-pointer">
-                            <Card className="overflow-hidden hover:shadow-lg transition-all h-full flex flex-col border border-gray-100">
-                                <CardContent className="p-0 flex flex-col h-full">
-                                    <div className="aspect-square bg-muted relative overflow-hidden flex-shrink-0">
-                                        {product.images?.length > 0 ? (
-                                            <img
-                                                src={product.images[0]}
-                                                alt={product.name[language] || product.name.ar}
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-primary/5">
-                                                <span className="text-4xl font-bold text-primary/20">
-                                                    {(product.name[language] || product.name.ar || '').charAt(0)}
-                                                </span>
-                                            </div>
-                                        )}
-                                        {product.compare_at_price && product.compare_at_price > product.price && (
-                                            <Badge className="absolute top-2 start-2 bg-destructive border-none shadow-sm">
-                                                {language === 'ar' ? 'تخفيض' : 'Sale'}
-                                            </Badge>
-                                        )}
-                                    </div>
-                                    <div className="p-4 flex flex-col flex-grow">
-                                        <h3 className="font-medium text-sm mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                                            {product.name[language] || product.name.ar}
-                                        </h3>
-                                        <div className="flex items-center justify-between mt-auto">
-                                            <div className="flex flex-col">
-                                                <span className="font-bold text-primary font-mono text-base">
-                                                    {formatPrice(product.price)}
-                                                </span>
-                                                {product.compare_at_price && product.compare_at_price > product.price && (
-                                                    <span className="text-xs text-muted-foreground line-through font-mono">
-                                                        {formatPrice(product.compare_at_price)}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
-                                                    addToCart({
-                                                        productId: product.id,
-                                                        productName: product.name,
-                                                        productImage: product.images?.[0] || null,
-                                                        basePrice: product.price,
-                                                        unitPrice: product.price,
-                                                        quantity: 1,
-                                                        variants: [],
-                                                        addedAt: new Date().toISOString()
-                                                    });
-                                                }}
-                                                className="bg-gray-100 hover:bg-primary text-gray-800 hover:text-white p-2 rounded-full transition-colors flex-shrink-0"
-                                                title={language === 'ar' ? 'أضف للسلة' : 'Add to Cart'}
-                                            >
-                                                <ShoppingCart className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </Link>
-                    </div>
-                ))}
-            </div>
-        </section>
-    );
+import {useLanguage} from '@/contexts/LanguageContext';
+import {useCart} from '@/contexts/CartContext';
+import {localizedValue,productImages} from '@/lib/theme-studio';
+import {ArrowUpLeft,Package,Plus} from 'lucide-react';
+export function SimilarProducts({store,productId,preview=false}:{store:any;productId:string;categoryId?:string;preview?:boolean}){
+ const {language}=useLanguage(),ar=language==='ar';const {addToCart,loading:cartLoading}=useCart();
+ const [data,setData]=useState<{title?:any;products:any[]}>({products:[]});const [adding,setAdding]=useState<string|null>(null);
+ useEffect(()=>{const controller=new AbortController();setData({products:[]});if(!productId||!store.slug||preview)return;
+ fetch(`/api/store/${encodeURIComponent(store.slug)}/products/${encodeURIComponent(productId)}/recommendations`,{signal:controller.signal,cache:'no-store'}).then(r=>r.ok?r.json():null).then(result=>{if(result&&Array.isArray(result.products))setData(result)}).catch(()=>{});return()=>controller.abort();},[store.slug,productId,preview]);
+ if(!data.products.length)return null;
+ const base=store.baseUrl??`/s/${store.slug}`;
+ const money=(value:number)=>new Intl.NumberFormat(ar?'ar-EG':'en',{style:'currency',currency:store.currency||'EGP'}).format(value);
+ const price=(p:any)=>Number(p.sale_price)>0&&Number(p.sale_price)<Number(p.price)?Number(p.sale_price):Number(p.price);
+ const add=async(p:any)=>{setAdding(p.id);try{await addToCart({productId:p.id,productName:{ar:localizedValue(p.name,'ar'),en:localizedValue(p.name,'en')},productImage:productImages(p.images)[0]||null,basePrice:Number(p.price),unitPrice:price(p),quantity:1,variants:[],addedAt:new Date().toISOString()})}finally{setAdding(null)}};
+ return <section aria-label={ar?'المنتجات المقترحة':'Recommended products'} className="mx-auto w-full max-w-7xl border-t px-4 py-10 md:px-8 md:py-14" dir={ar?'rtl':'ltr'}><h2 className="mb-6 text-2xl font-bold">{localizedValue(data.title,language)||(ar?'قد يعجبك أيضًا':'You may also like')}</h2><div className="grid grid-cols-2 gap-4 lg:grid-cols-4 md:gap-6">{data.products.map(p=><article key={p.id} data-recommended-product={p.id} className="flex min-w-0 flex-col overflow-hidden rounded-xl border bg-card text-card-foreground transition-shadow hover:shadow-md"><Link href={`${base}/${p.id}`} className="block aspect-square overflow-hidden bg-muted">{productImages(p.images)[0]?<img src={productImages(p.images)[0]} alt={localizedValue(p.name,language)} loading="lazy" className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"/>:<span className="flex h-full items-center justify-center"><Package className="h-9 w-9 opacity-30"/></span>}</Link><div className="flex flex-1 flex-col gap-3 p-3 md:p-4"><h3 className="line-clamp-2 text-sm font-semibold"><Link href={`${base}/${p.id}`}>{localizedValue(p.name,language)}</Link></h3><div className="flex flex-wrap gap-2 text-sm"><strong>{money(price(p))}</strong>{price(p)<Number(p.price)&&<del className="text-xs text-muted-foreground">{money(Number(p.price))}</del>}</div>{p.skip_cart?<Link href={`${base}/${p.id}`} className="mt-auto flex min-h-11 items-center justify-center gap-2 rounded-lg border px-2 text-xs font-medium">{ar?'عرض المنتج والطلب':'View product & order'}<ArrowUpLeft size={15}/></Link>:<button type="button" disabled={cartLoading||adding===p.id} onClick={()=>add(p)} className="mt-auto flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-2 text-xs font-medium text-primary-foreground disabled:opacity-50"><Plus size={15}/>{adding===p.id?(ar?'جاري الإضافة…':'Adding…'):(ar?'أضف إلى السلة':'Add to cart')}</button>}</div></article>)}</div></section>;
 }

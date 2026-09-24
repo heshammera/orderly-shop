@@ -60,7 +60,7 @@ export default async function ProductsPage({ params }: { params: { storeSlug: st
             .eq('status', 'active')
             .order('sort_order'),
         supabaseAdmin
-            .from('public_products')
+            .from('public_catalog_products')
             .select('id, name, price, compare_at_price, images')
             .eq('store_id', store.id)
             .eq('status', 'active')

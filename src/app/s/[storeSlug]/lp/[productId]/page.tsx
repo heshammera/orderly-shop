@@ -26,7 +26,7 @@ const getPage = cache(async (storeSlug: string, productId: string) => {
   const [product, landing] = await Promise.all([
     db
       .from("public_products")
-      .select("id,name,price,sale_price,images,store_id,skip_cart")
+      .select("id,name,price,sale_price,images,store_id,skip_cart,catalog_visibility")
       .eq("id", productId)
       .eq("store_id", store.id)
       .maybeSingle(),
@@ -61,6 +61,7 @@ export async function generateMetadata({
   const hero = c.hero_image || (Array.isArray(images) ? images[0] : null);
   return {
     title,
+    robots: data.product.catalog_visibility==='unlisted'?{index:false,follow:false}:undefined,
     description: c.subheadline?.ar || c.subheadline?.en || undefined,
     openGraph: { title, images: hero ? [hero] : [] },
   };

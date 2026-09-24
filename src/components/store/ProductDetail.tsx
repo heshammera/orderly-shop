@@ -990,6 +990,7 @@ export function ProductDetail({ product, variants, upsellOffers, store, themeSet
 
             {/* Similar Products Section */}
             <SimilarProducts
+                preview={preview}
                 store={store}
                 productId={product.id}
                 categoryId={undefined} // Can be supplied if we pass categoryId from page level 

@@ -100,6 +100,7 @@ export async function POST(req: Request) {
                     sku: p.sku || null,
                     images: p.image_url ? JSON.stringify([p.image_url]) : null,
                     status: 'active',
+                    catalog_visibility: 'listed',
                 });
             }
 

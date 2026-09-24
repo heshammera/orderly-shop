@@ -44,7 +44,7 @@ export async function POST(request: NextRequest, { params }: { params: { storeSl
 
         // 2. Get Store Products (for context)
         const { data: products } = await supabase
-            .from('products')
+            .from('public_catalog_products')
             .select('id, name, description, price, sale_price, stock_quantity')
             .eq('store_id', store.id)
             .eq('status', 'active');

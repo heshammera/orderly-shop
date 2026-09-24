@@ -1,5 +1,7 @@
 "use client";
 
+import Link from 'next/link';
+import {availableVariantOption} from '@/lib/variant-selection';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -33,15 +35,18 @@ export function ProductRecommendations() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (!store?.id) return;
+        let active = true;
+        setProducts([]);
+        if (!store?.id) { setLoading(false); return; }
+        setLoading(true);
 
         const fetchRecommendations = async () => {
             const supabase = createClient();
             const cartProductIds = cart.map(item => item.productId);
 
             let query = supabase
-                .from('public_products')
-                .select('id, name, price, images, compare_at_price, max_per_order, quantity:stock_quantity')
+                .from('public_catalog_products')
+                .select('id, name, price, sale_price, images, compare_at_price, max_per_order, quantity:stock_quantity, track_inventory, ignore_stock, skip_cart')
                 .eq('store_id', store.id)
                 .eq('status', 'active');
 
@@ -51,22 +56,28 @@ export function ProductRecommendations() {
                 });
             }
 
-            const { data } = await query.limit(3).order('created_at', { ascending: false });
+            const { data } = await query.limit(12).order('created_at', { ascending: false });
+            if (!active) return;
 
-            if (data) {
-                const parsedData = data.map(p => {
+            if (data?.length) {
+                const {data:groups,error:variantError}=await supabase.from('product_variants').select('product_id,required,variant_options(in_stock,manage_stock,stock)').in('product_id',data.map(p=>p.id));
+                if (!active) return;
+                if(variantError){setLoading(false);setProducts([]);return;}
+                const eligible=data.filter(p=>(p.max_per_order==null||p.max_per_order>=1)&&(p.ignore_stock||!p.track_inventory||p.quantity>0)&&!(groups||[]).some(g=>g.product_id===p.id&&g.required&&!g.variant_options.some(o=>availableVariantOption(o,p.ignore_stock)))).slice(0,3);
+                const parsedData = eligible.map(p => {
                     let n = p.name;
                     let i = p.images;
                     try { if (typeof n === 'string') n = JSON.parse(n); } catch (e) { }
                     try { if (typeof i === 'string') i = JSON.parse(i); } catch (e) { }
-                    return { ...p, name: n, images: i };
+                    return { ...p, price:Number(p.sale_price)>0&&Number(p.sale_price)<Number(p.price)?Number(p.sale_price):Number(p.price), name: n, images: i };
                 });
                 setProducts(parsedData);
             }
             setLoading(false);
         };
 
-        fetchRecommendations();
+        fetchRecommendations().catch(() => { if (active) { setProducts([]); setLoading(false); } });
+        return () => { active = false; };
     }, [store?.id, cart]);
 
     const handleAdd = async (product: any) => {
@@ -118,14 +129,14 @@ export function ProductRecommendations() {
                                 )}
                             </div>
                         </div>
-                        <Button
+                        {product.skip_cart?<Link className="text-xs underline" href={`${store.baseUrl??`/s/${store.slug}`}/${product.id}`}>{language==='ar'?'عرض المنتج':'View product'}</Link>:<Button
                             size="icon"
                             variant="outline"
                             className="h-8 w-8 rounded-full border-slate-200 text-slate-600 flex-shrink-0 hover:bg-primary/5 hover:text-primary hover:border-primary/30"
                             onClick={() => handleAdd(product)}
                         >
                             <Plus className="w-4 h-4" />
-                        </Button>
+                        </Button>}
                     </div>
                 ))}
             </div>

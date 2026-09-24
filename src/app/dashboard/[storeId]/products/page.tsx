@@ -30,6 +30,7 @@ import { ProductDetailsDialog } from '@/components/dashboard/ProductDetailsDialo
 import { BulkProductImport } from '@/components/dashboard/BulkProductImport';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import {setProductsCatalogVisibility,CatalogVisibility,merchandisingProductName} from '@/lib/product-merchandising';
 
 export default function ProductsPage({ params }: { params: { storeId: string } }) {
     const { storeId } = params;
@@ -43,6 +44,11 @@ export default function ProductsPage({ params }: { params: { storeId: string } }
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [isDuplicating, setIsDuplicating] = useState<string | null>(null);
 
+    const [visibilityFilter,setVisibilityFilter]=useState('all');
+    const [selectedIds,setSelectedIds]=useState<string[]>([]);
+    const [visibilityBusy,setVisibilityBusy]=useState(false);
+    const visibleProducts=products.filter(product=>visibilityFilter==='all'||(visibilityFilter==='unavailable'?product.status!=='active':product.catalog_visibility===visibilityFilter));
+    async function setVisibility(ids:string[],visibility:CatalogVisibility){if(!ids.length)return;setVisibilityBusy(true);try{await setProductsCatalogVisibility(storeId,ids,visibility);await fetchProducts();setSelectedIds([]);toast.success(language==='ar'?(visibility==='listed'?'تم إظهار المنتجات في المتجر':'تم إخفاء المنتجات؛ روابطها المباشرة ما زالت متاحة'):'Product visibility saved')}catch(e:any){toast.error(e.message)}finally{setVisibilityBusy(false)}}
     // Usage Limit Check
     const { canAddProduct, limits, usage, isLoading: limitLoading, subscription } = useSubscription(storeId);
 
@@ -184,10 +190,17 @@ export default function ProductsPage({ params }: { params: { storeId: string } }
                 </Alert>
             )}
 
-            <div className="border rounded-lg">
+            <div className="flex flex-wrap items-center gap-3 rounded-xl border p-4">
+                <label className="text-sm">{language==='ar'?'عرض المنتجات':'Show products'} <select aria-label={language==='ar'?'فلتر ظهور المنتجات':'Product visibility filter'} className="ms-2 rounded border bg-background p-2" value={visibilityFilter} onChange={e=>{setVisibilityFilter(e.target.value);setSelectedIds([])}}>{[['all','الكل','All'],['listed','الظاهرة','Listed'],['unlisted','المخفية','Hidden'],['unavailable','غير المتاحة للبيع','Unavailable']].map(([id,ar,en])=><option key={id} value={id}>{language==='ar'?ar:en}</option>)}</select></label>
+                <span className="text-sm text-muted-foreground">{language==='ar'?`${selectedIds.length} محدد`:`${selectedIds.length} selected`}</span>
+                <Button variant="outline" disabled={!selectedIds.length||visibilityBusy} onClick={()=>setVisibility(selectedIds,'unlisted')}>{language==='ar'?'إخفاء المحدد':'Hide selected'}</Button>
+                <Button variant="outline" disabled={!selectedIds.length||visibilityBusy} onClick={()=>setVisibility(selectedIds,'listed')}>{language==='ar'?'إظهار المحدد':'Show selected'}</Button>
+            </div>
+            <div className="border rounded-lg overflow-x-auto">
                 <Table>
                     <TableHeader>
                         <TableRow>
+                            <TableHead><input type="checkbox" aria-label={language==='ar'?'تحديد المنتجات المعروضة':'Select displayed products'} disabled={visibilityBusy} checked={visibleProducts.length>0&&visibleProducts.slice(0,200).every(p=>selectedIds.includes(p.id))} onChange={e=>setSelectedIds(e.target.checked?visibleProducts.slice(0,200).map(p=>p.id):[])}/></TableHead>
                             <TableHead>{language === 'ar' ? 'الصورة' : 'Image'}</TableHead>
                             <TableHead>{language === 'ar' ? 'الاسم' : 'Name'}</TableHead>
                             <TableHead>{language === 'ar' ? 'السعر' : 'Price'}</TableHead>
@@ -197,8 +210,9 @@ export default function ProductsPage({ params }: { params: { storeId: string } }
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {products.map((product) => (
+                        {visibleProducts.map((product) => (
                             <TableRow key={product.id}>
+                                <TableCell><input type="checkbox" aria-label={`${language==='ar'?'تحديد':'Select'} ${merchandisingProductName(product,language)}`} checked={selectedIds.includes(product.id)} disabled={visibilityBusy||(!selectedIds.includes(product.id)&&selectedIds.length>=200)} onChange={e=>setSelectedIds(ids=>e.target.checked?[...ids,product.id]:ids.filter(id=>id!==product.id))}/></TableCell>
                                 <TableCell>
                                     <div className="w-10 h-10 bg-gray-100 rounded-md overflow-hidden">
                                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -219,14 +233,14 @@ export default function ProductsPage({ params }: { params: { storeId: string } }
                                     </div>
                                 </TableCell>
                                 <TableCell className="font-medium">
-                                    {typeof product.name === 'string' ? JSON.parse(product.name)[language] || product.name : product.name[language]}
+                                    {merchandisingProductName(product,language)}
                                 </TableCell>
                                 <TableCell>{product.price} {product.currency}</TableCell>
                                 <TableCell>{product.stock_quantity}</TableCell>
                                 <TableCell>
                                     <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
                                         {product.status}
-                                    </Badge>
+                                    </Badge><Badge variant="outline" className="mt-1 block w-fit">{product.catalog_visibility==='unlisted'?(language==='ar'?'مخفي — متاح بالرابط':'Hidden — direct link'):(language==='ar'?'ظاهر':'Listed')}</Badge>
                                 </TableCell>
                                 <TableCell>
                                     <DropdownMenu>
@@ -237,7 +251,8 @@ export default function ProductsPage({ params }: { params: { storeId: string } }
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
-                                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                            <DropdownMenuLabel>{language==='ar'?'إجراءات':'Actions'}</DropdownMenuLabel>
+                                            <DropdownMenuItem disabled={visibilityBusy} onClick={()=>setVisibility([product.id],product.catalog_visibility==='unlisted'?'listed':'unlisted')}>{product.catalog_visibility==='unlisted'?(language==='ar'?'إظهار في المتجر':'Show in catalog'):(language==='ar'?'إخفاء من المتجر':'Hide from catalog')}</DropdownMenuItem>
                                             <DropdownMenuItem
                                                 onClick={() => {
                                                     setSelectedProduct(product);

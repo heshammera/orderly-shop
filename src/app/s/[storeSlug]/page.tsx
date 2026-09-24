@@ -156,7 +156,7 @@ export default async function StorePage({ params }: { params: Promise<{ storeSlu
             .order('sort_order'),
         // Fetch store products
         supabaseAdmin
-            .from('public_products')
+            .from('public_catalog_products')
             .select('id, name, price, sale_price, images, skip_cart, category_id:product_categories(category_id)')
             .eq('store_id', store.id)
             .eq('status', 'active')

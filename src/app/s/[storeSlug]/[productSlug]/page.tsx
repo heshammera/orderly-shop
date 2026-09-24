@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ storeSlug
 
         let query = supabaseAdmin
             .from('public_products')
-            .select('name, description, images')
+            .select('name, description, images, catalog_visibility')
             .eq('store_id', store.id);
 
         if (isUuid) {
@@ -50,6 +50,7 @@ export async function generateMetadata({ params }: { params: Promise<{ storeSlug
 
         return {
             title: name?.en || name?.ar || 'Product',
+            robots: product.catalog_visibility==='unlisted'?{index:false,follow:false}:undefined,
             description: desc?.en || desc?.ar || '',
             openGraph: {
                 images: images.length > 0 ? [images[0]] : [],

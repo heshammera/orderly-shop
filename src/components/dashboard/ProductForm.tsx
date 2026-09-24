@@ -19,6 +19,8 @@ import { Sparkles, Languages, Search } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ImageUpload } from '@/components/dashboard/ImageUpload';
 import {loadVariantEditor,saveVariantEditor,validateVariantEditor} from '@/lib/variant-editor';
+import {ProductMerchandisingEditor} from '@/components/dashboard/ProductMerchandisingEditor';
+import {defaultMerchandising,loadProductMerchandising,saveProductMerchandising,validateMerchandising,MerchandisingSnapshot,MerchandisingSaveError} from '@/lib/product-merchandising';
 import { VariantEditor } from '@/components/dashboard/VariantEditor';
 import { UpsellManager, UpsellFormData } from '@/components/dashboard/UpsellManager';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -40,6 +42,12 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
     const { language } = useLanguage();
     const [loading, setLoading] = useState(false);
     const createdProductId=useRef<string|null>(null);
+    const [merchandising,setMerchandising]=useState<MerchandisingSnapshot|null>(initialData?.id?null:defaultMerchandising());
+    const [merchLoading,setMerchLoading]=useState(!!initialData?.id);
+    const [merchError,setMerchError]=useState<string|null>(null);
+    const [merchConflict,setMerchConflict]=useState(false);
+    async function loadMerchandising(){const id=initialData?.id||createdProductId.current;if(!id){setMerchandising(defaultMerchandising());return}setMerchLoading(true);setMerchError(null);try{setMerchandising(await loadProductMerchandising(supabase,id));setMerchConflict(false)}catch(e:any){setMerchError(e.message||'تعذر تحميل إعدادات المنتج')}finally{setMerchLoading(false)}}
+    useEffect(()=>{loadMerchandising()},[initialData?.id]);
     const [variants, setVariants] = useState<any[]>([]);
     const [variantRevision,setVariantRevision]=useState<number|null>(initialData?.id?null:0);
     const loadVariants=async()=>{if(!initialData?.id)return;setVariantRevision(null);try{const snapshot=await loadVariantEditor(supabase,initialData.id);setVariants(snapshot.variants);setVariantRevision(snapshot.revision)}catch(e:any){toast.error(e.message||'تعذر تحميل خيارات المنتج')}};
@@ -184,6 +192,9 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
         try {
             if(variantRevision===null)throw new Error('انتظر تحميل خيارات المنتج قبل الحفظ أو أعد المحاولة.');
             validateVariantEditor(variants);
+            if(!merchandising||merchLoading||merchError||merchConflict)throw new Error('أعد تحميل إعدادات الظهور والاقتراحات قبل الحفظ.');
+            validateMerchandising(merchandising,initialData?.id||createdProductId.current||undefined);
+            if(initialData?.id||createdProductId.current){const fresh=await loadProductMerchandising(supabase,initialData?.id||createdProductId.current);if(fresh.revision!==merchandising.revision)throw new MerchandisingSaveError('تغيرت إعدادات الظهور والاقتراحات. أعد تحميلها قبل الحفظ.',true);}
             const payload = {
                 store_id: storeId,
                 name: JSON.stringify({ ar: formData.name_ar, en: formData.name_en }),
@@ -193,7 +204,7 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                 sku: formData.sku,
                 metadata: { ...initialData?.metadata, seo: {title:formData.meta_title,description:formData.meta_description,keywords:formData.seo_keywords}},
                 images: formData.images && formData.images.length > 0 ? JSON.stringify(formData.images) : null,
-                status: 'active',
+                ...(!(initialData?.id||createdProductId.current)?{status:'active'}:{}),
                 skip_cart: formData.skip_cart,
                 free_shipping: formData.free_shipping,
                 fake_countdown_enabled: formData.fake_countdown_enabled,
@@ -271,10 +282,12 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                 }
             }
 
+            setMerchandising(await saveProductMerchandising(storeId,savedProductId!,merchandising));
             toast.success(initialData ? (language === 'ar' ? 'تم تحديث المنتج بنجاح! 🎉' : 'Product updated successfully! 🎉') : (language === 'ar' ? 'تم إنشاء المنتج بنجاح! 🎉' : 'Product created successfully! 🎉'));
             if (onSuccess) onSuccess();
             else router.push(`/dashboard/${storeId}/products`);
         } catch (error: any) {
+            if(error instanceof MerchandisingSaveError&&error.conflict)setMerchConflict(true);
             console.error('Error saving product:', error);
             toast.error(error.message || (language === 'ar' ? 'فشل حفظ المنتج' : 'Failed to save product'));
         } finally {
@@ -704,8 +717,9 @@ export function ProductForm({ storeId, onSuccess, onCancel, initialData }: Produ
                 </CardContent>
             </Card>
 
+            <ProductMerchandisingEditor storeId={storeId} productId={initialData?.id||createdProductId.current||undefined} value={merchandising} onChange={setMerchandising} language={language} currency={storeCurrency} loading={merchLoading} error={merchError} conflict={merchConflict} disabled={loading} onReload={loadMerchandising}/>
             <div className="flex flex-col sm:flex-row items-center gap-4 pt-4 border-t">
-                <Button type="submit" disabled={loading} size="lg" className="w-full sm:w-auto">
+                <Button type="submit" disabled={loading||merchLoading||!!merchError||merchConflict} size="lg" className="w-full sm:w-auto">
                     {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                     <Save className="w-4 h-4 mr-2" />
                     {initialData ? (language === 'ar' ? 'تحديث المنتج' : 'Update Product') : (language === 'ar' ? 'إنشاء المنتج' : 'Create Product')}

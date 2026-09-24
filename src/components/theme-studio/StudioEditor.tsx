@@ -17,7 +17,7 @@ export default function StudioEditor({storeId}:{storeId:string}){
  const frame=useRef<HTMLIFrameElement>(null);
  const dirty=!!doc&&JSON.stringify(doc)!==saved;
  async function load(){if(loading.current)return;loading.current=true;setBusy(true);setError('');try{
-  const [active,store,products,categories]=await Promise.all([db.from('store_themes').select('id,global_tokens').eq('store_id',storeId).eq('is_active',true).maybeSingle(),db.from('stores').select('id,name,description,logo_url,slug,currency,settings,has_removed_copyright').eq('id',storeId).single(),db.from('public_products').select('*').eq('store_id',storeId).eq('status','active').limit(500),db.from('categories').select('id,name,image_url').eq('store_id',storeId).eq('status','active').order('sort_order')]);
+  const [active,store,products,categories]=await Promise.all([db.from('store_themes').select('id,global_tokens').eq('store_id',storeId).eq('is_active',true).maybeSingle(),db.from('stores').select('id,name,description,logo_url,slug,currency,settings,has_removed_copyright').eq('id',storeId).single(),db.from('public_catalog_products').select('*').eq('store_id',storeId).eq('status','active').limit(500),db.from('categories').select('id,name,image_url').eq('store_id',storeId).eq('status','active').order('sort_order')]);
   for(const result of [active,store,products,categories])if(result.error)throw result.error;
   if(!active.data){setTheme(null);setError(t('اختر تصميمًا أولًا من معرض الثيمات.','Choose a theme first.'));return}
   setTheme(active.data);if(active.data.global_tokens?.studio_version!=='2')return;
