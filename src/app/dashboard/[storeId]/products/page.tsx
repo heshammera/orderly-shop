@@ -48,7 +48,7 @@ export default function ProductsPage({ params }: { params: { storeId: string } }
     const [selectedIds,setSelectedIds]=useState<string[]>([]);
     const [visibilityBusy,setVisibilityBusy]=useState(false);
     const visibleProducts=products.filter(product=>visibilityFilter==='all'||(visibilityFilter==='unavailable'?product.status!=='active':product.catalog_visibility===visibilityFilter));
-    async function setVisibility(ids:string[],visibility:CatalogVisibility){if(!ids.length)return;setVisibilityBusy(true);try{await setProductsCatalogVisibility(storeId,ids,visibility);await fetchProducts();setSelectedIds([]);toast.success(language==='ar'?(visibility==='listed'?'تم إظهار المنتجات في المتجر':'تم إخفاء المنتجات؛ روابطها المباشرة ما زالت متاحة'):'Product visibility saved')}catch(e:any){toast.error(e.message)}finally{setVisibilityBusy(false)}}
+    async function setVisibility(ids:string[],visibility:CatalogVisibility){if(!ids.length)return;setVisibilityBusy(true);try{await setProductsCatalogVisibility(storeId,ids,visibility);const changed=new Set(ids);setProducts(current=>current.map(product=>changed.has(product.id)?{...product,catalog_visibility:visibility}:product));setSelectedIds([]);toast.success(language==='ar'?(visibility==='listed'?'تم إظهار المنتجات في المتجر':'تم إخفاء المنتجات؛ روابطها المباشرة ما زالت متاحة'):'Product visibility saved')}catch(e:any){toast.error(e.message)}finally{setVisibilityBusy(false)}}
     // Usage Limit Check
     const { canAddProduct, limits, usage, isLoading: limitLoading, subscription } = useSubscription(storeId);
 

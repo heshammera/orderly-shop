@@ -3,6 +3,7 @@ import {revalidatePath} from 'next/cache';
 import {createClient} from '@/lib/supabase/server';
 
 export const dynamic='force-dynamic';
+export const fetchCache='force-no-store';
 const uuid=(value:unknown):value is string=>typeof value==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 const invalid=()=>NextResponse.json({error:'إعدادات المنتج غير صالحة. راجع الاختيارات وحاول مرة أخرى.'},{status:400});
 
